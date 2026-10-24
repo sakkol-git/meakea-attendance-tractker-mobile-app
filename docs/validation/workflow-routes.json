@@ -1,0 +1,322 @@
+[
+  {
+    "id": "BF-001",
+    "title": "Login",
+    "module": "identity",
+    "route": "/login",
+    "access": "employee",
+    "boundary": "Remote login and explicit demo personas"
+  },
+  {
+    "id": "BF-002",
+    "title": "Refresh token rotation",
+    "module": "identity",
+    "route": "/security",
+    "access": "employee",
+    "boundary": "Automatic coalesced refresh and guarded replay"
+  },
+  {
+    "id": "BF-003",
+    "title": "Company setup",
+    "module": "identity",
+    "route": "/setup",
+    "access": "employee",
+    "boundary": "Authorized setup form; real provisioning requires accepted service"
+  },
+  {
+    "id": "BF-004",
+    "title": "Employee and organization onboarding",
+    "module": "identity",
+    "route": "/features/identity.people",
+    "access": "hr",
+    "boundary": "People, invitations, lifecycle, roles and organization catalogs"
+  },
+  {
+    "id": "BF-005",
+    "title": "Shift definition and assignment",
+    "module": "identity",
+    "route": "/features/identity.shifts",
+    "access": "hr",
+    "boundary": "Shift policies, assignment snapshots, period closure and history"
+  },
+  {
+    "id": "BF-006",
+    "title": "Company holidays",
+    "module": "identity",
+    "route": "/manage/holidays",
+    "access": "hr",
+    "boundary": "Create and edit holiday calendar"
+  },
+  {
+    "id": "BF-007",
+    "title": "Clock in",
+    "module": "attendance",
+    "route": "/home",
+    "access": "employee",
+    "boundary": "Clock command and one-open-session guard"
+  },
+  {
+    "id": "BF-008",
+    "title": "Clock out",
+    "module": "attendance",
+    "route": "/home",
+    "access": "employee",
+    "boundary": "Versioned clock-out and retry reconciliation"
+  },
+  {
+    "id": "BF-009",
+    "title": "Evidence submission",
+    "module": "attendance",
+    "route": "/evidence/capture",
+    "access": "employee",
+    "boundary": "Opt-in foreground observation and processing history"
+  },
+  {
+    "id": "BF-010",
+    "title": "Inference orchestration",
+    "module": "attendance",
+    "route": "/features/attendance.evidence",
+    "access": "employee",
+    "boundary": "Client displays processing outcomes; server owns orchestration"
+  },
+  {
+    "id": "BF-011",
+    "title": "Inferred attendance review",
+    "module": "attendance",
+    "route": "/activity",
+    "access": "employee",
+    "boundary": "Confirm or reject inferred sessions"
+  },
+  {
+    "id": "BF-012",
+    "title": "Correction and manual entry",
+    "module": "attendance",
+    "route": "/new/correction",
+    "access": "employee",
+    "boundary": "Correction submission and decision; HR manual-entry screen"
+  },
+  {
+    "id": "BF-013",
+    "title": "Daily-status finalization",
+    "module": "attendance",
+    "route": "/features/attendance.review",
+    "access": "hr",
+    "boundary": "Provisional days, review guards and revision-aware finalization"
+  },
+  {
+    "id": "BF-014",
+    "title": "Leave submission and reservation",
+    "module": "leave",
+    "route": "/new/leave",
+    "access": "employee",
+    "boundary": "Workday and exact-unit annual reservations"
+  },
+  {
+    "id": "BF-015",
+    "title": "Leave approval",
+    "module": "leave",
+    "route": "/approvals",
+    "access": "manager",
+    "boundary": "Independent versioned approval"
+  },
+  {
+    "id": "BF-016",
+    "title": "Leave rejection",
+    "module": "leave",
+    "route": "/approvals",
+    "access": "manager",
+    "boundary": "Reasoned rejection and release"
+  },
+  {
+    "id": "BF-017",
+    "title": "Leave cancellation",
+    "module": "leave",
+    "route": "/leave",
+    "access": "employee",
+    "boundary": "Own pending or whole future approved leave cancellation"
+  },
+  {
+    "id": "BF-018",
+    "title": "Leave balance and adjustments",
+    "module": "leave",
+    "route": "/features/leave.balances",
+    "access": "hr",
+    "boundary": "Independent HR ledger adjustments and balance revisions"
+  },
+  {
+    "id": "BF-019",
+    "title": "Year-end carry-over",
+    "module": "leave",
+    "route": "/features/leave.rollovers",
+    "access": "hr",
+    "boundary": "Explicit cap, preview, stale-preview rejection and replay-safe apply"
+  },
+  {
+    "id": "BF-020",
+    "title": "Leave conflict review",
+    "module": "leave",
+    "route": "/features/leave.conflicts",
+    "access": "hr",
+    "boundary": "Independent keep or cancel with compensation and evidence retention"
+  },
+  {
+    "id": "BF-021",
+    "title": "Create and edit requests",
+    "module": "requests",
+    "route": "/new/request",
+    "access": "employee",
+    "boundary": "Category, material, quantity, date and time drafts"
+  },
+  {
+    "id": "BF-022",
+    "title": "Submit and resolve review chain",
+    "module": "requests",
+    "route": "/requests",
+    "access": "employee",
+    "boundary": "Submission snapshots configured review chain"
+  },
+  {
+    "id": "BF-023",
+    "title": "Approve request step",
+    "module": "requests",
+    "route": "/approvals",
+    "access": "manager",
+    "boundary": "Assigned reviewer then optional HR step"
+  },
+  {
+    "id": "BF-024",
+    "title": "Reject or cancel request",
+    "module": "requests",
+    "route": "/requests",
+    "access": "employee",
+    "boundary": "Owner cancellation and independent reasoned rejection"
+  },
+  {
+    "id": "BF-025",
+    "title": "Material fulfillment",
+    "module": "requests",
+    "route": "/features/requests.fulfillment",
+    "access": "hr",
+    "boundary": "Partial stock-aware issue with history"
+  },
+  {
+    "id": "BF-026",
+    "title": "Private attachments",
+    "module": "attachments",
+    "route": "/requests",
+    "access": "employee",
+    "boundary": "Request and leave file picker, private download and share"
+  },
+  {
+    "id": "BF-027",
+    "title": "Notification delivery",
+    "module": "notifications",
+    "route": "/features/notifications.devices",
+    "access": "employee",
+    "boundary": "Device registration, rotation and delivery view; provider setup required"
+  },
+  {
+    "id": "BF-028",
+    "title": "Inbox and preferences",
+    "module": "notifications",
+    "route": "/notifications",
+    "access": "employee",
+    "boundary": "Reads, record links and own notification preferences"
+  },
+  {
+    "id": "BF-029",
+    "title": "Reports and projections",
+    "module": "reporting",
+    "route": "/features/reporting.attendance",
+    "access": "manager",
+    "boundary": "Period-filtered reports; projections are server-owned"
+  },
+  {
+    "id": "BF-030",
+    "title": "Report export",
+    "module": "reporting",
+    "route": "/features/reporting.exports",
+    "access": "manager",
+    "boundary": "Job history, status, scoped CSV download and share"
+  },
+  {
+    "id": "BF-031",
+    "title": "Projection recovery",
+    "module": "reporting",
+    "route": "/features/reporting.rebuilds",
+    "access": "owner",
+    "boundary": "Authorized reasoned rebuild request and job history"
+  },
+  {
+    "id": "BF-032",
+    "title": "Standalone scoring",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Readiness only; scoring runs in protected service"
+  },
+  {
+    "id": "BF-033",
+    "title": "Model inspection",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Readiness only; protected service metadata required"
+  },
+  {
+    "id": "BF-034",
+    "title": "Model training",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Operator-owned offline workflow, mobile status boundary"
+  },
+  {
+    "id": "BF-035",
+    "title": "Owner event relay",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Backend-owned publication, mobile status boundary"
+  },
+  {
+    "id": "BF-036",
+    "title": "Consumer retry and dead letter",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Backend-owned recovery, mobile status boundary"
+  },
+  {
+    "id": "BF-037",
+    "title": "Shift cutoff scheduler",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Backend scheduling; manual HR daily review available"
+  },
+  {
+    "id": "BF-038",
+    "title": "Reference bootstrap",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Backend bootstrap; fictional fixture initialization in demo"
+  },
+  {
+    "id": "BF-039",
+    "title": "Technical readiness and API documentation",
+    "module": "operations",
+    "route": "/features/operations.readiness",
+    "access": "owner",
+    "boundary": "Sanitized status contract, no direct infrastructure access"
+  },
+  {
+    "id": "BF-040",
+    "title": "Logout and token revocation",
+    "module": "identity",
+    "route": "/profile",
+    "access": "employee",
+    "boundary": "Local credential removal and server revocation request"
+  }
+]

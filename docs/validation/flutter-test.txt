@@ -1,0 +1,76 @@
+00:00 +0: loading /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart
+00:00 +0: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +1: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +2: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +3: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +4: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +5: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +6: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:00 +7: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +8: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +9: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +10: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +11: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +12: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +13: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +14: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +15: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +16: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +17: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +18: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +19: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +20: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +21: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +22: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:01 +23: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +24: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +25: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +26: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +27: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +28: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +29: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:02 +30: /Users/apple/Documents/hrflow/mobile/test/feature_screens_test.dart: production feature composition renders every workflow and editor at 200 percent text
+00:03 +31: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: demo history uses company dates around UTC midnight and newest-first ordering
+00:03 +32: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: employee reviews an inferred session with version and replay guards
+00:03 +33: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: approved correction updates attendance once and rejects stale approval replay
+00:03 +34: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: workflow pages preserve total and expose every record
+00:03 +35: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: workflow pages preserve total and expose every record
+00:03 +36: /Users/apple/Documents/hrflow/mobile/test/session_controller_test.dart: late startup restoration cannot replace an explicitly selected account
+00:03 +37: /Users/apple/Documents/hrflow/mobile/test/session_controller_test.dart: late startup restoration cannot replace an explicitly selected account
+00:03 +38: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: material request passes draft edit, submission, manager then HR approval and fulfillment
+00:03 +39: /Users/apple/Documents/hrflow/mobile/test/session_controller_test.dart: late earlier login and sign-out cannot overwrite a newer successful login
+00:03 +40: /Users/apple/Documents/hrflow/mobile/test/session_controller_test.dart: late earlier login and sign-out cannot overwrite a newer successful login
+00:03 +41: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: failed persistence rolls back demo mutation, leaving a safe retry
+00:03 +42: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: failed persistence rolls back demo mutation, leaving a safe retry
+00:03 +43: /Users/apple/Documents/hrflow/mobile/test/workflow_integration_test.dart: clock retry preserves occurrence time and body after an unknown outcome
+00:04 +44: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: company dates convert timestamps without shifting date-only values
+00:04 +45: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +46: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +47: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +48: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +49: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +50: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +51: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +52: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +53: /Users/apple/Documents/hrflow/mobile/test/widget_test.dart: employee demo signs in and navigates to leave and requests
+00:05 +54: /Users/apple/Documents/hrflow/mobile/test/shift_widget_test.dart: HR assigns a dated shift at 200% text; employee sees the schedule and cannot open HR editor
+00:06 +55: /Users/apple/Documents/hrflow/mobile/test/architecture_test.dart: each business feature owns its domain, application and data adapters
+00:06 +56: /Users/apple/Documents/hrflow/mobile/test/architecture_test.dart: no all-feature repository ships in the application
+00:06 +57: /Users/apple/Documents/hrflow/mobile/test/evidence_test.dart: reviewed transition uses stable batch identity and does not persist raw coordinates in demo
+00:06 +58: /Users/apple/Documents/hrflow/mobile/test/evidence_test.dart: notification links accept only known record types and safe identifiers
+00:06 +59: /Users/apple/Documents/hrflow/mobile/test/feature_workflows_test.dart: every feature view has a readable owned adapter and correct role boundary
+00:06 +60: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: (setUpAll)
+00:06 +61: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: (setUpAll)
+00:06 +61: /Users/apple/Documents/hrflow/mobile/test/feature_workflows_test.dart: exact half-day and cross-year reservations, adjustment revisions and stale rollover preview
+00:06 +62: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render home mobile reference
+00:06 +63: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render home mobile reference
+00:06 +64: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render home mobile reference
+00:06 +65: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render home mobile reference
+00:06 +66: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render home mobile reference
+00:07 +67: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render leave mobile reference
+00:07 +68: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render request mobile reference
+00:07 +69: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: render approvals mobile reference
+00:07 +70: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: all employee and HR routes render at 360px with 200 percent text
+00:08 +71: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: dark appearance renders core routes without errors
+00:08 +72: /Users/apple/Documents/hrflow/mobile/test/visual_test.dart: (tearDownAll)
+00:08 +72: All tests passed!

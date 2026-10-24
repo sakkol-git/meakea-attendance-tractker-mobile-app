@@ -1,0 +1,13 @@
+00:00 +0: loading /Users/apple/Documents/hrflow/mobile/test/_enterprise_audit_probe_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: audit: legacy HR editor fields are accepted without applying them
+AUDIT_HR_EDITOR: commandSucceeded=true; departmentApplied=false; positionApplied=false
+AUDIT_SHIFT_EDITOR: commandSucceeded=true; enteredDays=Sat, Sun; savedDays=Mon, Tue, Wed, Thu, Fri
+00:00 +1: audit: paginated request search
+AUDIT_SEARCH: empty=true; loadMoreVisible=false; repositoryPagesRead=1; controllerHasMore=true
+00:00 +2: audit: dark contrast and screenshot
+AUDIT_CONTRAST: darkSurface=ff0e1513, darkCard=ff1b211f, mutedOnSurface=2.99, mutedOnCard=2.64, approvedStatus=2.08, errorOnCard=2.26
+00:00 +3: audit: approval dialog at 200 percent text with keyboard
+AUDIT_DIALOG_EXCEPTION: null
+00:01 +4: (tearDownAll)
+00:01 +4: All tests passed!

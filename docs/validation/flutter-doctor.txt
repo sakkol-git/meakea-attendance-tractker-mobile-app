@@ -1,0 +1,41 @@
+[!] Flutter (Channel stable, 3.47.7, on macOS 26.5.1 25F80 darwin-arm64, locale en-KH) [76ms]
+    • Flutter version 3.47.7 on channel stable at /Users/apple/fvm/versions/3.47.7
+    ! The flutter binary is not on your path. Consider adding /Users/apple/fvm/versions/3.47.7/bin to your path.
+    ! The dart binary is not on your path. Consider adding /Users/apple/fvm/versions/3.47.7/bin to your path.
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision abaf9c5237 (2 weeks ago), 2026-10-08 09:51:21 -0700
+    • Engine revision deb287481e
+    • Dart version 3.13.5
+    • DevTools version 2.60.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, enable-record-use, enable-swift-package-manager, omit-legacy-version-file, enable-lldb-debugging, enable-uiscene-migration
+    • If those were intentional, you can disregard the above warnings; however it is recommended to use "git" directly to perform update checks and upgrades.
+
+[✗] Android toolchain - develop for Android devices [38ms]
+    ✗ Unable to locate Android SDK.
+      Install Android Studio from: https://developer.android.com/studio/index.html
+      On first launch it will assist you in installing the Android SDK components.
+      (or visit https://flutter.dev/to/macos-android-setup for detailed instructions).
+      If the Android SDK has been installed to a custom location, please use
+      `flutter config --android-sdk` to update to that location.
+
+
+[!] Xcode - develop for iOS and macOS [919ms]
+    ✗ Xcode installation is incomplete; a full installation is necessary for iOS and macOS development.
+      Download at: https://developer.apple.com/xcode/
+      Or install Xcode via the App Store.
+      Once installed, run:
+        sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+        sudo xcodebuild -runFirstLaunch
+    • CocoaPods version 1.17.0
+
+[✓] Chrome - develop for the web [18ms]
+    • Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[✓] Connected device (2 available) [82ms]
+    • macOS (desktop) • macos  • darwin-arm64   • macOS 26.5.1 25F80 darwin-arm64
+    • Chrome (web)    • chrome • web-javascript • Google Chrome 155.0.8059.81
+
+[✓] Network resources [1,077ms]
+    • All expected network resources are available.
+
+! Doctor found issues in 3 categories.

@@ -1,54 +1,55 @@
 # HRFlow mobile
 
-## Project
+Flutter employee and management client with a persistent local demonstration and a separately selected remote API adapter. The app replaces the generated counter scaffold. Current delivery: 24 October 2026.
 
-Android and iOS Flutter starter for HRFlow, package hrflow_mobile. This is the generated counter scaffold; HR features and API integration are not implemented.
+## Run
 
-This directory is an independent Git repository on main. The parent HRFlow repository ignores mobile/ in the same way it ignores web/. Commit mobile changes from this directory; no remote is configured yet.
+The pinned SDK is Flutter 3.47.7 / Dart 3.13.5; keep `pubspec.lock` with the application.
 
-## Pinned toolchain
-
-Flutter 3.47.7 stable with Dart 3.13.5, selected from FVM's latest stable release on 2026-10-23. The exact Flutter version is committed in .fvmrc. Keep pubspec.lock committed for repeatable application dependencies. The .fvm SDK cache/link is ignored; do not commit the SDK.
-
-Install FVM first. From the mobile directory, restore the pinned SDK and dependencies:
-
-```bash
+```sh
 fvm install
 fvm flutter pub get
-fvm flutter --version
-```
-
-Expect Flutter 3.47.7 and Dart 3.13.5. Use fvm flutter and fvm dart for this project; the global SDK is not changed. If a command fails, check the selected SDK with fvm list and the platform prerequisites with fvm flutter doctor -v.
-
-## Development commands
-
-Run from the mobile directory:
-
-```bash
-fvm flutter analyze
-fvm dart format --output=none --set-exit-if-changed lib test
-fvm flutter test
-fvm flutter doctor -v
-fvm flutter devices
 fvm flutter run
 ```
 
-Analysis and the starter counter widget test should pass. The final command needs an available Android device/emulator or iOS simulator/device. Android builds need the Android SDK and accepted licenses; iOS builds need Xcode and its platform tools. Device signing is not configured by this scaffold. Doctor reports machine prerequisites separately from Dart analysis/tests.
+Local mode is the default. Choose Employee, Manager, HR, or Owner from the demo sign-in screen. All identities and data are fictional. Changes survive app restart on that device; Profile → Reset demo clears them. Mobile and web do not share demo state.
 
-## IDE setup
-
-Open this directory as the Flutter project. For IntelliJ or Android Studio, select .fvm/flutter_sdk as the Flutter SDK path. The Dart SDK is inside .fvm/flutter_sdk/bin/cache/dart-sdk. Reopen the project if the IDE retains a different SDK.
-
-## Git workflow
-
-```bash
-git status
-git add lib test pubspec.yaml pubspec.lock
-git commit -m "Describe the mobile change"
+```sh
+fvm flutter run --dart-define=DATA_SOURCE=remote --dart-define=API_BASE_URL=https://hr.example.com/api/v1
 ```
 
-Review the diff before committing. Generated builds, local IDE files, SDK caches and local secrets are ignored. Root-repository commits do not save mobile changes; this repository needs its own remote/backup before collaboration.
+Use the same defines for release builds. Remote mode never falls back to synthetic data. A configured URL is sufficient only when the backend implements the documented adapter contract; no live HR API exists in this checkout.
 
-## Setup verification
+## Included experiences
 
-On 2026-10-23, Flutter analysis passed with no issues, Dart formatting required no changes, and the generated counter widget test passed (one test). Flutter Doctor found two platform-tooling gaps: Android SDK was not found and Xcode was incomplete. Android/iOS builds and device execution were not run. The global FVM selection was left unchanged.
+- Employee dashboard, clock-in/out, attendance history, inferred-record review, corrections, HR manual entries, daily calculation/finalization and reviewed geofence evidence.
+- Leave reservations and balances, half-day/cross-year requests, future approved cancellation, HR ledger adjustments, carry-over previews and conflict resolution.
+- General, material, remote-work, late-arrival and early-leave requests; drafts, edits, submission, cancellation, files, and review.
+- Manager approval inbox, team attendance, people directory and attendance exports.
+- HR/owner onboarding, invitations, lifecycle and role changes; sites, calendars, shift-policy snapshots and effective-period closure; inventory receipts and partial issues; filtered reports, export history and recovery requests.
+- Profile editing, own notification preferences/devices/delivery, Firebase registration and safe record links, dark appearance, remote password change, secure session persistence and refresh rotation.
+- Native device authentication for app unlock; Android/iOS permission configuration is included. This uses the operating system's device credentials/biometrics, not a custom application PIN.
+
+Open **Profile → All workflows** to reach feature screens. All 40 business-flow entries have documented client/operations ownership in the coverage map.
+
+English copy is implemented; the bundled Kantumruy Pro font also supports Khmer glyphs. Khmer translation is not implemented. UI follows the teal design direction in the parent `client-design/` documents and extends the unfinished mobile Figma reference.
+
+## Architecture and integration
+
+Read [architecture and cache policy](docs/ARCHITECTURE.md), [API adapter contract](docs/API-INTEGRATION.md), [workflow coverage](docs/WORKFLOW-COVERAGE.md), and [validation record](docs/VALIDATION.md).
+
+**Feature-first clean architecture:** each business module owns domain, application, data and presentation folders. `app/composition.dart` injects independent feature repositories; shared infrastructure handles transport, cache and storage. Domain models and workflow policy are independent of Flutter and storage. Application providers depend on ports; data adapters implement those ports. Riverpod composes dependencies and asynchronous state, GoRouter handles guarded navigation, encrypted Hive caches remote reads, and native secure storage holds tokens and encryption keys. Generic catalog metadata and command paths remain explicit provisional extension boundaries rather than generated OpenAPI types.
+
+## Checks
+
+```sh
+fvm dart format --output=none --set-exit-if-changed lib test
+fvm flutter analyze
+fvm flutter test
+fvm flutter build web --release
+fvm flutter doctor -v
+```
+
+The web target is a mobile-layout preview, not the Nuxt web client. Screen reference images are in `test/goldens/`. Android needs an installed SDK; iOS needs Xcode, signing and device testing. Neither platform toolchain is available on this machine, so native build/device acceptance remains open.
+
+This directory is an independent Git repository nested under the parent HRFlow repository. Review and save mobile changes here; parent commits do not include them. No commit or deployment is performed by this delivery.

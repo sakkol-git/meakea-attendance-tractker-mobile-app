@@ -1,0 +1,101 @@
+{
+  "profile": {
+    "userId": "demo-employee",
+    "employeeId": "demo-employee",
+    "tenantId": "demo-company",
+    "name": "Sok Dara",
+    "roles": ["EMPLOYEE"],
+    "locale": "en"
+  },
+  "employees": [
+    {
+      "id": "demo-employee",
+      "name": "Sok Dara",
+      "department": "Engineering",
+      "version": 1
+    },
+    {
+      "id": "demo-manager",
+      "name": "Chan Sopheak",
+      "department": "Engineering",
+      "version": 1
+    }
+  ],
+  "resources": [
+    {
+      "path": "/leave/requests",
+      "listPath": "/leave/requests/me",
+      "initialStatus": "PENDING",
+      "records": [],
+      "transitions": {
+        "approve": {
+          "from": ["PENDING"],
+          "to": "APPROVED",
+          "roles": ["MANAGER", "HR_ADMIN", "OWNER"]
+        },
+        "reject": {
+          "from": ["PENDING"],
+          "to": "REJECTED",
+          "roles": ["MANAGER", "HR_ADMIN", "OWNER"]
+        },
+        "cancel": {
+          "from": ["PENDING"],
+          "to": "CANCELLED",
+          "roles": ["EMPLOYEE", "HR_ADMIN", "OWNER"]
+        }
+      }
+    },
+    {
+      "path": "/requests",
+      "listPath": "/requests/me",
+      "initialStatus": "DRAFT",
+      "records": [],
+      "transitions": {
+        "submit": {
+          "from": ["DRAFT"],
+          "to": "PENDING",
+          "roles": ["EMPLOYEE", "HR_ADMIN", "OWNER"]
+        },
+        "approve": {
+          "from": ["PENDING"],
+          "to": "APPROVED",
+          "roles": ["MANAGER", "HR_ADMIN", "OWNER"]
+        },
+        "reject": {
+          "from": ["PENDING"],
+          "to": "REJECTED",
+          "roles": ["MANAGER", "HR_ADMIN", "OWNER"]
+        },
+        "cancel": {
+          "from": ["DRAFT", "PENDING"],
+          "to": "CANCELLED",
+          "roles": ["EMPLOYEE", "HR_ADMIN", "OWNER"]
+        },
+        "fulfill": {
+          "from": ["APPROVED"],
+          "to": "FULFILLED",
+          "roles": ["HR_ADMIN", "OWNER"]
+        }
+      }
+    },
+    {
+      "path": "/attendance/corrections",
+      "listPath": "/attendance/corrections",
+      "initialStatus": "PENDING",
+      "records": [],
+      "transitions": {
+        "approve": {
+          "from": ["PENDING"],
+          "to": "APPROVED",
+          "roles": ["MANAGER", "HR_ADMIN", "OWNER"]
+        },
+        "reject": {
+          "from": ["PENDING"],
+          "to": "REJECTED",
+          "roles": ["MANAGER", "HR_ADMIN", "OWNER"]
+        }
+      }
+    }
+  ],
+  "timezoneOffsetMinutes": 420
+}

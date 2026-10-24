@@ -1,0 +1,467 @@
+{
+  "status": "PROVISIONAL_CLIENT_REQUIREMENTS",
+  "routes": [
+    {
+      "feature": "attendance",
+      "key": "attendance.sites",
+      "method": "GET",
+      "path": "/attendance/work-sites/me",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.days",
+      "method": "GET",
+      "path": "/attendance/daily-status/me",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.team-days",
+      "method": "GET",
+      "path": "/attendance/daily-status",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.evidence",
+      "method": "GET",
+      "path": "/attendance/evidence/me",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.capture",
+      "method": "POST",
+      "path": "/attendance/evidence",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.manual",
+      "method": "POST",
+      "path": "/attendance/manual",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.manual-history",
+      "method": "GET",
+      "path": "/attendance/manual",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.review",
+      "method": "GET",
+      "path": "/attendance/reviews",
+      "versioned": false
+    },
+    {
+      "feature": "attendance",
+      "key": "attendance.finalize",
+      "method": "POST",
+      "path": "/attendance/daily-status/{id}/finalize",
+      "versioned": true
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.attendance",
+      "method": "GET",
+      "path": "/reports/attendance/summary",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.late",
+      "method": "GET",
+      "path": "/reports/attendance/late-ranking",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.leave",
+      "method": "GET",
+      "path": "/reports/leave/summary",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.balances",
+      "method": "GET",
+      "path": "/reports/leave/balances",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.requests",
+      "method": "GET",
+      "path": "/reports/requests/summary",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.exports",
+      "method": "GET",
+      "path": "/reports/exports",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.export.create",
+      "method": "POST",
+      "path": "/reports/exports",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.rebuilds",
+      "method": "GET",
+      "path": "/reports/admin/rebuilds",
+      "versioned": false
+    },
+    {
+      "feature": "reporting",
+      "key": "reporting.rebuild.start",
+      "method": "POST",
+      "path": "/reports/admin/rebuilds",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.assignments",
+      "method": "GET",
+      "path": "/shift-assignments",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.assignment.close",
+      "method": "POST",
+      "path": "/shift-assignments/{id}/close",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.company",
+      "method": "GET",
+      "path": "/tenants/current",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.setup",
+      "method": "POST",
+      "path": "/tenants",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.company.edit",
+      "method": "PATCH",
+      "path": "/tenants/current",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.people",
+      "method": "GET",
+      "path": "/employees",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.employee.create",
+      "method": "POST",
+      "path": "/employees",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.employee.edit",
+      "method": "PATCH",
+      "path": "/employees/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.employee.invite",
+      "method": "POST",
+      "path": "/employees/{id}/invite",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.employee.roles",
+      "method": "PUT",
+      "path": "/employees/{id}/roles",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.employee.terminate",
+      "method": "POST",
+      "path": "/employees/{id}/terminate",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.sites",
+      "method": "GET",
+      "path": "/work-sites",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.site.create",
+      "method": "POST",
+      "path": "/work-sites",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.site.edit",
+      "method": "PATCH",
+      "path": "/work-sites/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.site.archive",
+      "method": "DELETE",
+      "path": "/work-sites/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.shifts",
+      "method": "GET",
+      "path": "/shifts",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.shift.edit",
+      "method": "PATCH",
+      "path": "/shifts/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
+      "key": "identity.positions",
+      "method": "GET",
+      "path": "/positions",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.departments",
+      "method": "GET",
+      "path": "/departments",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.department.archive",
+      "method": "DELETE",
+      "path": "/departments/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "requests",
+      "key": "requests.types",
+      "method": "GET",
+      "path": "/requests/admin/types",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.type.create",
+      "method": "POST",
+      "path": "/requests/admin/types",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.type.edit",
+      "method": "PATCH",
+      "path": "/requests/admin/types/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "requests",
+      "key": "requests.inventory",
+      "method": "GET",
+      "path": "/materials/admin",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.stock.receive",
+      "method": "POST",
+      "path": "/materials/admin/{id}/receive",
+      "versioned": true
+    },
+    {
+      "feature": "requests",
+      "key": "requests.issues",
+      "method": "GET",
+      "path": "/materials/issues",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.chains",
+      "method": "GET",
+      "path": "/requests/admin/approval-chains",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.chain.create",
+      "method": "POST",
+      "path": "/requests/admin/approval-chains",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.chain.edit",
+      "method": "PATCH",
+      "path": "/requests/admin/approval-chains/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "requests",
+      "key": "requests.fulfillment",
+      "method": "GET",
+      "path": "/requests/approved-materials",
+      "versioned": false
+    },
+    {
+      "feature": "requests",
+      "key": "requests.issue",
+      "method": "POST",
+      "path": "/requests/{id}/fulfill",
+      "versioned": true
+    },
+    {
+      "feature": "requests",
+      "key": "requests.comment",
+      "method": "POST",
+      "path": "/requests/{id}/comments",
+      "versioned": true
+    },
+    {
+      "feature": "notifications",
+      "key": "notifications.devices",
+      "method": "GET",
+      "path": "/notifications/devices",
+      "versioned": false
+    },
+    {
+      "feature": "notifications",
+      "key": "notifications.device.register",
+      "method": "POST",
+      "path": "/notifications/devices",
+      "versioned": false
+    },
+    {
+      "feature": "notifications",
+      "key": "notifications.device.remove",
+      "method": "DELETE",
+      "path": "/notifications/devices/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "notifications",
+      "key": "notifications.delivery",
+      "method": "GET",
+      "path": "/notifications/delivery-status/me",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.balances",
+      "method": "GET",
+      "path": "/leave/admin/balances",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.ledger",
+      "method": "GET",
+      "path": "/leave/admin/ledger",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.adjust",
+      "method": "POST",
+      "path": "/leave/admin/balances/{id}/adjust",
+      "versioned": true
+    },
+    {
+      "feature": "leave",
+      "key": "leave.rollovers",
+      "method": "GET",
+      "path": "/leave/admin/year-end",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.rollover.preview",
+      "method": "POST",
+      "path": "/leave/admin/year-end/preview",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.rollover.apply",
+      "method": "POST",
+      "path": "/leave/admin/year-end",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.conflicts",
+      "method": "GET",
+      "path": "/leave/conflicts",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.conflict.resolve",
+      "method": "POST",
+      "path": "/leave/requests/{id}/resolve-conflict",
+      "versioned": true
+    },
+    {
+      "feature": "leave",
+      "key": "leave.calendar",
+      "method": "GET",
+      "path": "/leave/calendar",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.policies",
+      "method": "GET",
+      "path": "/leave/admin/types",
+      "versioned": false
+    },
+    {
+      "feature": "leave",
+      "key": "leave.policy.edit",
+      "method": "PUT",
+      "path": "/leave/admin/policies/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "operations",
+      "key": "operations.readiness",
+      "method": "GET",
+      "path": "/operations/workflow-status",
+      "versioned": false
+    }
+  ]
+}

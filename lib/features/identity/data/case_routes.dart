@@ -1,0 +1,113 @@
+import 'package:hrflow_mobile/core/data/case_repository.dart';
+
+const identityCaseRoutes = <String, CaseRoute>{
+  'identity.assignments': CaseRoute('/shift-assignments'),
+  'identity.assignment.close': CaseRoute(
+    '/shift-assignments/{id}/close',
+    method: 'POST',
+    versioned: true,
+  ),
+  'identity.company': CaseRoute(
+    '/tenants/current',
+    method: 'GET',
+    versioned: false,
+    single: true,
+  ),
+  'identity.setup': CaseRoute(
+    '/tenants',
+    method: 'POST',
+    versioned: false,
+    single: false,
+  ),
+  'identity.company.edit': CaseRoute(
+    '/tenants/current',
+    method: 'PATCH',
+    versioned: true,
+    single: false,
+  ),
+  'identity.people': CaseRoute(
+    '/employees',
+    method: 'GET',
+    versioned: false,
+    single: false,
+  ),
+  'identity.employee.create': CaseRoute(
+    '/employees',
+    method: 'POST',
+    versioned: false,
+    single: false,
+  ),
+  'identity.employee.edit': CaseRoute(
+    '/employees/{id}',
+    method: 'PATCH',
+    versioned: true,
+    single: false,
+  ),
+  'identity.employee.invite': CaseRoute(
+    '/employees/{id}/invite',
+    method: 'POST',
+    versioned: true,
+    single: false,
+  ),
+  'identity.employee.roles': CaseRoute(
+    '/employees/{id}/roles',
+    method: 'PUT',
+    versioned: true,
+    single: false,
+  ),
+  'identity.employee.terminate': CaseRoute(
+    '/employees/{id}/terminate',
+    method: 'POST',
+    versioned: true,
+    single: false,
+  ),
+  'identity.sites': CaseRoute(
+    '/work-sites',
+    method: 'GET',
+    versioned: false,
+    single: false,
+  ),
+  'identity.site.create': CaseRoute(
+    '/work-sites',
+    method: 'POST',
+    versioned: false,
+    single: false,
+  ),
+  'identity.site.edit': CaseRoute(
+    '/work-sites/{id}',
+    method: 'PATCH',
+    versioned: true,
+    single: false,
+  ),
+  'identity.site.archive': CaseRoute(
+    '/work-sites/{id}',
+    method: 'DELETE',
+    versioned: true,
+    single: false,
+  ),
+  'identity.shifts': CaseRoute(
+    '/shifts',
+    method: 'GET',
+    versioned: false,
+    single: false,
+  ),
+  'identity.shift.edit': CaseRoute(
+    '/shifts/{id}',
+    method: 'PATCH',
+    versioned: true,
+    single: false,
+  ),
+  'identity.positions': CaseRoute('/positions'),
+  'identity.departments': CaseRoute(
+    '/departments',
+    method: 'GET',
+    versioned: false,
+    single: false,
+  ),
+  'identity.department.archive': CaseRoute(
+    '/departments/{id}',
+    method: 'DELETE',
+    versioned: true,
+    single: false,
+  ),
+};
