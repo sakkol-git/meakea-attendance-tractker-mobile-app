@@ -91,6 +91,11 @@ const identityCaseRoutes = <String, CaseRoute>{
     versioned: false,
     single: false,
   ),
+  'identity.shift.create': CaseRoute(
+    '/shifts',
+    method: 'POST',
+    versioned: false,
+  ),
   'identity.shift.edit': CaseRoute(
     '/shifts/{id}',
     method: 'PATCH',
@@ -98,11 +103,23 @@ const identityCaseRoutes = <String, CaseRoute>{
     single: false,
   ),
   'identity.positions': CaseRoute('/positions'),
+  'identity.position.create': CaseRoute('/positions', method: 'POST'),
+  'identity.position.edit': CaseRoute(
+    '/positions/{id}',
+    method: 'PATCH',
+    versioned: true,
+  ),
   'identity.departments': CaseRoute(
     '/departments',
     method: 'GET',
     versioned: false,
     single: false,
+  ),
+  'identity.department.create': CaseRoute('/departments', method: 'POST'),
+  'identity.department.edit': CaseRoute(
+    '/departments/{id}',
+    method: 'PATCH',
+    versioned: true,
   ),
   'identity.department.archive': CaseRoute(
     '/departments/{id}',

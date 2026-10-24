@@ -589,6 +589,13 @@ class LocalDataSource implements DataSource {
       }
       if (r.path == path && r.method == 'POST') {
         _need(_admin, 'FORBIDDEN', 'HR access is required.', status: 403);
+        if (path == '/departments' || path == '/positions') {
+          _need(
+            body.keys.every({'name'}.contains),
+            'VALIDATION_ERROR',
+            'This catalog edit contains an unsupported field.',
+          );
+        }
         _need(
           (body['name'] as String? ?? '').trim().isNotEmpty,
           'VALIDATION_ERROR',
@@ -601,6 +608,13 @@ class LocalDataSource implements DataSource {
       }
       if (r.path.startsWith('$path/') && r.method == 'PATCH') {
         _need(_admin, 'FORBIDDEN', 'HR access is required.', status: 403);
+        if (path == '/departments' || path == '/positions') {
+          _need(
+            body.keys.every({'name'}.contains),
+            'VALIDATION_ERROR',
+            'This catalog edit contains an unsupported field.',
+          );
+        }
         final row = rows
             .where((v) => v['id'] == r.path.substring(path.length + 1))
             .firstOrNull;

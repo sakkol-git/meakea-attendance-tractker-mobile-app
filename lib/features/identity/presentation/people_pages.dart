@@ -6,6 +6,10 @@ import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
+import 'package:hrflow_mobile/shared/domain/cases.dart';
+import 'package:hrflow_mobile/shared/presentation/case_page.dart';
+
+import 'case_pages.dart';
 
 const adminPaths = {
   'departments': '/departments',
@@ -245,19 +249,33 @@ Future<void> editEntity(
   String title, {
   JsonMap? existing,
 }) async {
+  final typedPanelKey = switch (path) {
+    '/employees' => 'identity.people',
+    '/departments' => 'identity.departments',
+    '/positions' => 'identity.positions',
+    '/shifts' => 'identity.shifts',
+    _ => null,
+  };
+  if (typedPanelKey != null) {
+    final panel = identityPanels.firstWhere((p) => p.key == typedPanelKey);
+    final action = existing == null
+        ? panel.create!
+        : panel.actions.firstWhere((a) => a.key.endsWith('.edit'));
+    final record = existing == null
+        ? null
+        : CaseRecord(
+            id: existing['id'] as String,
+            title: (existing['name'] ?? title).toString(),
+            status: (existing['status'] ?? 'ACTIVE').toString(),
+            version: existing['version'] as int,
+            revision: existing['etag'] as String?,
+            values: existing,
+          );
+    await showCaseEditor(context, ref, action, record);
+    return;
+  }
   final fields = <String, String>{
     'name': 'Name',
-    if (path == '/employees') ...{
-      'email': 'Work email',
-      'department': 'Department',
-      'position': 'Position',
-      'managerId': 'Manager employee ID',
-    },
-    if (path == '/shifts') ...{
-      'startTime': 'Start time (HH:mm)',
-      'endTime': 'End time (HH:mm)',
-      'days': 'Workdays',
-    },
     if (path == '/holidays') 'date': 'Date (YYYY-MM-DD)',
     if (path == '/leave/types') 'entitled': 'Annual entitlement (days)',
     if (path == '/materials') 'unit': 'Unit',

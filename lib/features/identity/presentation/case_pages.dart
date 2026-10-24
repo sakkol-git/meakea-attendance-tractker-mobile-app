@@ -1,6 +1,37 @@
 import '../../../shared/presentation/case_page.dart';
 import '../../../shared/presentation/case_fields.dart';
 
+const shiftEditorFields = <CaseField>[
+  name,
+  CaseField('startTime', 'Start time', kind: FieldKind.time),
+  CaseField('endTime', 'End time', kind: FieldKind.time),
+  CaseField(
+    'workingDays',
+    'Working days',
+    kind: FieldKind.weekdays,
+    minimum: 1,
+    maximum: 127,
+    initial: 31,
+  ),
+  CaseField(
+    'graceMinutes',
+    'Arrival grace in minutes',
+    kind: FieldKind.integer,
+    minimum: 0,
+    maximum: 120,
+    initial: 10,
+  ),
+  CaseField(
+    'earlyToleranceMinutes',
+    'Departure tolerance in minutes',
+    kind: FieldKind.integer,
+    minimum: 0,
+    maximum: 120,
+    initial: 0,
+  ),
+  reason,
+];
+
 const identityPanels = [
   CasePanel(
     'identity.assignments',
@@ -274,40 +305,16 @@ const identityPanels = [
       'earlyToleranceMinutes': 'Departure tolerance (min)',
       'timezone': 'Timezone',
     },
+    create: CaseAction(
+      'identity.shift.create',
+      'Add shift policy',
+      fields: shiftEditorFields,
+    ),
     actions: [
       CaseAction(
         'identity.shift.edit',
         'Edit shift policy',
-        fields: [
-          name,
-          CaseField('startTime', 'Start time', kind: FieldKind.time),
-          CaseField('endTime', 'End time', kind: FieldKind.time),
-          CaseField(
-            'workingDays',
-            'Working days',
-            kind: FieldKind.weekdays,
-            minimum: 1,
-            maximum: 127,
-            initial: 31,
-          ),
-          CaseField(
-            'graceMinutes',
-            'Arrival grace in minutes',
-            kind: FieldKind.integer,
-            minimum: 0,
-            maximum: 120,
-            initial: 10,
-          ),
-          CaseField(
-            'earlyToleranceMinutes',
-            'Departure tolerance in minutes',
-            kind: FieldKind.integer,
-            minimum: 0,
-            maximum: 120,
-            initial: 0,
-          ),
-          reason,
-        ],
+        fields: shiftEditorFields,
       ),
     ],
   ),
@@ -316,7 +323,13 @@ const identityPanels = [
     'Department administration',
     'Archive unused departments while preserving employment history.',
     details: {'parentName': 'Parent department'},
+    create: CaseAction(
+      'identity.department.create',
+      'Add department',
+      fields: [name],
+    ),
     actions: [
+      CaseAction('identity.department.edit', 'Edit department', fields: [name]),
       CaseAction(
         'identity.department.archive',
         'Archive department',
@@ -330,5 +343,13 @@ const identityPanels = [
     'identity.positions',
     'Position catalog',
     'Available positions for onboarding and employee changes.',
+    create: CaseAction(
+      'identity.position.create',
+      'Add position',
+      fields: [name],
+    ),
+    actions: [
+      CaseAction('identity.position.edit', 'Edit position', fields: [name]),
+    ],
   ),
 ];

@@ -99,24 +99,32 @@ Future<ProviderContainer> _app(
 }
 
 void main() {
-  test('acceptance F01 employee edit persists the selected department and position', () async {
+  test('acceptance F01 employee edit persists selected department and position IDs', () async {
     final c = _client();
     addTearDown(c.close);
     await c.demoLogin('HR_ADMIN');
     final repo = IdentityDataRepository(c);
     final before = (await repo.collection('/employees'))
         .firstWhere((r) => r['id'] == 'demo-employee');
-    await repo.saveEntity('/employees', {
-      'name': before['name'],
-      'email': before['email'],
-      'department': 'Audit changed department',
-      'position': 'Audit changed position',
-      'managerId': before['managerId'] ?? '',
-    }, existing: before);
+    await repo.changeCase(
+      'identity.employee.edit',
+      'demo-employee',
+      {
+        'name': before['name'],
+        'email': before['email'],
+        'departmentId': 'people',
+        'positionId': 'designer',
+        'managerId': before['managerId'],
+      },
+      key: commandKey(),
+      etag: '"${before['version']}"',
+    );
     final stored = (await repo.collection('/employees'))
         .firstWhere((r) => r['id'] == 'demo-employee');
-    expect(stored['department'], 'Audit changed department');
-    expect(stored['position'], 'Audit changed position');
+    expect(stored['departmentId'], 'people');
+    expect(stored['positionId'], 'designer');
+    expect(stored['department'], 'People & Culture');
+    expect(stored['position'], 'Product designer');
   });
 
   test('acceptance F01 shift edit persists weekend workdays', () async {
@@ -125,15 +133,151 @@ void main() {
     await c.demoLogin('HR_ADMIN');
     final repo = IdentityDataRepository(c);
     final before = (await repo.collection('/shifts')).first;
-    await repo.saveEntity('/shifts', {
-      'name': before['name'],
-      'startTime': before['startTime'],
-      'endTime': before['endTime'],
-      'days': 'Sat, Sun',
-    }, existing: before);
+    await repo.changeCase(
+      'identity.shift.edit',
+      before['id'] as String,
+      {
+        'name': before['name'],
+        'startTime': before['startTime'],
+        'endTime': before['endTime'],
+        'workingDays': 96,
+        'graceMinutes': 10,
+        'earlyToleranceMinutes': 0,
+        'reason': 'Weekend coverage',
+      },
+      key: commandKey(),
+      etag: '"${before['version']}"',
+    );
     final stored = (await repo.collection('/shifts'))
         .firstWhere((r) => r['id'] == before['id']);
     expect(stored['days'], 'Sat, Sun');
+    expect(stored['workingDays'], 96);
+    final assignment = await repo.assignShift(
+      'demo-employee',
+      'shift-standard',
+      '2026-11-01',
+      null,
+      commandKey(),
+    );
+    expect(assignment.shiftId, 'shift-standard');
+    final assigned = (await repo.collection('/employees/demo-employee/shifts'))
+        .first;
+    expect((assigned['shiftSnapshot'] as Map)['workingDays'], 96);
+  });
+
+  test('acceptance F01 unknown employee edit field fails instead of claiming success', () async {
+    final c = _client();
+    addTearDown(c.close);
+    await c.demoLogin('HR_ADMIN');
+    final repo = IdentityDataRepository(c);
+    final before = (await repo.collection('/employees'))
+        .firstWhere((r) => r['id'] == 'demo-employee');
+    await expectLater(
+      repo.saveEntity('/employees', {
+        'unknownEditorField': 'ignored',
+      }, existing: before),
+      throwsA(
+        isA<DataFailure>().having((e) => e.code, 'code', 'VALIDATION_ERROR'),
+      ),
+    );
+  });
+
+  testWidgets(
+    'acceptance F01 directory edit uses typed lookups and reloads saved IDs',
+    (tester) async {
+      final c = _client();
+      final container = await _app(tester, c);
+      await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+      container.read(routerProvider).go('/directory');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sok Dara').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Edit employee'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byType(DropdownButtonFormField<String>),
+        findsAtLeastNWidgets(2),
+      );
+      await tester.tap(find.byType(DropdownButtonFormField<String>).at(0));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('People & Culture').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<String>).at(1));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Product designer').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Review changes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+      final stored = (await IdentityDataRepository(c).collection('/employees'))
+          .firstWhere((r) => r['id'] == 'demo-employee');
+      expect(stored['departmentId'], 'people');
+      expect(stored['positionId'], 'designer');
+    },
+  );
+
+  testWidgets(
+    'acceptance F01 shift rules edit saves weekend chips through the shared editor',
+    (tester) async {
+      final c = _client();
+      final container = await _app(tester, c);
+      await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+      container.read(routerProvider).go('/manage/shifts');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Standard workday'));
+      await tester.pumpAndSettle();
+      expect(find.text('Working days'), findsOneWidget);
+      for (final day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
+        await tester.tap(find.widgetWithText(FilterChip, day));
+        await tester.pumpAndSettle();
+      }
+      await tester.enterText(
+        find.byType(TextFormField).last,
+        'Weekend coverage',
+      );
+      await tester.tap(find.text('Review changes'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Confirm'));
+      await tester.pumpAndSettle();
+      final stored = (await IdentityDataRepository(c).collection('/shifts'))
+          .firstWhere((r) => r['id'] == 'shift-standard');
+      expect(stored['workingDays'], 96);
+      expect(stored['days'], 'Sat, Sun');
+    },
+  );
+
+  test('acceptance F01 department and position typed editors persist exact catalog values', () async {
+    final c = _client();
+    addTearDown(c.close);
+    await c.demoLogin('HR_ADMIN');
+    final repo = IdentityDataRepository(c);
+    for (final spec in [
+      ('identity.department', '/departments', 'Field Operations'),
+      ('identity.position', '/positions', 'Field Supervisor'),
+    ]) {
+      final created = await repo.changeCase('${spec.$1}.create', null, {
+        'name': spec.$3,
+      }, key: commandKey());
+      final id = created['id'] as String;
+      await repo.changeCase(
+        '${spec.$1}.edit',
+        id,
+        {'name': '${spec.$3} II'},
+        key: commandKey(),
+        etag: '"1"',
+      );
+      final stored = (await repo.collection(spec.$2))
+          .firstWhere((r) => r['id'] == id);
+      expect(stored['name'], '${spec.$3} II');
+      expect(stored['version'], 2);
+      await expectLater(
+        repo.saveEntity(spec.$2, {'ignored': 'field'}, existing: stored),
+        throwsA(
+          isA<DataFailure>().having((e) => e.code, 'code', 'VALIDATION_ERROR'),
+        ),
+      );
+    }
   });
 
   testWidgets('acceptance F02 search finds a request beyond the first page', (

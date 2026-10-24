@@ -57,6 +57,21 @@ extension IdentityCasesDemo on LocalDataSource {
     if ((r.path == '/shifts' && r.method == 'POST') ||
         (RegExp(r'^/shifts/[^/]+$').hasMatch(r.path) && r.method == 'PATCH')) {
       _need(_admin, 'FORBIDDEN', 'HR access is required.', status: 403);
+      _need(
+        body.keys.every(
+          {
+            'name',
+            'startTime',
+            'endTime',
+            'workingDays',
+            'graceMinutes',
+            'earlyToleranceMinutes',
+            'reason',
+          }.contains,
+        ),
+        'VALIDATION_ERROR',
+        'The shift edit contains an unsupported field.',
+      );
       final row = r.method == 'POST'
           ? <String, dynamic>{'id': _id(), 'version': 0}
           : _find('/shifts', r.path.split('/').last);
@@ -95,6 +110,7 @@ extension IdentityCasesDemo on LocalDataSource {
         'graceMinutes': grace,
         'earlyToleranceMinutes': early,
         'timezone': 'Asia/Phnom_Penh',
+        if (body['reason'] != null) 'lastChangeReason': body['reason'],
         'days': [
           for (var i = 0; i < 7; i++)
             if ((days & (1 << i)) != 0)
@@ -262,6 +278,21 @@ extension IdentityCasesDemo on LocalDataSource {
       }
       if (r.method == 'PATCH' && action == null) {
         _version(r, row);
+        _need(
+          body.keys.every(
+            {
+              'name',
+              'email',
+              'employeeNo',
+              'departmentId',
+              'positionId',
+              'managerId',
+              'hireDate',
+            }.contains,
+          ),
+          'VALIDATION_ERROR',
+          'The employee edit contains an unsupported field.',
+        );
         _validatePerson(body, id);
         for (final field in [
           'name',
