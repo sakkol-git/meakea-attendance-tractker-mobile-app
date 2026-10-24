@@ -1,6 +1,8 @@
 import '../../../shared/presentation/case_page.dart';
 import '../../../shared/domain/cases.dart';
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -88,10 +90,23 @@ class WorkflowListPage extends ConsumerStatefulWidget {
 
 class _WorkflowListState extends ConsumerState<WorkflowListPage> {
   String filter = 'All', search = '';
+  Timer? searchDebounce;
+  @override
+  void dispose() {
+    searchDebounce?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final leave = widget.kind == 'leave';
-    final provider = recordsProvider(widget.kind);
+    final provider = recordsProvider(
+      recordQuery(
+        widget.kind,
+        search: search,
+        status: filter == 'All' ? '' : filter.toUpperCase(),
+      ),
+    );
     return AppPage(
       title: leave ? 'Time off' : 'Requests',
       subtitle: leave
@@ -181,7 +196,12 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
             hintText: 'Search requests',
             prefixIcon: Icon(Icons.search),
           ),
-          onChanged: (v) => setState(() => search = v),
+          onChanged: (v) {
+            searchDebounce?.cancel();
+            searchDebounce = Timer(const Duration(milliseconds: 300), () {
+              if (mounted) setState(() => search = v.trim());
+            });
+          },
         ),
         const SizedBox(height: 12),
         SingleChildScrollView(
@@ -207,20 +227,15 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
         AsyncPanel(
           value: ref.watch(provider),
           retry: () => ref.invalidate(provider),
-          builder: (all) {
-            final rows = all
-                .where(
-                  (r) =>
-                      (search.isEmpty ||
-                          '${r.title} ${r.reason}'.toLowerCase().contains(
-                            search.toLowerCase(),
-                          )) &&
-                      (filter == 'All' ||
-                          filter == 'Closed' && r.terminal ||
-                          r.status == filter.toUpperCase()),
-                )
-                .toList();
+          builder: (rows) {
+            final controller = ref.read(provider.notifier);
             if (rows.isEmpty) {
+              if (controller.canLoadMore) {
+                return BusyButton(
+                  label: 'Load more requests',
+                  action: controller.loadMore,
+                );
+              }
               return EmptyState(
                 title: 'Nothing here yet',
                 description: search.isNotEmpty || filter != 'All'
@@ -239,11 +254,15 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
             }
             return Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text('${controller.total} results'),
+                ),
                 ...rows.map(WorkflowTile.new),
-                if (ref.read(provider.notifier).canLoadMore)
+                if (controller.canLoadMore)
                   BusyButton(
                     label: 'Load more requests',
-                    action: () => ref.read(provider.notifier).loadMore(),
+                    action: controller.loadMore,
                   ),
               ],
             );
@@ -260,52 +279,86 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
   }
 }
 
-class ApprovalPage extends ConsumerWidget {
+class ApprovalPage extends ConsumerStatefulWidget {
   const ApprovalPage({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => AppPage(
-    title: 'Team approvals',
-    subtitle: 'Thoughtful decisions keep your team moving.',
-    onRefresh: () async {
-      ref.invalidate(approvalProvider);
-      await ref.read(approvalProvider.future);
-    },
-    children: [
-      AsyncPanel(
-        value: ref.watch(approvalProvider),
-        retry: () => ref.invalidate(approvalProvider),
-        builder: (rows) => rows.isEmpty
-            ? const EmptyState(
-                title: 'You’re all caught up',
-                description: 'New team requests will appear here.',
-                icon: Icons.task_alt,
-              )
-            : Column(
-                children: [
-                  for (final row in rows)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 4, bottom: 6),
-                          child: Text(
-                            row.employeeName,
-                            style: const TextStyle(color: Palette.muted),
-                          ),
-                        ),
-                        WorkflowTile(row),
-                      ],
-                    ),
-                ],
-              ),
-      ),
-      if (ref.read(approvalProvider.notifier).canLoadMore)
-        BusyButton(
-          label: 'Load more approvals',
-          action: () => ref.read(approvalProvider.notifier).loadMore(),
+  ConsumerState<ApprovalPage> createState() => _ApprovalPageState();
+}
+
+class _ApprovalPageState extends ConsumerState<ApprovalPage> {
+  String search = '';
+  Timer? searchDebounce;
+  @override
+  void dispose() {
+    searchDebounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = recordsProvider(
+      recordQuery('approvals', search: search, sort: 'oldest'),
+    );
+    return AppPage(
+      title: 'Team approvals',
+      subtitle: 'Thoughtful decisions keep your team moving.',
+      onRefresh: () async {
+        ref.invalidate(provider);
+        await ref.read(provider.future);
+      },
+      children: [
+        TextField(
+          decoration: const InputDecoration(
+            hintText: 'Search approvals',
+            prefixIcon: Icon(Icons.search),
+          ),
+          onChanged: (value) {
+            searchDebounce?.cancel();
+            searchDebounce = Timer(const Duration(milliseconds: 300), () {
+              if (mounted) setState(() => search = value.trim());
+            });
+          },
         ),
-    ],
-  );
+        const SizedBox(height: 16),
+        AsyncPanel(
+          value: ref.watch(provider),
+          retry: () => ref.invalidate(provider),
+          builder: (rows) => rows.isEmpty
+              ? ref.read(provider.notifier).canLoadMore
+                    ? const SizedBox.shrink()
+                    : const EmptyState(
+                        title: 'You’re all caught up',
+                        description: 'New team requests will appear here.',
+                        icon: Icons.task_alt,
+                      )
+              : Column(
+                  children: [
+                    Text('${ref.read(provider.notifier).total} results'),
+                    for (final row in rows)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4, bottom: 6),
+                            child: Text(
+                              row.employeeName,
+                              style: const TextStyle(color: Palette.muted),
+                            ),
+                          ),
+                          WorkflowTile(row),
+                        ],
+                      ),
+                  ],
+                ),
+        ),
+        if (ref.read(provider.notifier).canLoadMore)
+          BusyButton(
+            label: 'Load more approvals',
+            action: () => ref.read(provider.notifier).loadMore(),
+          ),
+      ],
+    );
+  }
 }
 
 class RecordDetailPage extends ConsumerStatefulWidget {

@@ -37,7 +37,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
     ],
     onRefresh: () async {
       ref.invalidate(sessionsProvider);
-      ref.invalidate(recordsProvider('correction'));
+      ref.invalidate(recordsProvider(recordQuery('correction')));
       await ref.read(sessionsProvider.future);
     },
     children: [
@@ -62,8 +62,9 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         ),
       if (corrections)
         AsyncPanel(
-          value: ref.watch(recordsProvider('correction')),
-          retry: () => ref.invalidate(recordsProvider('correction')),
+          value: ref.watch(recordsProvider(recordQuery('correction'))),
+          retry: () =>
+              ref.invalidate(recordsProvider(recordQuery('correction'))),
           builder: (rows) => rows.isEmpty
               ? EmptyState(
                   title: 'No corrections',
@@ -78,12 +79,17 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                   children: [
                     ...rows.map(WorkflowTile.new),
                     if (ref
-                        .read(recordsProvider('correction').notifier)
+                        .read(
+                          recordsProvider(recordQuery('correction')).notifier,
+                        )
                         .canLoadMore)
                       BusyButton(
                         label: 'Load more corrections',
                         action: () => ref
-                            .read(recordsProvider('correction').notifier)
+                            .read(
+                              recordsProvider(recordQuery('correction'))
+                                  .notifier,
+                            )
                             .loadMore(),
                       ),
                   ],

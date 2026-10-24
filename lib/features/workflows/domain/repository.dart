@@ -10,6 +10,9 @@ abstract interface class WorkflowRepository
     bool pending = false,
     int page = 0,
     int size = 25,
+    String search = '',
+    String status = '',
+    String sort = '',
   });
   Future<List<WorkflowRecord>> records(String kind, {bool pending = false});
   Future<WorkflowRecord> detail(String kind, String id);

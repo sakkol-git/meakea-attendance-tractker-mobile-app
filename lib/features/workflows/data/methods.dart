@@ -32,6 +32,9 @@ mixin WorkflowsMethods on ResourceRepository {
     bool pending = false,
     int page = 0,
     int size = 25,
+    String search = '',
+    String status = '',
+    String sort = '',
   }) async {
     final path =
         pathFor(kind) +
@@ -41,7 +44,17 @@ mixin WorkflowsMethods on ResourceRepository {
             ? ''
             : '/me');
     final result = await client.request(
-      DataRequest('GET', path, query: {'page': '$page', 'size': '$size'}),
+      DataRequest(
+        'GET',
+        path,
+        query: {
+          'page': '$page',
+          'size': '$size',
+          if (search.isNotEmpty) 'search': search,
+          if (status.isNotEmpty) 'status': status,
+          if (sort.isNotEmpty) 'sort': sort,
+        },
+      ),
     );
     final data = object(result.data), rows = items(result.data);
     final total = data['total'];

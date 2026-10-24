@@ -26,6 +26,8 @@ Responses may be 200/201/202 with JSON or 204 without a body. HTTP redirects are
 
 Collections must return `{ "items": [...], "total": 123 }`, with non-negative integer total. Requests include zero-based `page` and `size`. Workflow pages use size 25; supporting collections use 100. The server must honor stable ordering and pagination. Incomplete/empty pages before total are errors. Catalog fetches stop at 10,000 records with an explicit error.
 
+Searchable workflow lists (`/requests/me`, `/leave/requests/me` and the three `/pending` approval queues) now send optional `search`, `status` and `sort` query parameters. People directory and feature administration lists send `search` with `page` and `size`. The backend must apply search/filter/sort **before** pagination and return the filtered `total`; changing a query resets the client to page zero. `status=CLOSED` is a grouped filter for `REJECTED`, `CANCELLED`, `FULFILLED` and `CLOSED` records. `sort=oldest` or `newest` orders by `createdAt` with a stable ID tie-breaker. Empty results must mean the complete filtered set is empty, not merely that the current page lacked matches. These semantics need an accepted OpenAPI definition and live acceptance before remote rollout.
+
 IDs are opaque nonempty strings that must fit the current safe path alphabet (lowercase ASCII letters, digits, hyphens). Timestamp values are parseable ISO-8601 strings; UTC `Z` is recommended. Date-only fields use `YYYY-MM-DD`. Versions are integers; amounts are finite JSON numbers, not numeric strings.
 
 Profile:

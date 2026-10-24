@@ -16,6 +16,8 @@ import 'package:hrflow_mobile/features/identity/data/session_client.dart';
 import 'package:hrflow_mobile/features/leave/domain/models.dart';
 import 'package:hrflow_mobile/features/requests/data/repository.dart';
 import 'package:hrflow_mobile/features/settings/domain/preferences_gateway.dart';
+import 'package:hrflow_mobile/features/workflows/presentation/workflow_pages.dart';
+import 'package:hrflow_mobile/shared/domain/cases.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 
 // Red tests: each assertion states the required behavior, never the known defect.
@@ -30,6 +32,8 @@ class _Preferences implements PreferencesGateway {
 
 class _PagedRequests extends RequestsDataRepository {
   int reads = 0;
+  String lastSearch = '', lastStatus = '';
+  int lastPage = 0;
   _PagedRequests(super.client);
 
   @override
@@ -38,8 +42,54 @@ class _PagedRequests extends RequestsDataRepository {
     bool pending = false,
     int page = 0,
     int size = 25,
+    String search = '',
+    String status = '',
+    String sort = '',
   }) async {
     reads++;
+    lastSearch = search;
+    lastStatus = status;
+    lastPage = page;
+    if (search.toLowerCase() == 'special laptop') {
+      return RecordPage(
+        [
+          WorkflowRecord(
+            id: 'acceptance-25',
+            employeeId: 'demo-employee',
+            title: 'Special laptop',
+            status: 'DRAFT',
+            reason: 'Equipment',
+            kind: 'request',
+            version: 1,
+            fields: const {},
+            employeeName: 'Sok Dara',
+          ),
+        ],
+        1,
+        page,
+        size,
+      );
+    }
+    if (status == 'APPROVED') {
+      return RecordPage(
+        [
+          WorkflowRecord(
+            id: 'acceptance-approved',
+            employeeId: 'demo-employee',
+            title: 'Approved conference',
+            status: 'APPROVED',
+            reason: 'Business event',
+            kind: 'request',
+            version: 1,
+            fields: const {},
+            employeeName: 'Sok Dara',
+          ),
+        ],
+        1,
+        page,
+        size,
+      );
+    }
     return RecordPage(
       List.generate(
         page == 0 ? 25 : 1,
@@ -60,6 +110,66 @@ class _PagedRequests extends RequestsDataRepository {
       size,
     );
   }
+}
+
+class _PagedPeople extends IdentityDataRepository {
+  String lastSearch = '';
+  _PagedPeople(super.client);
+
+  @override
+  Future<List<CaseRecord>> cases(
+    String collection, {
+    Map<String, String> filters = const {},
+  }) async {
+    if (collection != 'identity.people') {
+      return super.cases(collection, filters: filters);
+    }
+    lastSearch = filters['search'] ?? '';
+    final page = int.parse(filters['page'] ?? '0');
+    if (lastSearch == 'Special Person') {
+      return [
+        const CaseRecord(
+          id: 'special-person',
+          title: 'Special Person',
+          status: 'ACTIVE',
+          version: 1,
+          values: {
+            'id': 'special-person',
+            'name': 'Special Person',
+            'version': 1,
+          },
+        ),
+      ];
+    }
+    return List.generate(
+      page == 0 ? 25 : 1,
+      (i) => CaseRecord(
+        id: 'person-${page * 25 + i}',
+        title: 'Routine Person $i',
+        status: 'ACTIVE',
+        version: 1,
+        values: {
+          'id': 'person-${page * 25 + i}',
+          'name': 'Routine Person $i',
+          'version': 1,
+        },
+      ),
+    );
+  }
+}
+
+class _QueryServer implements DataSource {
+  @override
+  String get mode => 'remote';
+  DataRequest? last;
+  @override
+  Future<DataResponse> send(DataRequest request) async {
+    last = request;
+    return DataResponse(200, {'items': <Map<String, dynamic>>[], 'total': 0});
+  }
+
+  @override
+  void close() {}
 }
 
 ClientData _client() => ClientData.forTest(
@@ -298,15 +408,113 @@ void main() {
     container.read(routerProvider).go('/requests');
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, 'Special laptop');
+    await tester.pump(const Duration(milliseconds: 350));
     await tester.pumpAndSettle();
     expect(find.text('Nothing here yet'), findsNothing);
-    expect(find.text('Special laptop'), findsOneWidget);
+    expect(find.widgetWithText(WorkflowTile, 'Special laptop'), findsOneWidget);
+    expect(repo.lastSearch, 'Special laptop');
     expect(
       repo.reads,
       greaterThan(1),
       reason: 'Search must query beyond the first page.',
     );
   });
+
+  testWidgets(
+    'acceptance F02 status filter resets paging and queries the full dataset',
+    (tester) async {
+      final c = _client();
+      final repo = _PagedRequests(c);
+      final container = await _app(
+        tester,
+        c,
+        additional: [requestsRepositoryProvider.overrideWithValue(repo)],
+      );
+      await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+      container.read(routerProvider).go('/requests');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Approved').first);
+      await tester.pumpAndSettle();
+      expect(repo.lastStatus, 'APPROVED');
+      expect(repo.lastPage, 0);
+      expect(
+        find.widgetWithText(WorkflowTile, 'Approved conference'),
+        findsOneWidget,
+      );
+      expect(find.text('Nothing here yet'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'acceptance F02 directory search queries beyond the loaded people',
+    (tester) async {
+      final c = _client();
+      final repo = _PagedPeople(c);
+      final container = await _app(
+        tester,
+        c,
+        additional: [identityRepositoryProvider.overrideWithValue(repo)],
+      );
+      await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+      container.read(routerProvider).go('/directory');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Special Person');
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      expect(repo.lastSearch, 'Special Person');
+      expect(find.text('Special Person'), findsWidgets);
+      expect(find.text('No matches'), findsNothing);
+    },
+  );
+
+  test(
+    'acceptance F02 remote adapter sends server-side query before paging',
+    () async {
+      final server = _QueryServer();
+      final client = ClientData.forTest(server);
+      addTearDown(client.close);
+      await RequestsDataRepository(client).recordsPage(
+        'request',
+        page: 2,
+        size: 25,
+        search: 'laptop',
+        status: 'APPROVED',
+        sort: 'oldest',
+      );
+      expect(server.last?.path, '/requests/me');
+      expect(server.last?.query, {
+        'page': '2',
+        'size': '25',
+        'search': 'laptop',
+        'status': 'APPROVED',
+        'sort': 'oldest',
+      });
+    },
+  );
+
+  testWidgets(
+    'acceptance F02 approval search sends the query to its repositories',
+    (tester) async {
+      final c = _client();
+      final repo = _PagedRequests(c);
+      final container = await _app(
+        tester,
+        c,
+        additional: [requestsRepositoryProvider.overrideWithValue(repo)],
+      );
+      await container.read(sessionProvider.notifier).demo('MANAGER');
+      container.read(routerProvider).go('/approvals');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, 'Special laptop');
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      expect(repo.lastSearch, 'Special laptop');
+      expect(
+        find.widgetWithText(WorkflowTile, 'Special laptop'),
+        findsOneWidget,
+      );
+    },
+  );
 
   test('acceptance F03 dark functional text meets 4.5 contrast', () {
     final theme = appTheme(dark: true);

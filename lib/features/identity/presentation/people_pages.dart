@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:hrflow_mobile/app/providers.dart';
+import 'package:hrflow_mobile/app/cases.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
@@ -36,9 +40,22 @@ class DirectoryPage extends ConsumerStatefulWidget {
 
 class _DirectoryState extends ConsumerState<DirectoryPage> {
   String search = '';
+  Timer? searchDebounce;
+  @override
+  void dispose() {
+    searchDebounce?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final admin = ref.watch(sessionProvider).profile!.administers;
+    final provider = caseRowsProvider((
+      collection: 'identity.people',
+      search: search,
+      from: '',
+      to: '',
+    ));
     return AppPage(
       title: 'People directory',
       subtitle: 'Good work starts with people.',
@@ -58,16 +75,18 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
             hintText: 'Search people or departments',
             prefixIcon: Icon(Icons.search),
           ),
-          onChanged: (v) => setState(() => search = v.toLowerCase()),
+          onChanged: (v) {
+            searchDebounce?.cancel();
+            searchDebounce = Timer(const Duration(milliseconds: 300), () {
+              if (mounted) setState(() => search = v.trim());
+            });
+          },
         ),
         const SizedBox(height: 20),
         AsyncPanel(
-          value: ref.watch(collectionProvider('/employees')),
-          retry: () => ref.invalidate(collectionProvider('/employees')),
-          builder: (all) {
-            final people = all
-                .where((p) => p.values.join(' ').toLowerCase().contains(search))
-                .toList();
+          value: ref.watch(provider),
+          retry: () => ref.invalidate(provider),
+          builder: (people) {
             if (people.isEmpty) {
               return const EmptyState(
                 title: 'No matches',
@@ -76,35 +95,45 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
               );
             }
             return Column(
-              children: people
-                  .map(
-                    (p) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Card(
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          leading: CircleAvatar(
-                            backgroundColor: Palette.tint,
-                            child: Text(
-                              ('${(p['name'] as String? ?? p['fullName'] as String? ?? '').trim()}?')
-                                  .substring(0, 1),
-                            ),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text('${people.length} shown'),
+                ),
+                ...people.map((record) {
+                  final p = record.values;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Card(
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: CircleAvatar(
+                          backgroundColor: Palette.tint,
+                          child: Text(
+                            ('${(p['name'] as String? ?? p['fullName'] as String? ?? '').trim()}?')
+                                .substring(0, 1),
                           ),
-                          title: Text(
-                            p['name'] as String? ??
-                                p['fullName'] as String? ??
-                                'Employee',
-                          ),
-                          subtitle: Text(
-                            '${p['position'] ?? ''} · ${p['department'] ?? ''}',
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () => showPerson(context, p, admin),
                         ),
+                        title: Text(
+                          p['name'] as String? ??
+                              p['fullName'] as String? ??
+                              'Employee',
+                        ),
+                        subtitle: Text(
+                          '${p['position'] ?? ''} · ${p['department'] ?? ''}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => showPerson(context, p, admin),
                       ),
                     ),
-                  )
-                  .toList(),
+                  );
+                }),
+                if (ref.read(provider.notifier).more)
+                  BusyButton(
+                    label: 'Load more people',
+                    action: () => ref.read(provider.notifier).loadMore(),
+                  ),
+              ],
             );
           },
         ),

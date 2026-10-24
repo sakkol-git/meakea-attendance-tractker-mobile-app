@@ -15,7 +15,7 @@ Run the focused suite with `fvm flutter test --name acceptance`. The red tests a
 | 07 | Screen readers | A person completes ten key journeys with TalkBack and VoiceOver and records spoken output. | Unverified; Human-gated | Manual script and signed runs pending. |
 | 08 | Touch targets/input | Every interactive target is at least 48×48 dp and keyboard focus is visible, ordered and operable. | Partial | Target/focus audit pending. |
 | 09 | Role information architecture | Employee, manager, HR and owner each reach their top task in at most two actions. | Partial | Per-role navigation study pending. |
-| 10 | Search/pagination | A search or filter finds matching records on later pages without falsely displaying an empty state. | Fail; Red | `acceptance F02 search finds a request beyond the first page`. |
+| 10 | Search/pagination | A search or filter finds matching records on later pages without falsely displaying an empty state. | Pass-evidenced for client/demo; live API gate remains | Five `acceptance F02` tests cover later-page requests, status reset, directory search, approval search and remote query parameters. |
 | 11 | Context preservation | Unsaved edits require a discard decision; permitted drafts survive the agreed interruption scenarios. | Partial; Red | `acceptance F10 dirty admin dialog asks before discard`; storage policy pending. |
 | 12 | Form usability | Every form gives required/optional guidance, appropriate pickers, and an accurate review before submit. | Partial | Form-route inventory and scenarios pending. |
 | 13 | Workflow correctness | Every exposed editor reloads exactly the values saved, including IDs and shift weekdays. | Partial; F01 evidenced | `acceptance F01` tests: typed employee IDs, weekend shift and downstream assignment, directory/shift-rule entry points, department/position catalogs, and unknown-field rejection. Other workflow editors remain to be accepted. |
@@ -61,5 +61,17 @@ The Directory, People administration, Shift rules, Shift policies, Departments a
 | `fvm flutter test test/acceptance/enterprise_regressions_test.dart --plain-name 'acceptance F01' --reporter expanded` | **6 passed**. |
 | `fvm flutter test test/*_test.dart --reporter expanded` | **72 passed**, 0 failed. |
 | `fvm flutter test --name acceptance --reporter expanded` | **7 passed, 7 expected failures** in later prompts. |
+| `fvm flutter analyze` | **No issues found**. |
+| `fvm flutter build web --release` | **Built `build/web`**. |
+
+## P1-B verification, 24 October 2026
+
+Requests, leave, directory and approvals now query the repository with debounced search before paging. Status filtering is server-side for request/leave lists; query changes create a fresh page-zero controller. The local adapter filters before pagination; the remote adapter sends optional `search`, `status` and `sort`. List empty states are withheld while further pages remain. The displayed count is the filtered total for workflow lists and the loaded count for directory.
+
+| Command | Observed result |
+| --- | --- |
+| `fvm flutter test test/acceptance/enterprise_regressions_test.dart --plain-name 'acceptance F02' --reporter expanded` | **5 passed**. |
+| `fvm flutter test test/*_test.dart --reporter expanded` | **72 passed**, 0 failed. |
+| `fvm flutter test --name acceptance --reporter expanded` | **12 passed, 6 expected failures** in later prompts. |
 | `fvm flutter analyze` | **No issues found**. |
 | `fvm flutter build web --release` | **Built `build/web`**. |

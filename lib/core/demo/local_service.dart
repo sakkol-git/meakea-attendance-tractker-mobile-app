@@ -439,13 +439,33 @@ class LocalDataSource implements DataSource {
   DataResponse _page(Iterable<JsonMap> values, DataRequest r) {
     var list = values.toList();
     if (r.query['status'] != null) {
-      list = list.where((v) => v['status'] == r.query['status']).toList();
+      final requested = r.query['status'];
+      list = list
+          .where(
+            (v) => requested == 'CLOSED'
+                ? {
+                    'REJECTED',
+                    'CANCELLED',
+                    'FULFILLED',
+                    'CLOSED',
+                  }.contains(v['status'])
+                : v['status'] == requested,
+          )
+          .toList();
     }
     if (r.query['search'] != null) {
       final q = r.query['search']!.toLowerCase();
       list = list
           .where((v) => v.values.join(' ').toLowerCase().contains(q))
           .toList();
+    }
+    if (r.query['sort'] == 'oldest' || r.query['sort'] == 'newest') {
+      final oldest = r.query['sort'] == 'oldest';
+      list.sort((a, b) {
+        final left = (a['createdAt'] ?? '').toString();
+        final right = (b['createdAt'] ?? '').toString();
+        return oldest ? left.compareTo(right) : right.compareTo(left);
+      });
     }
     for (final bound in ['from', 'to']) {
       final date = r.query[bound];
