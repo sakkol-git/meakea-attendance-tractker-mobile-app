@@ -16,6 +16,7 @@ abstract interface class WorkflowRepository
     String search = '',
     String status = '',
     String sort = '',
+    int minAgeDays = 0,
   });
   Future<List<WorkflowRecord>> records(String kind, {bool pending = false});
   Future<WorkflowRecord> detail(String kind, String id);

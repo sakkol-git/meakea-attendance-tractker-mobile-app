@@ -18,7 +18,8 @@ abstract final class WorkflowPolicy {
           actor.manages &&
           record.status == 'PENDING' &&
           (record.fields['currentApproverId'] == null ||
-              record.fields['currentApproverId'] == actor.id) &&
+              record.fields['currentApproverId'] == actor.id ||
+              record.fields['delegatedApproverId'] == actor.id) &&
           (record.fields['approvalStage'] != 'HR' || actor.administers)) ...{
         'approve',
         'reject',

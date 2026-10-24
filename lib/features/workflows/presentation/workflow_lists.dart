@@ -10,12 +10,21 @@ import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/leave_quantity.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 
+import 'approval_position.dart';
+
 class WorkflowTile extends StatelessWidget {
   final WorkflowRecord record;
-  const WorkflowTile(this.record, {super.key});
+  final DateTime? now;
+  final VoidCallback? onOpen;
+  const WorkflowTile(this.record, {super.key, this.now, this.onOpen});
   @override
   Widget build(BuildContext context) {
     final r = record;
+    final created = DateTime.tryParse('${r.fields['createdAt'] ?? ''}');
+    final waitingDays = now == null || created == null
+        ? null
+        : now!.difference(created).inDays.clamp(0, 999);
+    final exceptions = r.fields['policyExceptions'] as List? ?? const [];
     final dates = r.fields['startDate'] != null
         ? '${shortDate(r.fields['startDate'])} – ${shortDate(r.fields['endDate'])}'
         : r.fields['workDate'] != null
@@ -26,7 +35,7 @@ class WorkflowTile extends StatelessWidget {
       child: Card(
         child: InkWell(
           borderRadius: BorderRadius.circular(18),
-          onTap: () => context.push('/record/${r.kind}/${r.id}'),
+          onTap: onOpen ?? () => context.push('/record/${r.kind}/${r.id}'),
           child: Padding(
             padding: const EdgeInsets.all(18),
             child: Column(
@@ -60,6 +69,13 @@ class WorkflowTile extends StatelessWidget {
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     StatusPill(r.status),
+                    if (waitingDays != null && r.status == 'PENDING')
+                      Chip(label: Text('Waiting ${waitingDays}d')),
+                    if (exceptions.isNotEmpty)
+                      Tooltip(
+                        message: exceptions.join(', '),
+                        child: const Chip(label: Text('Policy exception')),
+                      ),
                     if (r.fields['days'] != null)
                       Text(
                         formatLeaveDays(r.fields['days'] as num?),
@@ -281,6 +297,8 @@ class ApprovalPage extends ConsumerStatefulWidget {
 
 class _ApprovalPageState extends ConsumerState<ApprovalPage> {
   String search = '';
+  String requestType = '', status = 'PENDING', sort = 'oldest';
+  int minAgeDays = 0;
   Timer? searchDebounce;
   @override
   void dispose() {
@@ -291,11 +309,25 @@ class _ApprovalPageState extends ConsumerState<ApprovalPage> {
   @override
   Widget build(BuildContext context) {
     final provider = recordsProvider(
-      recordQuery('approvals', search: search, sort: 'oldest'),
+      recordQuery(
+        'approvals',
+        search: search,
+        status: status,
+        sort: sort,
+        requestType: requestType,
+        minAgeDays: minAgeDays,
+      ),
     );
     return AppPage(
       title: 'Team approvals',
       subtitle: 'Thoughtful decisions keep your team moving.',
+      actions: [
+        IconButton(
+          tooltip: 'Manage delegation',
+          onPressed: () => context.push('/approvals/delegations'),
+          icon: const Icon(Icons.people_outline),
+        ),
+      ],
       onRefresh: () async {
         ref.invalidate(provider);
         await ref.read(provider.future);
@@ -313,6 +345,55 @@ class _ApprovalPageState extends ConsumerState<ApprovalPage> {
             });
           },
         ),
+        ExpansionTile(
+          title: const Text('Filter and sort'),
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: requestType,
+              decoration: const InputDecoration(labelText: 'Request type'),
+              items: const [
+                DropdownMenuItem(value: '', child: Text('All types')),
+                DropdownMenuItem(value: 'leave', child: Text('Leave')),
+                DropdownMenuItem(value: 'request', child: Text('Requests')),
+                DropdownMenuItem(
+                  value: 'correction',
+                  child: Text('Corrections'),
+                ),
+              ],
+              onChanged: (value) => setState(() => requestType = value ?? ''),
+            ),
+            DropdownButtonFormField<int>(
+              initialValue: minAgeDays,
+              decoration: const InputDecoration(labelText: 'Waiting age'),
+              items: const [
+                DropdownMenuItem(value: 0, child: Text('Any age')),
+                DropdownMenuItem(value: 1, child: Text('At least 1 day')),
+                DropdownMenuItem(value: 3, child: Text('At least 3 days')),
+                DropdownMenuItem(value: 7, child: Text('At least 7 days')),
+              ],
+              onChanged: (value) => setState(() => minAgeDays = value ?? 0),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: status,
+              decoration: const InputDecoration(labelText: 'Status'),
+              items: const [
+                DropdownMenuItem(value: 'PENDING', child: Text('Pending')),
+                DropdownMenuItem(value: 'APPROVED', child: Text('Approved')),
+                DropdownMenuItem(value: 'REJECTED', child: Text('Rejected')),
+              ],
+              onChanged: (value) => setState(() => status = value ?? 'PENDING'),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: sort,
+              decoration: const InputDecoration(labelText: 'Sort'),
+              items: const [
+                DropdownMenuItem(value: 'oldest', child: Text('Oldest first')),
+                DropdownMenuItem(value: 'newest', child: Text('Newest first')),
+              ],
+              onChanged: (value) => setState(() => sort = value ?? 'oldest'),
+            ),
+          ],
+        ),
         const SizedBox(height: 16),
         AsyncPanel(
           value: ref.watch(provider),
@@ -327,8 +408,11 @@ class _ApprovalPageState extends ConsumerState<ApprovalPage> {
                       )
               : Column(
                   children: [
-                    Text('${ref.read(provider.notifier).total} results'),
-                    for (final row in rows)
+                    Text(
+                      '${ref.read(provider.notifier).total} '
+                      '${ref.read(provider.notifier).total == 1 ? 'result' : 'results'}',
+                    ),
+                    for (final (index, row) in rows.indexed)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -341,7 +425,14 @@ class _ApprovalPageState extends ConsumerState<ApprovalPage> {
                               ),
                             ),
                           ),
-                          WorkflowTile(row),
+                          WorkflowTile(
+                            row,
+                            now: ref.read(clockProvider)(),
+                            onOpen: () => context.push(
+                              '/record/${row.kind}/${row.id}',
+                              extra: ApprovalPosition(rows, index),
+                            ),
+                          ),
                         ],
                       ),
                   ],

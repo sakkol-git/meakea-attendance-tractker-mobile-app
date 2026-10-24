@@ -16,6 +16,8 @@ part '../../features/reporting/data/local_handler.dart';
 part '../../features/reporting/data/case_local.dart';
 part '../../features/attachments/data/local_handler.dart';
 part '../../features/workflows/data/local_handler.dart';
+part '../../features/workflows/data/review_context_local.dart';
+part '../../features/approvals/data/delegation_local.dart';
 part '../../features/requests/data/local_handler.dart';
 part '../../features/requests/data/case_local.dart';
 
@@ -218,6 +220,7 @@ class LocalDataSource implements DataSource {
       },
     ];
     _rows['/exports'] = [];
+    _rows['/approval-delegations'] = [];
     _rows['/shift-assignments'] = [];
     if (populate) _populate();
   }
@@ -464,6 +467,14 @@ class LocalDataSource implements DataSource {
           .where((v) => v.values.join(' ').toLowerCase().contains(q))
           .toList();
     }
+    final minAgeDays = int.tryParse(r.query['minAgeDays'] ?? '') ?? 0;
+    if (minAgeDays > 0) {
+      final cutoff = _now().toUtc().subtract(Duration(days: minAgeDays));
+      list = list.where((row) {
+        final created = DateTime.tryParse('${row['createdAt'] ?? ''}');
+        return created != null && !created.toUtc().isAfter(cutoff);
+      }).toList();
+    }
     if (r.query['sort'] == 'oldest' || r.query['sort'] == 'newest') {
       final oldest = r.query['sort'] == 'oldest';
       list.sort((a, b) {
@@ -606,7 +617,8 @@ class LocalDataSource implements DataSource {
                     person['id'] == row['employeeId'] &&
                     person['managerId'] == employeeId,
               ) ||
-              row['currentApproverId'] == employeeId));
+              row['currentApproverId'] == employeeId)) ||
+      _delegatedReviewer(row);
   List<JsonMap> _own(List<JsonMap> rows) => !populate
       ? rows.where((r) => r['supersededBy'] == null).toList()
       : rows
@@ -689,6 +701,7 @@ class LocalDataSource implements DataSource {
         _handleAttendance(r) ??
         _handleReporting(r) ??
         _handleAttachments(r) ??
+        _handleDelegations(r) ??
         _handleRequests(r) ??
         _handleWorkflows(r);
     if (result != null) return result;

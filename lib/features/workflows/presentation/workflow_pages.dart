@@ -2,6 +2,8 @@ export 'workflow_lists.dart';
 import '../../../shared/presentation/case_page.dart';
 import 'decision_dialog.dart';
 import 'record_action_bar.dart';
+import 'decision_context.dart';
+import 'approval_position.dart';
 import '../../../shared/domain/cases.dart';
 
 import 'package:flutter/material.dart';
@@ -20,7 +22,8 @@ import 'package:hrflow_mobile/core/leave_quantity.dart';
 
 class RecordDetailPage extends ConsumerStatefulWidget {
   final String kind, id;
-  const RecordDetailPage(this.kind, this.id, {super.key});
+  final ApprovalPosition? position;
+  const RecordDetailPage(this.kind, this.id, {super.key, this.position});
   @override
   ConsumerState<RecordDetailPage> createState() => _RecordDetailState();
 }
@@ -187,6 +190,8 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                     ],
                   ),
                 ),
+                if (actions.contains('approve') || actions.contains('reject'))
+                  DecisionContext(r),
                 if (r.kind == 'request') ...[
                   const SectionTitle('Discussion'),
                   for (final comment in r.fields['comments'] as List? ?? [])
@@ -419,7 +424,34 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
   }
 
   Future<void> _decision(WorkflowRecord r, String action) =>
-      showWorkflowDecision(context, ref, r, action);
+      showWorkflowDecision(
+        context,
+        ref,
+        r,
+        action,
+        onSaved: () {
+          final next = widget.position?.next;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Request updated'),
+              action: SnackBarAction(
+                label: next == null ? 'Back to queue' : 'Next request',
+                onPressed: () {
+                  if (next == null) {
+                    context.pop();
+                  } else {
+                    final record = next.current;
+                    context.pushReplacement(
+                      '/record/${record.kind}/${record.id}',
+                      extra: next,
+                    );
+                  }
+                },
+              ),
+            ),
+          );
+        },
+      );
 }
 
 class _TimelineItem extends StatelessWidget {

@@ -23,6 +23,8 @@ import 'package:hrflow_mobile/features/dashboard/presentation/workspace_navigati
 import 'package:hrflow_mobile/features/attendance/presentation/activity_page.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/form_page.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/workflow_pages.dart';
+import 'package:hrflow_mobile/features/workflows/presentation/approval_position.dart';
+import 'package:hrflow_mobile/features/approvals/presentation/delegations_page.dart';
 import 'package:hrflow_mobile/features/identity/presentation/profile_page.dart';
 import 'package:hrflow_mobile/features/identity/presentation/people_pages.dart';
 import 'package:hrflow_mobile/features/identity/presentation/assignments_page.dart';
@@ -44,6 +46,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (['/login', '/startup', '/lock'].contains(location)) return '/home';
       if ([
             '/approvals',
+            '/approvals/delegations',
             '/directory',
             '/reports',
             '/team-attendance',
@@ -125,6 +128,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, s) => RecordDetailPage(
           s.pathParameters['kind']!,
           s.pathParameters['id']!,
+          position: s.extra is ApprovalPosition
+              ? s.extra as ApprovalPosition
+              : null,
         ),
       ),
       GoRoute(
@@ -136,6 +142,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const NotificationsPage(),
       ),
       GoRoute(path: '/schedule', builder: (_, _) => const SchedulePage()),
+      GoRoute(
+        path: '/approvals/delegations',
+        builder: (_, _) => const DelegationsPage(),
+      ),
       GoRoute(
         path: '/profile/edit',
         builder: (_, _) => const EditProfilePage(),

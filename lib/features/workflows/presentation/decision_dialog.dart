@@ -11,8 +11,9 @@ Future<void> showWorkflowDecision(
   BuildContext context,
   WidgetRef ref,
   WorkflowRecord r,
-  String action,
-) async {
+  String action, {
+  VoidCallback? onSaved,
+}) async {
   String note = '';
   final form = GlobalKey<FormState>();
   String? failure;
@@ -56,6 +57,18 @@ Future<void> showWorkflowDecision(
                           ? 'The request will be cancelled. This decision is recorded.'
                           : 'Review the details before confirming your decision.',
                     ),
+                    const SizedBox(height: 8),
+                    InfoRow('Employee', r.employeeName),
+                    InfoRow('Request', r.title),
+                    if (r.fields['startDate'] != null)
+                      InfoRow(
+                        'Dates',
+                        '${shortDate(r.fields['startDate'])} – ${shortDate(r.fields['endDate'])}',
+                      ),
+                    if (r.fields['days'] != null)
+                      InfoRow('Chargeable days', '${r.fields['days']}'),
+                    if (r.fields['quantity'] != null)
+                      InfoRow('Requested quantity', '${r.fields['quantity']}'),
                     const SizedBox(height: 16),
                     TextFormField(
                       onChanged: (value) => note = value,
@@ -172,7 +185,11 @@ Future<void> showWorkflowDecision(
                           ref.invalidate(inboxProvider);
                           if (dialog.mounted) Navigator.pop(dialog);
                           if (context.mounted) {
-                            toast(context, 'Request updated');
+                            if (onSaved == null) {
+                              toast(context, 'Request updated');
+                            } else {
+                              onSaved();
+                            }
                           }
                         } catch (e) {
                           final kind = writeFailureKind(e);

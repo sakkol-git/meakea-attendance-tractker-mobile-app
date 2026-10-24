@@ -119,6 +119,70 @@ class _LongHistoryLeave extends LeaveDataRepository {
   }
 }
 
+class _TwoPendingLeave extends LeaveDataRepository {
+  _TwoPendingLeave(super.client);
+  WorkflowRecord? second;
+  @override
+  Future<RecordPage> recordsPage(
+    String kind, {
+    bool pending = false,
+    int page = 0,
+    int size = 25,
+    String search = '',
+    String status = '',
+    String sort = '',
+    int minAgeDays = 0,
+  }) async {
+    final original = await super.recordsPage(
+      kind,
+      pending: pending,
+      page: page,
+      size: size,
+      search: search,
+      status: status,
+      sort: sort,
+      minAgeDays: minAgeDays,
+    );
+    if (!pending || kind != 'leave' || original.records.isEmpty) {
+      return original;
+    }
+    final first = original.records.first;
+    second = WorkflowRecord(
+      id: 'leave-second',
+      employeeId: first.employeeId,
+      employeeName: first.employeeName,
+      title: 'Second leave',
+      status: first.status,
+      reason: first.reason,
+      kind: first.kind,
+      version: first.version,
+      fields: first.fields,
+    );
+    return RecordPage([first, second!], 2, page, size);
+  }
+
+  @override
+  Future<WorkflowRecord> detail(String kind, String id) async =>
+      id == 'leave-second' ? second! : super.detail(kind, id);
+  @override
+  Future<WorkflowRecord> decide(
+    WorkflowRecord record,
+    String action,
+    String note,
+    String key,
+  ) async => WorkflowRecord(
+    id: record.id,
+    employeeId: record.employeeId,
+    employeeName: record.employeeName,
+    title: record.title,
+    status: 'APPROVED',
+    reason: record.reason,
+    kind: record.kind,
+    version: record.version + 1,
+    fields: record.fields,
+  );
+}
+
 class _PagedRequests extends RequestsDataRepository {
   int reads = 0;
   String lastSearch = '', lastStatus = '';
@@ -134,6 +198,7 @@ class _PagedRequests extends RequestsDataRepository {
     String search = '',
     String status = '',
     String sort = '',
+    int minAgeDays = 0,
   }) async {
     reads++;
     lastSearch = search;
@@ -1098,7 +1163,11 @@ void main() {
       await container.read(sessionProvider.notifier).demo('MANAGER');
       container.read(routerProvider).go('/approvals');
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Personal leave'));
+      await tester.scrollUntilVisible(
+        find.text('Personal leave'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Personal leave'));
       await tester.pumpAndSettle();
@@ -1123,7 +1192,7 @@ void main() {
           of: find.byType(AlertDialog),
           matching: find.textContaining('Personal leave'),
         ),
-        findsOneWidget,
+        findsWidgets,
         reason: 'The focused decision dialog must identify the request under review.',
       );
     },
@@ -1173,6 +1242,29 @@ void main() {
       );
     },
   );
+  testWidgets('acceptance F07 rejection names employee and requires reason', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('MANAGER');
+    container.read(routerProvider).go('/approvals');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Personal leave'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Personal leave'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reject request'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Sok Dara'), findsWidgets);
+    await tester.tap(find.text('Confirm'));
+    await tester.pump();
+    expect(
+      find.text('Give a reason with at least 5 characters'),
+      findsOneWidget,
+    );
+    expect(find.byType(AlertDialog), findsOneWidget);
+  });
   testWidgets(
     'acceptance F11 stale resource shows time and disables approval',
     (tester) async {
@@ -1198,7 +1290,11 @@ void main() {
         ),
         findsOneWidget,
       );
-      await tester.ensureVisible(find.text('Personal leave'));
+      await tester.scrollUntilVisible(
+        find.text('Personal leave'),
+        120,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.text('Personal leave'));
       await tester.pumpAndSettle();
@@ -1216,6 +1312,32 @@ void main() {
       expect(confirm.onPressed, isNull);
     },
   );
+  testWidgets('acceptance F07 next request keeps the queue position', (
+    tester,
+  ) async {
+    final c = _client();
+    final repo = _TwoPendingLeave(c);
+    final container = await _app(
+      tester,
+      c,
+      additional: [workflowRepositoryProvider('leave').overrideWithValue(repo)],
+    );
+    await container.read(sessionProvider.notifier).demo('MANAGER');
+    container.read(routerProvider).go('/approvals');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Personal leave'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Personal leave'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Approve request'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Confirm'));
+    await tester.pumpAndSettle();
+    expect(find.text('Next request'), findsOneWidget);
+    await tester.tap(find.text('Next request'));
+    await tester.pumpAndSettle();
+    expect(find.text('Second leave'), findsWidgets);
+  });
   testWidgets('acceptance F06 HR finds a deep task through Work search', (
     tester,
   ) async {
@@ -1397,6 +1519,55 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getBottomRight(action).dy, before);
       expect(before, lessThan(640));
+    },
+  );
+
+  test(
+    'acceptance F07 approval age and status filter before pagination',
+    () async {
+      final c = _client();
+      addTearDown(c.close);
+      await c.demoLogin('MANAGER');
+      final repo = LeaveDataRepository(c);
+      final waiting = await repo.recordsPage(
+        'leave',
+        pending: true,
+        status: 'PENDING',
+        minAgeDays: 3,
+        sort: 'oldest',
+      );
+      expect(waiting.records.map((row) => row.id), contains('leave-pending'));
+      final review = await repo.detail('leave', 'leave-pending');
+      final context = review.fields['reviewContext'] as Map;
+      expect(context['chargeableDays'], 1.0);
+      expect(context['balanceAfter'], isA<num>());
+      expect(context['teamMembersOff'], isA<List>());
+      final older = await repo.recordsPage(
+        'leave',
+        pending: true,
+        status: 'PENDING',
+        minAgeDays: 4,
+      );
+      expect(older.records, isEmpty);
+      final approved = await repo.recordsPage(
+        'leave',
+        pending: true,
+        status: 'APPROVED',
+      );
+      expect(approved.records.every((row) => row.status == 'APPROVED'), true);
+      final server = _QueryServer();
+      final remote = ClientData.forTest(server);
+      addTearDown(remote.close);
+      await LeaveDataRepository(remote).recordsPage(
+        'leave',
+        pending: true,
+        status: 'PENDING',
+        sort: 'oldest',
+        minAgeDays: 3,
+      );
+      expect(server.last?.path, '/leave/requests/pending');
+      expect(server.last?.query['minAgeDays'], '3');
+      expect(server.last?.query['status'], 'PENDING');
     },
   );
 

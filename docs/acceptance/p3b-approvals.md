@@ -1,0 +1,9 @@
+# P3-B approval queue and decision context
+
+The role-gated queue searches and filters through the repository before paging. It sends `search`, `status`, `sort`, `requestType`, `minAgeDays`, `page` and `size` to each applicable `/leave/requests/pending`, `/requests/pending` and `/attendance/corrections/pending` endpoint. The default is pending, oldest first. A card shows waiting age and supplied `policyExceptions`; it never invents a violation.
+
+The detail panel displays supplied `reviewContext` for leave chargeable days, resulting balance, team members off, stock versus requested material quantities, completed steps and next reviewer. Correction detail retains its dated original/proposed comparison. The decision dialog names the employee, request, dates or amount and operation; rejection requires a reason. A successful decision can open the next item in the loaded queue snapshot.
+
+Delegation is scoped to eligible reviewers. The client uses `GET /approvals/eligible-delegates?search=&page=&size=`, `GET /approvals/delegations`, `POST /approvals/delegations` with `delegateId`, `startsOn`, `endsOn`, `reason` and an idempotency key, and `DELETE /approvals/delegations/{id}` with `If-Match`. The expected list items contain `id`, `delegateId`, `delegateName`, ISO date-only bounds, `status` and `version` or `etag`. The server must independently enforce reviewer eligibility, no self-delegation, overlapping-period policy, ownership, authorization on every delegated record, audit and revocation. The local adapter models those rules for demonstration; it is not security authority. Escalation and bulk approval remain out of launch scope per [scope.md](scope.md).
+
+Validation on 24 October 2026: `fvm flutter analyze` clean; full Flutter suite 139 passing; `fvm flutter build web --release` built. The approval light/dark goldens were regenerated and inspected. Live gateway contract and representative reviewer usability are still required for full acceptance.

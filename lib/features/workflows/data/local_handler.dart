@@ -36,12 +36,20 @@ extension WorkflowsDemo on LocalDataSource {
         }
         return _page(
           isPending
-              ? rows.where(
-                  (v) =>
-                      _visible(v) &&
-                      v['status'] == 'PENDING' &&
-                      (!populate || v['employeeId'] != employeeId),
-                )
+              ? rows
+                    .where(
+                      (v) =>
+                          _visible(v) &&
+                          v['status'] == (r.query['status'] ?? 'PENDING') &&
+                          (!populate || v['employeeId'] != employeeId),
+                    )
+                    .map(
+                      (row) => {
+                        ...row,
+                        if (_delegatedReviewer(row))
+                          'delegatedApproverId': employeeId,
+                      },
+                    )
               : _own(rows),
           r,
         );
@@ -93,6 +101,9 @@ extension WorkflowsDemo on LocalDataSource {
                 row['status'] == 'PENDING' ||
                 (row['status'] == 'APPROVED' &&
                     (row['startDate'] as String).compareTo(today) > 0),
+          if (populate && _manages && row['employeeId'] != employeeId)
+            'reviewContext': _reviewContext(path, row),
+          if (_delegatedReviewer(row)) 'delegatedApproverId': employeeId,
         }, etag: '"${row['version']}"');
       }
       if (r.method == 'PATCH' && parts.length == 1) {

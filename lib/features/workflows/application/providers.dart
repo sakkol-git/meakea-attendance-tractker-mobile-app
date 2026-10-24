@@ -17,13 +17,24 @@ typedef RecordQuery = ({
   String search,
   String status,
   String sort,
+  String requestType,
+  int minAgeDays,
 });
 RecordQuery recordQuery(
   String kind, {
   String search = '',
   String status = '',
   String sort = '',
-}) => (kind: kind, search: search, status: status, sort: sort);
+  String requestType = '',
+  int minAgeDays = 0,
+}) => (
+  kind: kind,
+  search: search,
+  status: status,
+  sort: sort,
+  requestType: requestType,
+  minAgeDays: minAgeDays,
+);
 
 final recordsProvider = AsyncNotifierProvider.autoDispose
     .family<RecordListController, List<WorkflowRecord>, RecordQuery>(
@@ -42,18 +53,24 @@ class RecordListController extends AsyncNotifier<List<WorkflowRecord>> {
     final repository = ref.read(workflowRepositoryProvider(kind));
     final pages = await Future.wait(
       kind == 'approvals'
-          ? ['leave', 'request', 'correction'].map(
-              (type) => ref
-                  .read(workflowRepositoryProvider(type))
-                  .recordsPage(
-                    type,
-                    pending: true,
-                    page: page,
-                    search: query.search,
-                    status: query.status,
-                    sort: query.sort,
-                  ),
-            )
+          ? ['leave', 'request', 'correction']
+                .where(
+                  (type) =>
+                      query.requestType.isEmpty || type == query.requestType,
+                )
+                .map(
+                  (type) => ref
+                      .read(workflowRepositoryProvider(type))
+                      .recordsPage(
+                        type,
+                        pending: true,
+                        page: page,
+                        search: query.search,
+                        status: query.status,
+                        sort: query.sort,
+                        minAgeDays: query.minAgeDays,
+                      ),
+                )
           : [
               repository.recordsPage(
                 kind,
@@ -61,6 +78,7 @@ class RecordListController extends AsyncNotifier<List<WorkflowRecord>> {
                 search: query.search,
                 status: query.status,
                 sort: query.sort,
+                minAgeDays: query.minAgeDays,
               ),
             ],
     );

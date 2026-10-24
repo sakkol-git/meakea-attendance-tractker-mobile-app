@@ -52,6 +52,7 @@ mixin WorkflowsMethods on ResourceRepository {
     String search = '',
     String status = '',
     String sort = '',
+    int minAgeDays = 0,
   }) async {
     final path =
         pathFor(kind) +
@@ -70,6 +71,7 @@ mixin WorkflowsMethods on ResourceRepository {
           if (search.isNotEmpty) 'search': search,
           if (status.isNotEmpty) 'status': status,
           if (sort.isNotEmpty) 'sort': sort,
+          if (minAgeDays > 0) 'minAgeDays': '$minAgeDays',
         },
       ),
     );
