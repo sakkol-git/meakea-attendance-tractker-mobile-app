@@ -1,0 +1,365 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hrflow_mobile/app.dart';
+import 'package:hrflow_mobile/app/composition.dart';
+import 'package:hrflow_mobile/app/providers.dart';
+import 'package:hrflow_mobile/core/demo/local_service.dart';
+import 'package:hrflow_mobile/core/protocol.dart';
+import 'package:hrflow_mobile/core/theme.dart';
+import 'package:hrflow_mobile/features/identity/data/repository.dart';
+import 'package:hrflow_mobile/features/identity/data/session_client.dart';
+import 'package:hrflow_mobile/features/leave/domain/models.dart';
+import 'package:hrflow_mobile/features/requests/data/repository.dart';
+import 'package:hrflow_mobile/features/settings/domain/preferences_gateway.dart';
+import 'package:hrflow_mobile/shared/domain/workflow.dart';
+
+// Red tests: each assertion states the required behavior, never the known defect.
+// Keep these in the normal test tree so later fixes must turn them green.
+class _Preferences implements PreferencesGateway {
+  const _Preferences();
+  @override
+  Future<bool?> read(String key) async => false;
+  @override
+  Future<void> write(String key, bool value) async {}
+}
+
+class _PagedRequests extends RequestsDataRepository {
+  int reads = 0;
+  _PagedRequests(super.client);
+
+  @override
+  Future<RecordPage> recordsPage(
+    String kind, {
+    bool pending = false,
+    int page = 0,
+    int size = 25,
+  }) async {
+    reads++;
+    return RecordPage(
+      List.generate(
+        page == 0 ? 25 : 1,
+        (i) => WorkflowRecord(
+          id: 'acceptance-${page * 25 + i}',
+          employeeId: 'demo-employee',
+          title: page == 0 ? 'Routine request $i' : 'Special laptop',
+          status: 'DRAFT',
+          reason: 'Equipment',
+          kind: 'request',
+          version: 1,
+          fields: const {},
+          employeeName: 'Sok Dara',
+        ),
+      ),
+      26,
+      page,
+      size,
+    );
+  }
+}
+
+ClientData _client() => ClientData.forTest(
+  LocalDataSource(
+    jsonDecode(File('assets/data/demo-seed.json').readAsStringSync())
+        as JsonMap,
+    populate: true,
+    now: () => DateTime.utc(2026, 10, 23, 3),
+  ),
+);
+
+double _contrast(Color a, Color b) {
+  final x = a.computeLuminance(), y = b.computeLuminance();
+  return ((x > y ? x : y) + .05) / ((x > y ? y : x) + .05);
+}
+
+Future<ProviderContainer> _app(
+  WidgetTester tester,
+  ClientData client, {
+  List<Override> additional = const [],
+}) async {
+  final container = ProviderContainer(
+    overrides: [
+      ...composeFeatures(client, preferences: const _Preferences()).where(
+        (base) =>
+            !additional.any((replacement) => replacement.origin == base.origin),
+      ),
+      ...additional,
+    ],
+  );
+  addTearDown(container.dispose);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(container: container, child: const HrFlowApp()),
+  );
+  await tester.pumpAndSettle();
+  return container;
+}
+
+void main() {
+  test('acceptance F01 employee edit persists the selected department and position', () async {
+    final c = _client();
+    addTearDown(c.close);
+    await c.demoLogin('HR_ADMIN');
+    final repo = IdentityDataRepository(c);
+    final before = (await repo.collection('/employees'))
+        .firstWhere((r) => r['id'] == 'demo-employee');
+    await repo.saveEntity('/employees', {
+      'name': before['name'],
+      'email': before['email'],
+      'department': 'Audit changed department',
+      'position': 'Audit changed position',
+      'managerId': before['managerId'] ?? '',
+    }, existing: before);
+    final stored = (await repo.collection('/employees'))
+        .firstWhere((r) => r['id'] == 'demo-employee');
+    expect(stored['department'], 'Audit changed department');
+    expect(stored['position'], 'Audit changed position');
+  });
+
+  test('acceptance F01 shift edit persists weekend workdays', () async {
+    final c = _client();
+    addTearDown(c.close);
+    await c.demoLogin('HR_ADMIN');
+    final repo = IdentityDataRepository(c);
+    final before = (await repo.collection('/shifts')).first;
+    await repo.saveEntity('/shifts', {
+      'name': before['name'],
+      'startTime': before['startTime'],
+      'endTime': before['endTime'],
+      'days': 'Sat, Sun',
+    }, existing: before);
+    final stored = (await repo.collection('/shifts'))
+        .firstWhere((r) => r['id'] == before['id']);
+    expect(stored['days'], 'Sat, Sun');
+  });
+
+  testWidgets('acceptance F02 search finds a request beyond the first page', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(402, 874);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final c = _client();
+    final repo = _PagedRequests(c);
+    final container = await _app(
+      tester,
+      c,
+      additional: [requestsRepositoryProvider.overrideWithValue(repo)],
+    );
+    await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+    container.read(routerProvider).go('/requests');
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'Special laptop');
+    await tester.pumpAndSettle();
+    expect(find.text('Nothing here yet'), findsNothing);
+    expect(find.text('Special laptop'), findsOneWidget);
+    expect(
+      repo.reads,
+      greaterThan(1),
+      reason: 'Search must query beyond the first page.',
+    );
+  });
+
+  test('acceptance F03 dark functional text meets 4.5 contrast', () {
+    final theme = appTheme(dark: true);
+    final card = theme.colorScheme.surfaceContainer;
+    final approvedBackground = Color.alphaBlend(
+      const Color(0xFF17613F).withValues(alpha: .09),
+      card,
+    );
+    final pairs = <String, (Color, Color)>{
+      'muted on surface': (Palette.muted, theme.colorScheme.surface),
+      'muted on card': (Palette.muted, card),
+      'approved on pill': (const Color(0xFF17613F), approvedBackground),
+      'error on card': (Palette.danger, card),
+    };
+    for (final entry in pairs.entries) {
+      expect(
+        _contrast(entry.value.$1, entry.value.$2),
+        greaterThanOrEqualTo(4.5),
+        reason:
+            '${entry.key}: ${_contrast(entry.value.$1, entry.value.$2).toStringAsFixed(2)}:1',
+      );
+    }
+  });
+
+  testWidgets('acceptance F04 correction exposes a next-day checkout date', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+    container.read(routerProvider).go('/new/correction');
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Correct clock-out date'),
+      findsOneWidget,
+      reason: '22:00–06:00 must be expressible with an explicit next-day end.',
+    );
+  });
+
+  test(
+    'acceptance F04 overnight correction survives data-layer reload',
+    () async {
+      final c = _client();
+      addTearDown(c.close);
+      await c.demoLogin('EMPLOYEE');
+      const start = '2026-10-23T15:00:00Z'; // 22:00 in Phnom Penh.
+      const end = '2026-10-23T23:00:00Z'; // 06:00 on 24 October.
+      final created = await c.request(
+        DataRequest(
+          'POST',
+          '/attendance/corrections',
+          body: {
+            'workDate': '2026-10-23',
+            'newCheckIn': start,
+            'newCheckOut': end,
+            'reason': 'Overnight shift correction',
+          },
+          idempotencyKey: commandKey(),
+        ),
+      );
+      final id = (created.data as Map)['id'];
+      final reloaded = await c.request(
+        DataRequest('GET', '/attendance/corrections/$id'),
+      );
+      final stored = reloaded.data as Map;
+      expect(stored['newCheckIn'], start);
+      expect(stored['newCheckOut'], end);
+      expect(
+        DateTime.parse(stored['newCheckIn'])
+            .toUtc()
+            .add(const Duration(hours: 7))
+            .day,
+        23,
+      );
+      expect(
+        DateTime.parse(stored['newCheckOut'])
+            .toUtc()
+            .add(const Duration(hours: 7))
+            .day,
+        24,
+      );
+    },
+  );
+
+  testWidgets('acceptance F09 home displays hundredth-day balance unchanged', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(
+      tester,
+      c,
+      additional: [
+        balancesProvider.overrideWith(
+          (ref) async => const [
+            LeaveBalance('annual', 'Annual leave', 20, 17.75, 0, 2.25),
+          ],
+        ),
+      ],
+    );
+    await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+    container.read(routerProvider).go('/home');
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Annual leave'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Annual leave'), findsWidgets);
+    expect(find.textContaining('2.25'), findsWidgets);
+  });
+
+  testWidgets('acceptance F08 audit rows retain time of day', (tester) async {
+    final c = _client();
+    final container = await _app(
+      tester,
+      c,
+      additional: [
+        collectionProvider('/audit-logs').overrideWith(
+          (ref) async => [
+            {
+              'action': 'EMPLOYEE_UPDATED',
+              'actor': 'HR',
+              'at': '2026-10-23T09:15:00+07:00',
+            },
+            {
+              'action': 'EMPLOYEE_UPDATED',
+              'actor': 'HR',
+              'at': '2026-10-23T16:45:00+07:00',
+            },
+          ],
+        ),
+      ],
+    );
+    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    container.read(routerProvider).go('/audit');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('HR ·'), findsNWidgets(2));
+    expect(find.textContaining('09:15'), findsOneWidget);
+    expect(find.textContaining('16:45'), findsOneWidget);
+  });
+
+  testWidgets(
+    'acceptance F07 approval dialog keeps decision action visible with keyboard',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 740);
+      tester.view.devicePixelRatio = 1;
+      tester.platformDispatcher.textScaleFactorTestValue = 2;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      final c = _client();
+      final container = await _app(tester, c);
+      await container.read(sessionProvider.notifier).demo('MANAGER');
+      container.read(routerProvider).go('/approvals');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Personal leave'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Approve request'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Approve request'));
+      await tester.pump(const Duration(milliseconds: 400));
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull);
+      final action = find.text('Confirm');
+      expect(action, findsOneWidget);
+      expect(
+        tester.getBottomRight(action).dy,
+        lessThanOrEqualTo(440),
+        reason:
+            'The decision action must remain above the keyboard at 200% text.',
+      );
+      expect(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.textContaining('Personal leave'),
+        ),
+        findsOneWidget,
+        reason: 'The focused decision dialog must identify the request under review.',
+      );
+    },
+  );
+  testWidgets('acceptance F10 dirty admin dialog asks before discard', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    container.read(routerProvider).go('/manage/departments');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Add record'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).last, 'New department');
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discard this draft?'), findsOneWidget);
+  });
+}
