@@ -30,12 +30,35 @@ class AppPage extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
-        if (ref.watch(cacheStaleProvider).asData?.value == true)
+        if (ref.watch(staleResourcesProvider).asData?.value
+            case final resources? when resources.isNotEmpty)
           Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: Text(
-              'Showing saved data. It may be out of date. Pull to refresh.',
-              style: TextStyle(color: context.semantic.warning),
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Semantics(
+              liveRegion: true,
+              child: Surface(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Showing saved data',
+                      style: TextStyle(
+                        color: context.semantic.warning,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    for (final resource in resources)
+                      Text(
+                        '${resource.path.split('?').first}: Last updated ${companyTimestamp(resource.savedAt.toIso8601String())}',
+                      ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Changes to these resources require a connection so the latest version and permissions can be checked.',
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         if (subtitle != null)

@@ -6,6 +6,12 @@ import 'package:crypto/crypto.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/data/cache/store.dart';
 
+class StaleResource {
+  final String path;
+  final DateTime savedAt;
+  const StaleResource(this.path, this.savedAt);
+}
+
 /// GET-only read-through cache. Identity is bound only after authenticated profile validation.
 class CachedDataSource implements DataSource {
   final DataSource upstream;
@@ -19,6 +25,7 @@ class CachedDataSource implements DataSource {
   final Map<String, Future<DataResponse>> _inflight = {};
   final Set<String> _stale = {};
   final _changes = StreamController<bool>.broadcast();
+  final _resourceChanges = StreamController<List<StaleResource>>.broadcast();
   int hits = 0, misses = 0, coalesced = 0;
   CachedDataSource(
     this.upstream,
@@ -32,8 +39,21 @@ class CachedDataSource implements DataSource {
   @override
   String get mode => upstream.mode;
   Stream<bool> get staleChanges => _changes.stream;
+  Stream<List<StaleResource>> get staleResources => _resourceChanges.stream;
+  List<StaleResource> get staleSnapshot => [
+    for (final key in _stale)
+      if (_memory[key] case final entry?)
+        StaleResource(
+          entry['path'] as String,
+          DateTime.fromMillisecondsSinceEpoch(
+            entry['savedAt'] as int,
+            isUtc: true,
+          ),
+        ),
+  ];
   void _notify() {
     if (!_changes.isClosed) _changes.add(_stale.isNotEmpty);
+    if (!_resourceChanges.isClosed) _resourceChanges.add(staleSnapshot);
   }
 
   Future<void> bind(String identity) async {
@@ -299,5 +319,6 @@ class CachedDataSource implements DataSource {
     upstream.close();
     unawaited(store.close());
     unawaited(_changes.close());
+    unawaited(_resourceChanges.close());
   }
 }

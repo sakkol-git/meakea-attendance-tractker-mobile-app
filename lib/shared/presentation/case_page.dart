@@ -341,7 +341,6 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
   final lookupLabels = <String, String>{};
   bool busy = false, review = false, dirty = false;
   String? error, fingerprint;
-  String key = commandKey(), commitKey = commandKey();
   Map<String, dynamic>? prepared;
   String previewSearch = '';
   int previewPage = 0;
@@ -515,11 +514,9 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
     }
     final hash = canonicalJson(body);
     if (fingerprint != hash) {
-      key = commandKey();
       fingerprint = hash;
       prepared = null;
       review = false;
-      commitKey = commandKey();
     }
     final gateway = ref.read(caseGatewayProvider(action.key.split('.').first));
     final id = action.targetField == null
@@ -530,6 +527,15 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
       error = null;
     });
     try {
+      final keys = ref.read(pendingCommandKeysProvider);
+      final scope = '${actor.tenantId}:${actor.id}:case:${action.key}:$id';
+      final stage = review && prepared != null ? 'commit' : 'command';
+      final key = await keys.acquire('$scope:$stage', {
+        'action': action.key,
+        'etag': widget.record?.etag,
+        'body': body,
+        if (prepared?['previewId'] != null) 'previewId': prepared!['previewId'],
+      });
       if (!review) {
         if (action.prepare != null) {
           prepared = await gateway.changeCase(
@@ -551,9 +557,11 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
           if (prepared?['previewId'] != null)
             'previewId': prepared!['previewId'],
         },
-        key: prepared == null ? key : commitKey,
+        key: key,
         etag: widget.record?.etag,
       );
+      await keys.clear('$scope:command');
+      await keys.clear('$scope:commit');
       if (!mounted) return;
       dirty = false;
       ref.invalidate(caseRowsProvider);
@@ -566,7 +574,15 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
       toast(context, 'Changes saved');
       Navigator.pop(context);
     } catch (failure) {
-      if (mounted) setState(() => error = message(failure));
+      if (mounted) {
+        setState(
+          () => error = switch (writeFailureKind(failure)) {
+            WriteFailureKind.conflict => 'This record changed. Keep your inputs, review the latest record, then submit again.',
+            WriteFailureKind.unknown => 'Outcome unknown. Check the record before retrying; the same command key will be reused.',
+            WriteFailureKind.failed => message(failure),
+          },
+        );
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }

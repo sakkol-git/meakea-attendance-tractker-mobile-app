@@ -10,6 +10,7 @@ import 'package:hrflow_mobile/app/composition.dart';
 import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/app/cases.dart';
 import 'package:hrflow_mobile/core/demo/local_service.dart';
+import 'package:hrflow_mobile/core/data/cache/cached_source.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/features/identity/data/repository.dart';
@@ -17,6 +18,7 @@ import 'package:hrflow_mobile/features/identity/data/session_client.dart';
 import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
 import 'package:hrflow_mobile/core/leave_quantity.dart';
 import 'package:hrflow_mobile/features/leave/domain/models.dart';
+import 'package:hrflow_mobile/features/leave/data/repository.dart';
 import 'package:hrflow_mobile/features/requests/data/repository.dart';
 import 'package:hrflow_mobile/features/settings/domain/preferences_gateway.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/workflow_pages.dart';
@@ -31,6 +33,58 @@ class _Preferences implements PreferencesGateway {
   Future<bool?> read(String key) async => false;
   @override
   Future<void> write(String key, bool value) async {}
+}
+
+class _CompetingReviewerLeave extends LeaveDataRepository {
+  _CompetingReviewerLeave(super.client);
+  WorkflowRecord? changed;
+  int attempts = 0;
+  final keys = <String>[];
+
+  @override
+  Future<WorkflowRecord> detail(String kind, String id) async =>
+      changed ?? super.detail(kind, id);
+
+  @override
+  Future<WorkflowRecord> decide(
+    WorkflowRecord record,
+    String action,
+    String note,
+    String key,
+  ) async {
+    attempts++;
+    keys.add(key);
+    if (attempts == 1) {
+      changed = WorkflowRecord(
+        id: record.id,
+        employeeId: record.employeeId,
+        title: record.title,
+        status: record.status,
+        reason: record.reason,
+        kind: record.kind,
+        version: record.version + 1,
+        fields: record.fields,
+        employeeName: record.employeeName,
+      );
+      throw const DataFailure(
+        412,
+        'STALE_VERSION',
+        'Another reviewer changed it.',
+      );
+    }
+    changed = WorkflowRecord(
+      id: record.id,
+      employeeId: record.employeeId,
+      title: record.title,
+      status: 'APPROVED',
+      reason: record.reason,
+      kind: record.kind,
+      version: record.version + 1,
+      fields: record.fields,
+      employeeName: record.employeeName,
+    );
+    return changed!;
+  }
 }
 
 class _PagedRequests extends RequestsDataRepository {
@@ -516,21 +570,19 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Edit employee'));
       await tester.pumpAndSettle();
-      expect(
-        find.byType(DropdownButtonFormField<String>),
-        findsAtLeastNWidgets(2),
-      );
-      await tester.tap(find.byType(DropdownButtonFormField<String>).at(0));
+      expect(find.text('Department · Required'), findsOneWidget);
+      expect(find.text('Position · Required'), findsOneWidget);
+      await tester.tap(find.text('Search department'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('People & Culture').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(DropdownButtonFormField<String>).at(1));
+      await tester.tap(find.text('Search position'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Product designer').last);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Review changes'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Confirm'));
+      await tester.tap(find.text('Edit employee').last);
       await tester.pumpAndSettle();
       final stored = (await IdentityDataRepository(c).collection('/employees'))
           .firstWhere((r) => r['id'] == 'demo-employee');
@@ -551,16 +603,20 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Working days'), findsOneWidget);
       for (final day in ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']) {
-        await tester.tap(find.widgetWithText(FilterChip, day));
+        final chip = find.widgetWithText(FilterChip, day);
+        await tester.ensureVisible(chip);
+        await tester.pumpAndSettle();
+        await tester.tap(chip);
         await tester.pumpAndSettle();
       }
       await tester.enterText(
         find.byType(TextFormField).last,
         'Weekend coverage',
       );
+      await tester.ensureVisible(find.text('Review changes'));
       await tester.tap(find.text('Review changes'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Confirm'));
+      await tester.tap(find.text('Edit shift policy'));
       await tester.pumpAndSettle();
       final stored = (await IdentityDataRepository(c).collection('/shifts'))
           .firstWhere((r) => r['id'] == 'shift-standard');
@@ -1036,6 +1092,90 @@ void main() {
         findsOneWidget,
         reason: 'The focused decision dialog must identify the request under review.',
       );
+    },
+  );
+
+  testWidgets(
+    'acceptance F11 competing reviewer preserves note and resubmits latest',
+    (tester) async {
+      final c = _client();
+      final competing = _CompetingReviewerLeave(c);
+      final container = await _app(
+        tester,
+        c,
+        additional: [
+          workflowRepositoryProvider('leave').overrideWithValue(competing),
+        ],
+      );
+      await container.read(sessionProvider.notifier).demo('MANAGER');
+      container.read(routerProvider).go('/approvals');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Personal leave'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Approve request'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Approve request'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(
+        find.byType(TextFormField).last,
+        'Coverage checked',
+      );
+      await tester.tap(find.text('Confirm'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(competing.attempts, 1);
+      expect(find.textContaining('Another reviewer changed'), findsOneWidget);
+      expect(find.text('Coverage checked'), findsOneWidget);
+      expect(find.text('When opened'), findsOneWidget);
+      expect(find.text('Latest'), findsOneWidget);
+      await tester.tap(find.text('Decide using latest'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(competing.attempts, 2);
+      expect(competing.keys[0], isNot(competing.keys[1]));
+      expect(
+        (await competing.detail('leave', competing.changed!.id)).status,
+        'APPROVED',
+      );
+    },
+  );
+  testWidgets(
+    'acceptance F11 stale resource shows time and disables approval',
+    (tester) async {
+      final c = _client();
+      final container = await _app(
+        tester,
+        c,
+        additional: [
+          staleResourcesProvider.overrideWith(
+            (ref) => Stream.value([
+              StaleResource('/leave/requests', DateTime.utc(2026, 10, 23, 3)),
+            ]),
+          ),
+          cacheStaleProvider.overrideWith((ref) => Stream.value(true)),
+        ],
+      );
+      await container.read(sessionProvider.notifier).demo('MANAGER');
+      container.read(routerProvider).go('/approvals');
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(
+          '/leave/requests: Last updated 23 Oct 2026 · 10:00:00 UTC+07',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Personal leave'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Approve request'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Approve request'));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(
+        find.textContaining('Decision unavailable offline'),
+        findsOneWidget,
+      );
+      final confirm = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Confirm'),
+      );
+      expect(confirm.onPressed, isNull);
     },
   );
   testWidgets('acceptance F10 dirty admin dialog asks before discard', (

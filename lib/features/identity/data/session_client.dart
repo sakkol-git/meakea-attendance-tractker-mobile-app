@@ -20,6 +20,7 @@ import 'package:hrflow_mobile/core/demo/local_service.dart';
 import 'package:hrflow_mobile/core/data/remote_source.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/data/storage.dart';
+import 'package:hrflow_mobile/core/data/pending_commands.dart';
 
 class ClientData implements SessionGateway, ApiClient {
   late final DataSource source;
@@ -44,6 +45,16 @@ class ClientData implements SessionGateway, ApiClient {
   }
 
   ClientData._(this.secrets, this.namespace);
+  Future<void> _bindCommandAccount(Profile profile) async {
+    final slot = '$namespace.pending.account';
+    final identity = '${profile.tenantId}:${profile.id}';
+    final previous = await secrets.read(slot);
+    if (previous != null && previous != identity) {
+      await PendingCommandKeys(secrets, namespace).clearAll();
+    }
+    await secrets.write(slot, identity);
+  }
+
   static Future<ClientData> create({
     String mode = const String.fromEnvironment(
       'DATA_SOURCE',
@@ -113,6 +124,9 @@ class ClientData implements SessionGateway, ApiClient {
   Stream<bool> get staleChanges => source is CachedDataSource
       ? (source as CachedDataSource).staleChanges
       : const Stream.empty();
+  Stream<List<StaleResource>> get staleResources => source is CachedDataSource
+      ? (source as CachedDataSource).staleResources
+      : const Stream.empty();
   @override
   Future<void> resetDemo() async {
     if (source is! LocalDataSource) {
@@ -144,6 +158,7 @@ class ClientData implements SessionGateway, ApiClient {
         (await request(const DataRequest('GET', '/auth/me'))).data,
       );
       final profile = ProfileMapper.fromJson(raw);
+      await _bindCommandAccount(profile);
       if (source is CachedDataSource) {
         await (source as CachedDataSource).bind(
           '$namespace:${raw['tenantId']}:${profile.id}:${profile.role}',
@@ -183,6 +198,7 @@ class ClientData implements SessionGateway, ApiClient {
         (await request(const DataRequest('GET', '/auth/me'))).data,
       );
       final profile = ProfileMapper.fromJson(raw);
+      await _bindCommandAccount(profile);
       if (source is CachedDataSource) {
         await (source as CachedDataSource).bind(
           '$namespace:${raw['tenantId']}:${profile.id}:${profile.role}',
@@ -206,9 +222,11 @@ class ClientData implements SessionGateway, ApiClient {
     }
     _workspaceGeneration++;
     (source as LocalDataSource).setDemoRole(role);
-    return ProfileMapper.fromJson(
+    final profile = ProfileMapper.fromJson(
       object((await source.send(const DataRequest('GET', '/auth/me'))).data),
     );
+    await _bindCommandAccount(profile);
+    return profile;
   }
 
   void _requireGeneration(int generation) {
@@ -352,6 +370,8 @@ class ClientData implements SessionGateway, ApiClient {
         );
       }
     } finally {
+      await PendingCommandKeys(secrets, namespace).clearAll();
+      await secrets.remove('$namespace.pending.account');
       if (generation == _generation) await _eraseSession();
     }
   }

@@ -1,4 +1,5 @@
 import '../../../shared/presentation/case_page.dart';
+import 'decision_dialog.dart';
 import '../../../shared/domain/cases.dart';
 
 import 'dart:async';
@@ -12,7 +13,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
-import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 import 'package:hrflow_mobile/shared/domain/workflow_policy.dart';
 import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
@@ -794,113 +794,8 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
     );
   }
 
-  Future<void> _decision(WorkflowRecord r, String action) async {
-    final note = TextEditingController();
-    final form = GlobalKey<FormState>();
-    String? failure;
-    bool busy = false;
-    var key = commandKey();
-    String last = '';
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialog) => StatefulBuilder(
-        builder: (dialog, setDialog) => AlertDialog(
-          title: Text(
-            '${action[0].toUpperCase()}${action.substring(1)} request?',
-          ),
-          content: Form(
-            key: form,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  action == 'reject'
-                      ? 'A clear reason helps the employee understand your decision.'
-                      : action == 'cancel'
-                      ? 'The request will be cancelled. This decision is recorded.'
-                      : 'Review the details before confirming your decision.',
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: note,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: action == 'reject'
-                        ? 'Reason'
-                        : 'Note (optional)',
-                  ),
-                  validator: (v) =>
-                      action == 'reject' && (v?.trim().length ?? 0) < 5
-                      ? 'Give a reason with at least 5 characters'
-                      : null,
-                ),
-                if (failure != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      failure!,
-                      style: TextStyle(color: context.semantic.error),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: busy ? null : () => Navigator.pop(dialog),
-              child: Text('Go back'),
-            ),
-            FilledButton(
-              onPressed: busy
-                  ? null
-                  : () async {
-                      if (!form.currentState!.validate()) return;
-                      final text = note.text.trim();
-                      if (text != last) {
-                        key = commandKey();
-                        last = text;
-                      }
-                      setDialog(() {
-                        busy = true;
-                        failure = null;
-                      });
-                      try {
-                        await ref
-                            .read(workflowUseCasesProvider(widget.kind))
-                            .decide(
-                              ref.read(sessionProvider).profile!,
-                              r,
-                              action,
-                              text,
-                              key,
-                            );
-                        ref.invalidate(
-                          detailProvider((kind: widget.kind, id: widget.id)),
-                        );
-                        ref.invalidate(recordsProvider);
-                        ref.invalidate(approvalProvider);
-                        ref.invalidate(balancesProvider);
-                        ref.invalidate(inboxProvider);
-                        if (dialog.mounted) Navigator.pop(dialog);
-                        if (mounted) toast(context, 'Request updated');
-                      } catch (e) {
-                        if (dialog.mounted) {
-                          setDialog(() => failure = message(e));
-                        }
-                      } finally {
-                        if (dialog.mounted) setDialog(() => busy = false);
-                      }
-                    },
-              child: Text(busy ? 'Saving…' : 'Confirm'),
-            ),
-          ],
-        ),
-      ),
-    );
-    note.dispose();
-  }
+  Future<void> _decision(WorkflowRecord r, String action) =>
+      showWorkflowDecision(context, ref, r, action);
 }
 
 class _TimelineItem extends StatelessWidget {

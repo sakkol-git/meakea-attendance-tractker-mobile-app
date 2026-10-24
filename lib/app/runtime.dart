@@ -4,6 +4,9 @@ import '../features/notifications/application/push.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/app/providers.dart';
+import 'package:hrflow_mobile/core/data/pending_commands.dart';
+import 'package:hrflow_mobile/features/identity/data/session_client.dart';
+import 'package:hrflow_mobile/core/data/cache/cached_source.dart';
 
 String message(Object e) => e is DataFailure
     ? switch (e.status) {
@@ -13,6 +16,16 @@ String message(Object e) => e is DataFailure
         _ => e.message,
       }
     : 'Something went wrong. Please try again.';
+
+enum WriteFailureKind { conflict, failed, unknown }
+
+WriteFailureKind writeFailureKind(Object error) => error is DataFailure
+    ? error.status == 412
+          ? WriteFailureKind.conflict
+          : {'TIMEOUT', 'NETWORK_ERROR'}.contains(error.code)
+          ? WriteFailureKind.unknown
+          : WriteFailureKind.failed
+    : WriteFailureKind.failed;
 void refreshFeatures(Ref ref) {
   ref.invalidate(caseRowsProvider);
   ref.invalidate(caseOptionsProvider);
@@ -34,5 +47,16 @@ void refreshFeatures(Ref ref) {
 final cacheStaleProvider = StreamProvider<bool>(
   (ref) => ref.watch(clientProvider).staleChanges,
 );
+final staleResourcesProvider = StreamProvider<List<StaleResource>>((ref) {
+  final client = ref.watch(clientProvider);
+  return client is ClientData ? client.staleResources : const Stream.empty();
+});
 
 final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
+final pendingCommandKeysProvider = Provider<PendingCommandKeys>((ref) {
+  final client = ref.watch(clientProvider);
+  if (client is! ClientData) {
+    throw StateError('Persistent command keys require ClientData.');
+  }
+  return PendingCommandKeys(client.secrets, client.namespace);
+});

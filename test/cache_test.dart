@@ -204,6 +204,8 @@ void main() {
     final offline = await source.send(request);
     expect(offline.stale, true);
     expect(offline.fromCache, true);
+    expect(source.staleSnapshot.single.path, '/employees');
+    expect(source.staleSnapshot.single.savedAt, DateTime.utc(2026, 10, 23));
     server.error = const DataFailure(403, 'FORBIDDEN', 'Denied');
     await expectLater(
       source.send(request),

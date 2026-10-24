@@ -1,0 +1,7 @@
+# P2-D recovery contract and limits
+
+The approval decision dialog separates version conflicts (HTTP 412), definite failures, and uncertain outcomes (`TIMEOUT` or `NETWORK_ERROR`). On a conflict it fetches the latest record, displays opened/latest status and version, and keeps the reviewer's note. An uncertain retry retains the same secure-store command key for that account, record, action, ETag and note. A success clears the key. The shared admin editor also uses durable keys for preview and commit requests. Logout and account change erase these keys.
+
+The server must retain idempotency receipts for POST commands and return the original receipt when a retry carries the same key and payload. ETags are opaque and a conflict must return HTTP 412. A timeout must never be presented as a definite failure. The client cannot prove whether a timed-out command committed without the server's receipt and a record refresh.
+
+Cached GET responses can be shown for at most 24 hours after a network error. The banner lists the saved resource path and its last update instant in UTC+07; approval decisions are disabled while stale data is active. Other write surfaces still require coverage before criteria 23–25 can be accepted. Tests prove storage/restart key retention, logout erasure, failure classification, cache metadata, the large-text decision dialog, a competing-reviewer resubmit, and a lost-response replay with exactly one local command receipt. A live gateway exercise remains required.
