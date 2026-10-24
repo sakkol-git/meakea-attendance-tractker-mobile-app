@@ -11,7 +11,110 @@ abstract final class Palette {
       amber = Color(0xFF805400);
 }
 
+@immutable
+class SemanticColors extends ThemeExtension<SemanticColors> {
+  final Color textPrimary, textMuted, surface, card;
+  final Color error, onError, errorBackground;
+  final Color success, onSuccess, successBackground;
+  final Color warning, onWarning, warningBackground;
+  final Color info, onInfo, infoBackground;
+  final Color disabled, selectedNav, focusRing, divider;
+  final Color heroBackground, onHero, onHeroMuted, heroSubtle;
+
+  const SemanticColors({
+    required this.textPrimary,
+    required this.textMuted,
+    required this.surface,
+    required this.card,
+    required this.error,
+    required this.onError,
+    required this.errorBackground,
+    required this.success,
+    required this.onSuccess,
+    required this.successBackground,
+    required this.warning,
+    required this.onWarning,
+    required this.warningBackground,
+    required this.info,
+    required this.onInfo,
+    required this.infoBackground,
+    required this.disabled,
+    required this.selectedNav,
+    required this.focusRing,
+    required this.divider,
+    required this.heroBackground,
+    required this.onHero,
+    required this.onHeroMuted,
+    required this.heroSubtle,
+  });
+
+  static const light = SemanticColors(
+    textPrimary: Color(0xFF172B29),
+    textMuted: Color(0xFF526560),
+    surface: Color(0xFFF5F7F8),
+    card: Colors.white,
+    error: Color(0xFFA12B2B),
+    onError: Colors.white,
+    errorBackground: Color(0xFFFBEAEA),
+    success: Color(0xFF17613F),
+    onSuccess: Colors.white,
+    successBackground: Color(0xFFE8F4F0),
+    warning: Color(0xFF805400),
+    onWarning: Colors.white,
+    warningBackground: Color(0xFFFFF1D7),
+    info: Color(0xFF265A8E),
+    onInfo: Colors.white,
+    infoBackground: Color(0xFFE7F1FA),
+    disabled: Color(0xFF64726F),
+    selectedNav: Color(0xFF006151),
+    focusRing: Color(0xFF006151),
+    divider: Color(0xFF71857F),
+    heroBackground: Color(0xFF006151),
+    onHero: Colors.white,
+    onHeroMuted: Color(0xFFD1EBE4),
+    heroSubtle: Color(0xFF9CE9BF),
+  );
+  static const dark = SemanticColors(
+    textPrimary: Color(0xFFF3F8F5),
+    textMuted: Color(0xFFB8CBC3),
+    surface: Color(0xFF0E1513),
+    card: Color(0xFF1B211F),
+    error: Color(0xFFFFB4AB),
+    onError: Color(0xFF5F1515),
+    errorBackground: Color(0xFF3F2524),
+    success: Color(0xFFA9E8C4),
+    onSuccess: Color(0xFF083922),
+    successBackground: Color(0xFF22392D),
+    warning: Color(0xFFFFD48A),
+    onWarning: Color(0xFF4D3000),
+    warningBackground: Color(0xFF44341C),
+    info: Color(0xFFB4D7FF),
+    onInfo: Color(0xFF163D65),
+    infoBackground: Color(0xFF22364B),
+    disabled: Color(0xFFA1ABA6),
+    selectedNav: Color(0xFFA9E8C4),
+    focusRing: Color(0xFFB4D7FF),
+    divider: Color(0xFF8EA099),
+    heroBackground: Color(0xFF006151),
+    onHero: Colors.white,
+    onHeroMuted: Color(0xFFD1EBE4),
+    heroSubtle: Color(0xFF9CE9BF),
+  );
+
+  @override
+  SemanticColors copyWith() => this;
+
+  @override
+  SemanticColors lerp(ThemeExtension<SemanticColors>? other, double t) =>
+      other is SemanticColors && t >= .5 ? other : this;
+}
+
+extension SemanticTheme on BuildContext {
+  SemanticColors get semantic => Theme.of(this).extension<SemanticColors>()!;
+}
+
 ThemeData appTheme({bool dark = false}) {
+  final semantic = dark ? SemanticColors.dark : SemanticColors.light;
   final scheme = ColorScheme.fromSeed(
     seedColor: Palette.teal,
     brightness: dark ? Brightness.dark : Brightness.light,
@@ -20,7 +123,7 @@ ThemeData appTheme({bool dark = false}) {
     useMaterial3: true,
     colorScheme: scheme,
     fontFamily: 'KantumruyPro',
-    scaffoldBackgroundColor: dark ? scheme.surface : Palette.canvas,
+    scaffoldBackgroundColor: semantic.surface,
   );
   final text = base.textTheme.copyWith(
     headlineLarge: const TextStyle(
@@ -55,42 +158,42 @@ ThemeData appTheme({bool dark = false}) {
   return base.copyWith(
     textTheme: text.apply(
       fontFamily: 'KantumruyPro',
-      bodyColor: dark ? scheme.onSurface : Palette.ink,
-      displayColor: dark ? scheme.onSurface : Palette.ink,
+      bodyColor: semantic.textPrimary,
+      displayColor: semantic.textPrimary,
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: dark ? scheme.surface : Palette.canvas,
+      backgroundColor: semantic.surface,
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
       elevation: 0,
       titleTextStyle: text.titleLarge?.copyWith(
-        color: dark ? scheme.onSurface : Palette.ink,
+        color: semantic.textPrimary,
         fontFamily: 'KantumruyPro',
       ),
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      color: dark ? scheme.surfaceContainer : Colors.white,
+      color: semantic.card,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: BorderSide(color: dark ? scheme.outlineVariant : Palette.line),
+        side: BorderSide(color: semantic.divider),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: dark ? scheme.surfaceContainer : Colors.white,
+      fillColor: semantic.card,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF71857F)),
+        borderSide: BorderSide(color: semantic.disabled),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: Palette.teal,
-        foregroundColor: Colors.white,
+        backgroundColor: dark ? semantic.successBackground : Palette.teal,
+        foregroundColor: dark ? semantic.textPrimary : Colors.white,
         minimumSize: const Size(48, 52),
         textStyle: const TextStyle(
           fontFamily: 'KantumruyPro',
@@ -107,8 +210,15 @@ ThemeData appTheme({bool dark = false}) {
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: dark ? scheme.surface : Colors.white,
-      indicatorColor: Palette.tint,
+      backgroundColor: semantic.card,
+      indicatorColor: semantic.successBackground,
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? semantic.selectedNav
+              : semantic.textMuted,
+        ),
+      ),
       labelTextStyle: WidgetStateProperty.all(
         const TextStyle(
           fontFamily: 'KantumruyPro',
@@ -117,10 +227,11 @@ ThemeData appTheme({bool dark = false}) {
         ),
       ),
     ),
-    dividerTheme: const DividerThemeData(color: Palette.line, space: 1),
+    dividerTheme: DividerThemeData(color: semantic.divider, space: 1),
     snackBarTheme: const SnackBarThemeData(behavior: SnackBarBehavior.floating),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
-      color: Palette.teal,
+    progressIndicatorTheme: ProgressIndicatorThemeData(
+      color: semantic.selectedNav,
     ),
+    extensions: [semantic],
   );
 }

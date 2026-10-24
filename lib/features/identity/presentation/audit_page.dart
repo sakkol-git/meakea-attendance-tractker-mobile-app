@@ -31,14 +31,12 @@ class AuditPage extends ConsumerWidget {
                           children: [
                             Text(
                               statusLabel(r['action'] as String),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             Text(
                               '${r['actor'] ?? r['actorId'] ?? ''} · ${shortDate(r['at'] as String?)}',
-                              style: const TextStyle(
-                                color: Palette.muted,
+                              style: TextStyle(
+                                color: context.semantic.textMuted,
                                 fontSize: 12,
                               ),
                             ),

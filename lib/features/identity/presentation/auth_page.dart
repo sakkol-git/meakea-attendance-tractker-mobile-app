@@ -46,12 +46,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Palette.teal,
+                        color: context.semantic.heroBackground,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.layers_outlined,
-                        color: Colors.white,
+                        color: context.semantic.onHero,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -73,7 +73,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   local
                       ? 'Explore your workspace with fictional data. Choose a role to walk through the experience.'
                       : 'Sign in to your company workspace to manage your day.',
-                  style: const TextStyle(color: Palette.muted),
+                  style: TextStyle(color: context.semantic.textMuted),
                 ),
                 const SizedBox(height: 32),
                 if (session.error != null)
@@ -81,19 +81,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
                       session.error!,
-                      style: const TextStyle(color: Palette.danger),
+                      style: TextStyle(color: context.semantic.error),
                     ),
                   ),
                 if (local) ...demoChoices() else remoteForm(),
                 TextButton(
                   onPressed: () => context.push('/setup'),
-                  child: const Text('Set up a company workspace'),
+                  child: Text('Set up a company workspace'),
                 ),
                 const SizedBox(height: 40),
-                const Text(
+                Text(
                   'Your people. Your workspace.\nDesigned for a calmer workday.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Palette.muted, fontSize: 12),
+                  style: TextStyle(
+                    color: context.semantic.textMuted,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -141,13 +144,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               horizontal: 20,
               vertical: 8,
             ),
-            leading: Icon(entry.$4, color: Palette.teal),
+            leading: Icon(entry.$4, color: context.semantic.selectedNav),
             title: Text(
               entry.$2,
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(fontWeight: FontWeight.w600),
             ),
             subtitle: Text(entry.$3),
-            trailing: const Icon(Icons.arrow_forward, size: 20),
+            trailing: Icon(Icons.arrow_forward, size: 20),
             onTap: () => ref.read(sessionProvider.notifier).demo(entry.$1),
           ),
         ),
@@ -211,18 +214,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           },
         ),
         TextButton(
-          child: const Text('Need help signing in?'),
+          child: Text('Need help signing in?'),
           onPressed: () => showDialog<void>(
             context: context,
             builder: (c) => AlertDialog(
-              title: const Text('Need help signing in?'),
-              content: const Text(
+              title: Text('Need help signing in?'),
+              content: Text(
                 'Contact your company HR administrator to reset your account access.',
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(c),
-                  child: const Text('Got it'),
+                  child: Text('Got it'),
                 ),
               ],
             ),
@@ -240,7 +243,7 @@ class LockPage extends ConsumerWidget {
     title: 'Workspace locked',
     children: [
       const SizedBox(height: 64),
-      const Icon(Icons.lock_outline, size: 64, color: Palette.teal),
+      Icon(Icons.lock_outline, size: 64, color: context.semantic.selectedNav),
       const SizedBox(height: 24),
       Text(
         'Welcome back',
@@ -248,7 +251,7 @@ class LockPage extends ConsumerWidget {
         style: Theme.of(context).textTheme.headlineMedium,
       ),
       const SizedBox(height: 12),
-      const Text(
+      Text(
         'Use your device biometrics or passcode to unlock your workspace.',
         textAlign: TextAlign.center,
       ),
@@ -266,7 +269,7 @@ class LockPage extends ConsumerWidget {
       ),
       TextButton(
         onPressed: () => ref.read(sessionProvider.notifier).signOut(),
-        child: const Text('Sign out instead'),
+        child: Text('Sign out instead'),
       ),
     ],
   );

@@ -57,9 +57,9 @@ class SchedulePage extends ConsumerWidget {
                       child: Surface(
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.event_outlined,
-                              color: Palette.teal,
+                              color: context.semantic.selectedNav,
                             ),
                             const SizedBox(width: 16),
                             Expanded(child: Text(h['name'] as String)),

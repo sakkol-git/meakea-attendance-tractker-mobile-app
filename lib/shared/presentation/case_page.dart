@@ -127,7 +127,7 @@ class _FeatureCasesState extends ConsumerState<FeatureCasesPage> {
         if (panel.dates)
           IconButton(
             tooltip: 'Choose report period',
-            icon: const Icon(Icons.date_range_outlined),
+            icon: Icon(Icons.date_range_outlined),
             onPressed: () async {
               final now = ref.read(clockProvider)();
               final value = await showDateRangePicker(
@@ -150,8 +150,8 @@ class _FeatureCasesState extends ConsumerState<FeatureCasesPage> {
             padding: const EdgeInsets.only(bottom: 20),
             child: FilledButton.icon(
               onPressed: () => context.push('/evidence/capture'),
-              icon: const Icon(Icons.my_location),
-              label: const Text('Submit observation'),
+              icon: Icon(Icons.my_location),
+              label: Text('Submit observation'),
             ),
           ),
         if (panel.key == 'notifications.devices') ...[
@@ -171,7 +171,7 @@ class _FeatureCasesState extends ConsumerState<FeatureCasesPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: FilledButton.icon(
-              icon: const Icon(Icons.add),
+              icon: Icon(Icons.add),
               label: Text(panel.create!.label),
               onPressed: () =>
                   showCaseEditor(context, ref, panel.create!, null),
@@ -522,7 +522,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(prepared!['summary'].toString()),
                       ),
-                    const Text(
+                    Text(
                       'Confirm these changes. A reason and the resulting action are recorded where required.',
                     ),
                   ] else
@@ -536,7 +536,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
                         error!,
-                        style: const TextStyle(color: Palette.danger),
+                        style: TextStyle(color: context.semantic.error),
                       ),
                     ),
                 ],
@@ -658,7 +658,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
             if (state.hasError)
               Text(
                 state.errorText!,
-                style: const TextStyle(color: Palette.danger),
+                style: TextStyle(color: context.semantic.error),
               ),
           ],
         ),
@@ -701,7 +701,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
             ? IconButton(
                 tooltip: 'Choose ${field.label.toLowerCase()}',
                 onPressed: busy ? null : () => selectDate(field),
-                icon: const Icon(Icons.calendar_today_outlined),
+                icon: Icon(Icons.calendar_today_outlined),
               )
             : null,
       ),

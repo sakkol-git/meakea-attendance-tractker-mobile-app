@@ -37,7 +37,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           onPressed: () => context.push('/notifications'),
           icon: Badge(
             isLabelVisible: inbox.any((m) => !m.read),
-            child: const Icon(Icons.notifications_outlined),
+            child: Icon(Icons.notifications_outlined),
           ),
         ),
         const SizedBox(width: 8),
@@ -47,7 +47,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           children: [
             CircleAvatar(
               radius: 25,
-              backgroundColor: Palette.tint,
+              backgroundColor: context.semantic.successBackground,
               child: Text(
                 p.name
                     .split(' ')
@@ -55,8 +55,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     .map((s) => s[0])
                     .take(2)
                     .join(),
-                style: const TextStyle(
-                  color: Palette.teal,
+                style: TextStyle(
+                  color: context.semantic.selectedNav,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -72,7 +72,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                   Text(
                     p.position,
-                    style: const TextStyle(color: Palette.muted),
+                    style: TextStyle(color: context.semantic.textMuted),
                   ),
                 ],
               ),
@@ -90,7 +90,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             return Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Palette.teal,
+                color: context.semantic.heroBackground,
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Column(
@@ -98,9 +98,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.schedule_outlined,
-                        color: Colors.white70,
+                        color: context.semantic.onHeroMuted,
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -109,8 +109,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                           open == null
                               ? 'Make today count'
                               : 'You’re clocked in',
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.semantic.onHero,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -120,8 +120,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: open == null
-                              ? Colors.white38
-                              : const Color(0xFF9CE9BF),
+                              ? context.semantic.heroSubtle
+                              : context.semantic.success,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -134,8 +134,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                               ? 'Ready for a\nproductive day?'
                               : 'Your workday,\nwell recorded.')
                         : 'One task at\na time.',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.semantic.onHero,
                       fontSize: 30,
                       height: 1.3,
                       fontWeight: FontWeight.w600,
@@ -150,7 +150,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                           timeText((open ?? recent)?.clockIn),
                         ),
                       ),
-                      Container(width: 1, height: 38, color: Colors.white24),
+                      Container(
+                        width: 1,
+                        height: 38,
+                        color: context.semantic.heroSubtle,
+                      ),
                       const SizedBox(width: 24),
                       Expanded(
                         child: _ClockMetric(
@@ -165,8 +169,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                     data: Theme.of(context).copyWith(
                       filledButtonTheme: FilledButtonThemeData(
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Palette.teal,
+                          backgroundColor: context.semantic.onHero,
+                          foregroundColor: context.semantic.heroBackground,
                           minimumSize: const Size(48, 52),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -197,10 +201,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Recorded in your company timezone · GMT+07',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                    style: TextStyle(
+                      color: context.semantic.onHeroMuted,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -277,9 +284,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                       Text(
                         formatLeaveDays(balances[i].available),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Palette.teal,
+                          color: context.semantic.selectedNav,
                         ),
                       ),
                     ],
@@ -290,11 +297,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ),
         const SizedBox(height: 20),
-        const Surface(
+        Surface(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.tips_and_updates_outlined, color: Palette.teal),
+              Icon(
+                Icons.tips_and_updates_outlined,
+                color: context.semantic.selectedNav,
+              ),
               SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -316,12 +326,15 @@ class _ClockMetric extends StatelessWidget {
   Widget build(BuildContext c) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+      Text(
+        label,
+        style: TextStyle(color: c.semantic.onHeroMuted, fontSize: 12),
+      ),
       const SizedBox(height: 6),
       Text(
         value,
         style: TextStyle(
-          color: Colors.white,
+          color: c.semantic.onHero,
           fontSize: value == 'Not recorded' ? 16 : 24,
           fontWeight: FontWeight.w600,
         ),
@@ -354,13 +367,13 @@ class _QuickAction extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: Palette.teal),
+              Icon(icon, color: c.semantic.selectedNav),
               const SizedBox(height: 16),
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: const TextStyle(fontSize: 12, color: Palette.muted),
+                style: TextStyle(fontSize: 12, color: c.semantic.textMuted),
               ),
             ],
           ),

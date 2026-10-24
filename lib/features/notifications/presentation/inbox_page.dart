@@ -21,7 +21,7 @@ class NotificationsPage extends ConsumerWidget {
             if (context.mounted) toast(context, message(e));
           }
         },
-        child: const Text('Read all'),
+        child: Text('Read all'),
       ),
     ],
     onRefresh: () async {
@@ -50,7 +50,9 @@ class NotificationsPage extends ConsumerWidget {
                             m.read
                                 ? Icons.notifications_none
                                 : Icons.notifications_active_outlined,
-                            color: m.read ? Palette.muted : Palette.teal,
+                            color: m.read
+                                ? context.semantic.textMuted
+                                : context.semantic.selectedNav,
                           ),
                           title: Text(
                             m.title,
@@ -66,10 +68,10 @@ class NotificationsPage extends ConsumerWidget {
                           ),
                           trailing: m.read
                               ? null
-                              : const Icon(
+                              : Icon(
                                   Icons.circle,
                                   size: 8,
-                                  color: Palette.teal,
+                                  color: context.semantic.selectedNav,
                                 ),
                           onTap: () async {
                             try {

@@ -21,8 +21,8 @@ class PreferencesPage extends ConsumerWidget {
             children: [
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Dark appearance'),
-                subtitle: const Text('A softer workspace in low light'),
+                title: Text('Dark appearance'),
+                subtitle: Text('A softer workspace in low light'),
                 value: settings.dark,
                 onChanged: ref.read(settingsProvider.notifier).setDark,
               ),
@@ -94,10 +94,10 @@ class SecurityPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Icon(
+              Icon(
                 Icons.verified_user_outlined,
                 size: 48,
-                color: Palette.teal,
+                color: context.semantic.selectedNav,
               ),
               const SizedBox(height: 16),
               Text(
@@ -105,13 +105,13 @@ class SecurityPage extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Use your device biometrics or passcode when returning to HRFlow. Your device handles verification; HRFlow never stores your device PIN.',
               ),
               const SizedBox(height: 16),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Require device unlock'),
+                title: Text('Require device unlock'),
                 value: enabled,
                 onChanged: kIsWeb
                     ? null
@@ -146,15 +146,15 @@ class SecurityPage extends ConsumerWidget {
                       },
               ),
               if (kIsWeb)
-                const Text(
+                Text(
                   'Device unlock is available in the native Android and iOS app.',
-                  style: TextStyle(color: Palette.muted),
+                  style: TextStyle(color: context.semantic.textMuted),
                 ),
               if (enabled)
                 OutlinedButton.icon(
                   onPressed: () => ref.read(sessionProvider.notifier).lock(),
-                  icon: const Icon(Icons.lock_outline),
-                  label: const Text('Lock now'),
+                  icon: Icon(Icons.lock_outline),
+                  label: Text('Lock now'),
                 ),
             ],
           ),
@@ -163,8 +163,8 @@ class SecurityPage extends ConsumerWidget {
           const SectionTitle('Account password'),
           OutlinedButton.icon(
             onPressed: () => context.push('/security/password'),
-            icon: const Icon(Icons.password),
-            label: const Text('Change password'),
+            icon: Icon(Icons.password),
+            label: Text('Change password'),
           ),
         ],
       ],
@@ -262,11 +262,15 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext c) => AppPage(
     title: 'About your workspace',
     children: [
-      const Surface(
+      Surface(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.layers_outlined, size: 40, color: Palette.teal),
+            Icon(
+              Icons.layers_outlined,
+              size: 40,
+              color: c.semantic.selectedNav,
+            ),
             SizedBox(height: 16),
             Text(
               'HRFlow',
@@ -277,12 +281,15 @@ class AboutPage extends StatelessWidget {
               'A calmer way to manage your workday. Attendance, leave and requests in one thoughtful workspace.',
             ),
             SizedBox(height: 16),
-            Text('Version 1.0.0', style: TextStyle(color: Palette.muted)),
+            Text(
+              'Version 1.0.0',
+              style: TextStyle(color: c.semantic.textMuted),
+            ),
           ],
         ),
       ),
       const SectionTitle('Your information'),
-      const Surface(
+      Surface(
         child: Text(
           'Your organization manages access to employment records. Contact your HR administrator for your company’s privacy notice, employment policies, data requests or account support.',
         ),
@@ -294,7 +301,7 @@ class AboutPage extends StatelessWidget {
           applicationName: 'HRFlow',
           applicationVersion: '1.0.0',
         ),
-        child: const Text('Open-source licenses'),
+        child: Text('Open-source licenses'),
       ),
     ],
   );

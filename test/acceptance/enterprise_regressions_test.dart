@@ -594,25 +594,73 @@ void main() {
     },
   );
 
-  test('acceptance F03 dark functional text meets 4.5 contrast', () {
-    final theme = appTheme(dark: true);
-    final card = theme.colorScheme.surfaceContainer;
-    final approvedBackground = Color.alphaBlend(
-      const Color(0xFF17613F).withValues(alpha: .09),
-      card,
-    );
-    final pairs = <String, (Color, Color)>{
-      'muted on surface': (Palette.muted, theme.colorScheme.surface),
-      'muted on card': (Palette.muted, card),
-      'approved on pill': (const Color(0xFF17613F), approvedBackground),
-      'error on card': (Palette.danger, card),
-    };
-    for (final entry in pairs.entries) {
+  test('acceptance F03 every semantic text and control pair has contrast', () {
+    for (final dark in [false, true]) {
+      final colors = appTheme(dark: dark).extension<SemanticColors>()!;
+      final textPairs = <String, (Color, Color)>{
+        'primary/surface': (colors.textPrimary, colors.surface),
+        'primary/card': (colors.textPrimary, colors.card),
+        'muted/surface': (colors.textMuted, colors.surface),
+        'muted/card': (colors.textMuted, colors.card),
+        'error/card': (colors.error, colors.card),
+        'success/pill': (colors.success, colors.successBackground),
+        'error/pill': (colors.error, colors.errorBackground),
+        'warning/pill': (colors.warning, colors.warningBackground),
+        'info/pill': (colors.info, colors.infoBackground),
+        'muted/neutral pill': (colors.textMuted, colors.card),
+        'onError/error': (colors.onError, colors.error),
+        'onSuccess/success': (colors.onSuccess, colors.success),
+        'onWarning/warning': (colors.onWarning, colors.warning),
+        'onInfo/info': (colors.onInfo, colors.info),
+        'onHero/hero': (colors.onHero, colors.heroBackground),
+        'onHeroMuted/hero': (colors.onHeroMuted, colors.heroBackground),
+        'hero button text/button': (colors.heroBackground, colors.onHero),
+      };
+      for (final entry in textPairs.entries) {
+        final ratio = _contrast(entry.value.$1, entry.value.$2);
+        expect(
+          ratio,
+          greaterThanOrEqualTo(4.5),
+          reason:
+              '${dark ? 'dark' : 'light'} ${entry.key}: ${ratio.toStringAsFixed(2)}:1',
+        );
+      }
+      final controlPairs = <String, (Color, Color)>{
+        'selected nav/indicator': (
+          colors.selectedNav,
+          colors.successBackground,
+        ),
+        'unselected nav/card': (colors.textMuted, colors.card),
+        'focus/card': (colors.focusRing, colors.card),
+        'focus/surface': (colors.focusRing, colors.surface),
+        'divider/card': (colors.divider, colors.card),
+        'disabled/card': (colors.disabled, colors.card),
+        'hero indicator/hero': (colors.heroSubtle, colors.heroBackground),
+      };
+      for (final entry in controlPairs.entries) {
+        final ratio = _contrast(entry.value.$1, entry.value.$2);
+        expect(
+          ratio,
+          greaterThanOrEqualTo(3),
+          reason:
+              '${dark ? 'dark' : 'light'} ${entry.key}: ${ratio.toStringAsFixed(2)}:1',
+        );
+      }
+    }
+  });
+
+  test('acceptance F03 feature code contains no literal ARGB colors', () {
+    for (final file in Directory(
+      'lib',
+    ).listSync(recursive: true).whereType<File>()) {
+      if (!file.path.endsWith('.dart') ||
+          file.path.endsWith('/core/theme.dart')) {
+        continue;
+      }
       expect(
-        _contrast(entry.value.$1, entry.value.$2),
-        greaterThanOrEqualTo(4.5),
-        reason:
-            '${entry.key}: ${_contrast(entry.value.$1, entry.value.$2).toStringAsFixed(2)}:1',
+        File(file.path).readAsStringSync(),
+        isNot(contains('Color(0x')),
+        reason: file.path,
       );
     }
   });

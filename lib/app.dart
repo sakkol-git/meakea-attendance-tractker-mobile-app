@@ -286,17 +286,17 @@ class WorkspaceShell extends ConsumerWidget {
               bottom: false,
               child: Container(
                 width: double.infinity,
-                color: Palette.tint,
+                color: context.semantic.successBackground,
                 padding: const EdgeInsets.symmetric(
                   vertical: 5,
                   horizontal: 16,
                 ),
-                child: const Text(
+                child: Text(
                   'DEMO WORKSPACE  ·  Fictional data',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Palette.teal,
+                    color: context.semantic.success,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

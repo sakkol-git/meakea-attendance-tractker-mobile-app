@@ -47,7 +47,7 @@ class _ReportsState extends ConsumerState<ReportsPage> {
                 child: Surface(
                   child: Row(
                     children: [
-                      Icon(e.$3, color: Palette.teal),
+                      Icon(e.$3, color: context.semantic.selectedNav),
                       const SizedBox(width: 16),
                       Expanded(child: Text(e.$1)),
                       Text(
@@ -62,9 +62,9 @@ class _ReportsState extends ConsumerState<ReportsPage> {
         ),
       ),
       const SectionTitle('Export attendance'),
-      const Text(
+      Text(
         'Download a CSV of recorded sessions. Exported files can contain employee information; share them only with authorized people.',
-        style: TextStyle(color: Palette.muted),
+        style: TextStyle(color: context.semantic.textMuted),
       ),
       const SizedBox(height: 16),
       BusyButton(

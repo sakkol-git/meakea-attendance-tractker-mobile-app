@@ -50,11 +50,17 @@ class WorkflowTile extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right, color: Palette.muted),
+                    Icon(
+                      Icons.chevron_right,
+                      color: context.semantic.textMuted,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(dates, style: const TextStyle(color: Palette.muted)),
+                Text(
+                  dates,
+                  style: TextStyle(color: context.semantic.textMuted),
+                ),
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 12,
@@ -65,12 +71,15 @@ class WorkflowTile extends StatelessWidget {
                     if (r.fields['days'] != null)
                       Text(
                         formatLeaveDays(r.fields['days'] as num?),
-                        style: const TextStyle(fontSize: 13),
+                        style: TextStyle(fontSize: 14),
                       ),
                     if (r.fields['approvalStage'] == 'HR')
-                      const Text(
+                      Text(
                         'HR review',
-                        style: TextStyle(fontSize: 13, color: Palette.amber),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: context.semantic.warning,
+                        ),
                       ),
                   ],
                 ),
@@ -118,7 +127,7 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
         IconButton(
           tooltip: 'New ${leave ? 'leave request' : 'request'}',
           onPressed: () => context.push('/new/${widget.kind}'),
-          icon: const Icon(Icons.add_circle_outline),
+          icon: Icon(Icons.add_circle_outline),
         ),
         const SizedBox(width: 8),
       ],
@@ -144,12 +153,12 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Palette.tint,
+                              color: context.semantic.successBackground,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.spa_outlined,
-                              color: Palette.teal,
+                              color: context.semantic.selectedNav,
                             ),
                           ),
                           const SizedBox(width: 14),
@@ -159,15 +168,13 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                               children: [
                                 Text(
                                   b.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                                 Text(
                                   '${formatLeaveDays(b.used)} used · ${formatLeaveDays(b.pending)} pending\n${leaveBalancePeriod(b.year)}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
-                                    color: Palette.muted,
+                                    color: context.semantic.textMuted,
                                   ),
                                 ),
                               ],
@@ -243,7 +250,7 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                     : Icons.assignment_outlined,
                 action: TextButton(
                   onPressed: () => context.push('/new/${widget.kind}'),
-                  child: const Text('Create a request'),
+                  child: Text('Create a request'),
                 ),
               );
             }
@@ -266,7 +273,7 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
         const SizedBox(height: 12),
         FilledButton.icon(
           onPressed: () => context.push('/new/${widget.kind}'),
-          icon: const Icon(Icons.add),
+          icon: Icon(Icons.add),
           label: Text(leave ? 'Request time off' : 'Create request'),
         ),
       ],
@@ -337,7 +344,9 @@ class _ApprovalPageState extends ConsumerState<ApprovalPage> {
                             padding: const EdgeInsets.only(left: 4, bottom: 6),
                             child: Text(
                               row.employeeName,
-                              style: const TextStyle(color: Palette.muted),
+                              style: TextStyle(
+                                color: context.semantic.textMuted,
+                              ),
                             ),
                           ),
                           WorkflowTile(row),
@@ -405,7 +414,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                       const SizedBox(height: 8),
                       Text(
                         'Requested by ${r.employeeName}',
-                        style: const TextStyle(color: Palette.muted),
+                        style: TextStyle(color: context.semantic.textMuted),
                       ),
                       const Divider(height: 32),
                       if (r.fields['startDate'] != null) ...[
@@ -551,8 +560,8 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                       );
                       ref.invalidate(provider);
                     },
-                    icon: const Icon(Icons.chat_bubble_outline),
-                    label: const Text('Add comment'),
+                    icon: Icon(Icons.chat_bubble_outline),
+                    label: Text('Add comment'),
                   ),
                 ],
                 if (r.kind == 'request' || r.kind == 'leave') ...[
@@ -562,17 +571,19 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (files.isEmpty)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.only(bottom: 12),
                             child: Text(
                               'No attachments yet.',
-                              style: TextStyle(color: Palette.muted),
+                              style: TextStyle(
+                                color: context.semantic.textMuted,
+                              ),
                             ),
                           ),
                         for (final file in files)
                           ListTile(
                             contentPadding: EdgeInsets.zero,
-                            leading: const Icon(Icons.attach_file),
+                            leading: Icon(Icons.attach_file),
                             title: Text(
                               file['name'] as String? ?? 'Attachment',
                             ),
@@ -628,7 +639,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                                         }
                                       }
                                     },
-                              icon: const Icon(Icons.download_outlined),
+                              icon: Icon(Icons.download_outlined),
                             ),
                           ),
                         if (actions.contains('cancel'))
@@ -683,7 +694,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                                       }
                                     }
                                   },
-                            icon: const Icon(Icons.add),
+                            icon: Icon(Icons.add),
                             label: Text(
                               working
                                   ? 'Working…'
@@ -729,15 +740,15 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                     padding: const EdgeInsets.only(top: 16),
                     child: Text(
                       error!,
-                      style: const TextStyle(color: Palette.danger),
+                      style: TextStyle(color: context.semantic.error),
                     ),
                   ),
                 const SizedBox(height: 24),
                 if (actions.contains('submit'))
                   OutlinedButton.icon(
                     onPressed: () => context.push('/edit/request/${r.id}'),
-                    icon: const Icon(Icons.edit_outlined),
-                    label: const Text('Edit draft'),
+                    icon: Icon(Icons.edit_outlined),
+                    label: Text('Edit draft'),
                   ),
                 const SizedBox(height: 8),
                 if (actions.contains('submit'))
@@ -749,7 +760,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                 if (actions.contains('cancel'))
                   TextButton(
                     onPressed: () => _decision(r, 'cancel'),
-                    child: const Text('Cancel request'),
+                    child: Text('Cancel request'),
                   ),
                 if (actions.contains('approve')) ...[
                   BusyButton(
@@ -760,8 +771,8 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                   const SizedBox(height: 8),
                   OutlinedButton.icon(
                     onPressed: () => _decision(r, 'reject'),
-                    icon: const Icon(Icons.close),
-                    label: const Text('Reject request'),
+                    icon: Icon(Icons.close),
+                    label: Text('Reject request'),
                   ),
                 ],
                 if (actions.contains('fulfill'))
@@ -828,7 +839,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                     padding: const EdgeInsets.only(top: 12),
                     child: Text(
                       failure!,
-                      style: const TextStyle(color: Palette.danger),
+                      style: TextStyle(color: context.semantic.error),
                     ),
                   ),
               ],
@@ -837,7 +848,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
           actions: [
             TextButton(
               onPressed: busy ? null : () => Navigator.pop(dialog),
-              child: const Text('Go back'),
+              child: Text('Go back'),
             ),
             FilledButton(
               onPressed: busy
@@ -904,17 +915,17 @@ class _TimelineItem extends StatelessWidget {
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: Palette.teal),
+        Icon(icon, size: 20, color: c.semantic.selectedNav),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+              Text(title, style: TextStyle(fontWeight: FontWeight.w500)),
               if (subtitle.isNotEmpty)
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 12, color: Palette.muted),
+                  style: TextStyle(fontSize: 12, color: c.semantic.textMuted),
                 ),
             ],
           ),

@@ -32,7 +32,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
           );
           if (selected != null) setState(() => range = selected);
         },
-        icon: const Icon(Icons.date_range_outlined),
+        icon: Icon(Icons.date_range_outlined),
       ),
     ],
     onRefresh: () async {
@@ -72,7 +72,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                       'If something looks wrong, send a correction for review.',
                   action: TextButton(
                     onPressed: () => context.push('/new/correction'),
-                    child: const Text('Report an issue'),
+                    child: Text('Report an issue'),
                   ),
                 )
               : Column(
@@ -128,9 +128,11 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Recorded time',
-                              style: TextStyle(color: Palette.muted),
+                              style: TextStyle(
+                                color: context.semantic.textMuted,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -142,7 +144,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                       ),
                       Text(
                         '${sessions.length} sessions',
-                        style: const TextStyle(color: Palette.teal),
+                        style: TextStyle(color: context.semantic.selectedNav),
                       ),
                     ],
                   ),
@@ -165,9 +167,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                                         .add(const Duration(hours: 7))
                                         .toString(),
                                   ),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: TextStyle(fontWeight: FontWeight.w600),
                                 ),
                               ),
                               StatusPill(
@@ -191,11 +191,11 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Clock in',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Palette.muted,
+                                        color: context.semantic.textMuted,
                                       ),
                                     ),
                                     Text(
@@ -211,11 +211,11 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Clock out',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Palette.muted,
+                                        color: context.semantic.textMuted,
                                       ),
                                     ),
                                     Text(
@@ -230,8 +230,8 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                               if (s.clockOut != null)
                                 Text(
                                   durationText(s.duration),
-                                  style: const TextStyle(
-                                    color: Palette.teal,
+                                  style: TextStyle(
+                                    color: context.semantic.selectedNav,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -272,7 +272,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                             alignment: Alignment.centerRight,
                             child: TextButton(
                               onPressed: () => context.push('/new/correction'),
-                              child: const Text('Report an issue'),
+                              child: Text('Report an issue'),
                             ),
                           ),
                         ],
@@ -286,8 +286,8 @@ class _ActivityState extends ConsumerState<ActivityPage> {
       const SizedBox(height: 12),
       OutlinedButton.icon(
         onPressed: () => context.push('/new/correction'),
-        icon: const Icon(Icons.edit_calendar_outlined),
-        label: const Text('Request a correction'),
+        icon: Icon(Icons.edit_calendar_outlined),
+        label: Text('Request a correction'),
       ),
     ],
   );

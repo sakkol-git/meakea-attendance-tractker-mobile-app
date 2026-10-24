@@ -37,16 +37,16 @@ class ShiftAssignmentsPage extends ConsumerWidget {
                     description: 'Add a shift under Profile → Shift rules before assigning it to an employee.',
                   )
                 : FilledButton.icon(
-                    icon: const Icon(Icons.event_available_outlined),
-                    label: const Text('Assign a work shift'),
+                    icon: Icon(Icons.event_available_outlined),
+                    label: Text('Assign a work shift'),
                     onPressed: () =>
                         assignShiftDialog(context, ref, employeeId, shifts),
                   ),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Date ranges include both the first and last day. Existing assignments are preserved. An overlapping period must be resolved before adding another assignment.',
-            style: TextStyle(color: Palette.muted),
+            style: TextStyle(color: context.semantic.textMuted),
           ),
         ],
       ],
@@ -94,8 +94,8 @@ class ShiftAssignmentsSection extends ConsumerWidget {
                                 : assignment.validFrom.compareTo(date) > 0
                                 ? 'Upcoming assignment'
                                 : 'Previous assignment',
-                            style: const TextStyle(
-                              color: Palette.teal,
+                            style: TextStyle(
+                              color: context.semantic.selectedNav,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -184,7 +184,7 @@ class _AssignShiftState extends ConsumerState<_AssignShiftDialog> {
     return PopScope(
       canPop: !busy,
       child: AlertDialog(
-        title: const Text('Assign a work shift'),
+        title: Text('Assign a work shift'),
         content: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
           child: Form(
@@ -223,7 +223,7 @@ class _AssignShiftState extends ConsumerState<_AssignShiftDialog> {
                       suffixIcon: IconButton(
                         tooltip: 'Choose first day',
                         onPressed: busy ? null : () => pick(from),
-                        icon: const Icon(Icons.calendar_today_outlined),
+                        icon: Icon(Icons.calendar_today_outlined),
                       ),
                     ),
                     validator: (value) =>
@@ -233,7 +233,7 @@ class _AssignShiftState extends ConsumerState<_AssignShiftDialog> {
                   ),
                   SwitchListTile(
                     contentPadding: EdgeInsets.zero,
-                    title: const Text('No end date'),
+                    title: Text('No end date'),
                     value: noEnd,
                     onChanged: busy
                         ? null
@@ -249,7 +249,7 @@ class _AssignShiftState extends ConsumerState<_AssignShiftDialog> {
                         suffixIcon: IconButton(
                           tooltip: 'Choose last day',
                           onPressed: busy ? null : () => pick(to),
-                          icon: const Icon(Icons.calendar_today_outlined),
+                          icon: Icon(Icons.calendar_today_outlined),
                         ),
                       ),
                       validator: (value) =>
@@ -264,7 +264,7 @@ class _AssignShiftState extends ConsumerState<_AssignShiftDialog> {
                       padding: const EdgeInsets.only(top: 16),
                       child: Text(
                         error!,
-                        style: const TextStyle(color: Palette.danger),
+                        style: TextStyle(color: context.semantic.error),
                       ),
                     ),
                 ],
@@ -275,7 +275,7 @@ class _AssignShiftState extends ConsumerState<_AssignShiftDialog> {
         actions: [
           TextButton(
             onPressed: busy ? null : () => Navigator.pop(dialog),
-            child: const Text('Go back'),
+            child: Text('Go back'),
           ),
           FilledButton(
             onPressed: busy

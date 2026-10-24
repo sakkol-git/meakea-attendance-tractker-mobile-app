@@ -20,11 +20,11 @@ class ProfilePage extends ConsumerWidget {
             children: [
               CircleAvatar(
                 radius: 36,
-                backgroundColor: Palette.tint,
+                backgroundColor: context.semantic.successBackground,
                 child: Text(
                   p.name.split(' ').map((s) => s[0]).take(2).join(),
-                  style: const TextStyle(
-                    color: Palette.teal,
+                  style: TextStyle(
+                    color: context.semantic.selectedNav,
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                   ),
@@ -32,7 +32,10 @@ class ProfilePage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(p.name, style: Theme.of(context).textTheme.headlineMedium),
-              Text(p.position, style: const TextStyle(color: Palette.muted)),
+              Text(
+                p.position,
+                style: TextStyle(color: context.semantic.textMuted),
+              ),
               const SizedBox(height: 12),
               StatusPill(p.role),
               const SizedBox(height: 16),
@@ -84,9 +87,9 @@ class ProfilePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
+                Text(
                   'Switch personas to follow a request from submission through approval. Demo changes stay on this device.',
-                  style: TextStyle(color: Palette.muted),
+                  style: TextStyle(color: context.semantic.textMuted),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -122,18 +125,18 @@ class ProfilePage extends ConsumerWidget {
                     final reset = await showDialog<bool>(
                       context: context,
                       builder: (c) => AlertDialog(
-                        title: const Text('Reset demo workspace?'),
-                        content: const Text(
+                        title: Text('Reset demo workspace?'),
+                        content: Text(
                           'All demo changes, files and decisions will be cleared.',
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(c, false),
-                            child: const Text('Keep data'),
+                            child: Text('Keep data'),
                           ),
                           FilledButton(
                             onPressed: () => Navigator.pop(c, true),
-                            child: const Text('Reset'),
+                            child: Text('Reset'),
                           ),
                         ],
                       ),
@@ -146,7 +149,7 @@ class ProfilePage extends ConsumerWidget {
                       }
                     }
                   },
-                  child: const Text('Reset demo data'),
+                  child: Text('Reset demo data'),
                 ),
               ],
             ),
@@ -158,18 +161,18 @@ class ProfilePage extends ConsumerWidget {
             final confirmed = await showDialog<bool>(
               context: context,
               builder: (c) => AlertDialog(
-                title: const Text('Sign out?'),
-                content: const Text(
+                title: Text('Sign out?'),
+                content: Text(
                   'Your workspace data remains saved. You can sign in again at any time.',
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(c, false),
-                    child: const Text('Stay here'),
+                    child: Text('Stay here'),
                   ),
                   FilledButton(
                     onPressed: () => Navigator.pop(c, true),
-                    child: const Text('Sign out'),
+                    child: Text('Sign out'),
                   ),
                 ],
               ),
@@ -178,8 +181,8 @@ class ProfilePage extends ConsumerWidget {
               await ref.read(sessionProvider.notifier).signOut();
             }
           },
-          icon: const Icon(Icons.logout),
-          label: const Text('Sign out'),
+          icon: Icon(Icons.logout),
+          label: Text('Sign out'),
         ),
       ],
     );
@@ -196,9 +199,9 @@ class _Link extends StatelessWidget {
     child: Card(
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 5),
-        leading: Icon(icon, color: Palette.teal),
+        leading: Icon(icon, color: c.semantic.selectedNav),
         title: Text(title),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(Icons.chevron_right),
         onTap: () => c.push(path),
       ),
     ),
@@ -260,9 +263,9 @@ class _EditProfileState extends ConsumerState<EditProfilePage> {
                     : null,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Your work email, position and department are managed by HR.',
-                style: TextStyle(color: Palette.muted),
+                style: TextStyle(color: context.semantic.textMuted),
               ),
               const SizedBox(height: 24),
               BusyButton(

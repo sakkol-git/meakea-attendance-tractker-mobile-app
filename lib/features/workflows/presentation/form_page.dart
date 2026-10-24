@@ -123,16 +123,16 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
     return await showDialog<bool>(
           context: context,
           builder: (c) => AlertDialog(
-            title: const Text('Discard this draft?'),
-            content: const Text('Your unsaved changes will be lost.'),
+            title: Text('Discard this draft?'),
+            content: Text('Your unsaved changes will be lost.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(c, false),
-                child: const Text('Keep editing'),
+                child: Text('Keep editing'),
               ),
               FilledButton(
                 onPressed: () => Navigator.pop(c, true),
-                child: const Text('Discard'),
+                child: Text('Discard'),
               ),
             ],
           ),
@@ -319,7 +319,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                                   : () => setState(
                                       () => additionalMaterials.remove(item),
                                     ),
-                              icon: const Icon(Icons.close),
+                              icon: Icon(Icons.close),
                             ),
                           ),
                         ),
@@ -346,8 +346,8 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                                   error = null;
                                 });
                               },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add another material'),
+                        icon: Icon(Icons.add),
+                        label: Text('Add another material'),
                       ),
                     ],
                   ],
@@ -401,9 +401,12 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                             : (v) => setState(() => halfDay = v!),
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'Weekends and company holidays are excluded in the demo. Your company’s policy determines the final balance.',
-                        style: TextStyle(fontSize: 12, color: Palette.muted),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.semantic.textMuted,
+                        ),
                       ),
                     ],
                     if (correction ||
@@ -429,16 +432,14 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                       ),
                       if (correction) ...[
                         const SizedBox(height: 12),
-                        const Text(
-                          'Company time zone: Asia/Phnom_Penh (UTC+07)',
-                        ),
+                        Text('Company time zone: Asia/Phnom_Penh (UTC+07)'),
                         if (iso(to) != iso(from))
-                          const Text(
+                          Text(
                             'Ends next day',
                             key: Key('correction-next-day'),
                           ),
                         const SizedBox(height: 12),
-                        const Text('Original recorded time'),
+                        Text('Original recorded time'),
                         AsyncPanel(
                           value: ref.watch(sessionsProvider),
                           retry: () => ref.invalidate(sessionsProvider),
@@ -450,9 +451,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                               return iso(day) == iso(from);
                             }).toList();
                             if (originals.isEmpty) {
-                              return const Text(
-                                'No recorded session on this date',
-                              );
+                              return Text('No recorded session on this date');
                             }
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,7 +489,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
                         error!,
-                        style: const TextStyle(color: Palette.danger),
+                        style: TextStyle(color: context.semantic.error),
                       ),
                     ),
                   const SizedBox(height: 8),
@@ -502,7 +501,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.arrow_forward),
+                        : Icon(Icons.arrow_forward),
                     label: Text(
                       saving
                           ? 'Saving…'
@@ -512,11 +511,14 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                     ),
                   ),
                   if (!leave && !correction)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 12),
                       child: Text(
                         'You can add attachments and review the draft before submitting.',
-                        style: TextStyle(fontSize: 12, color: Palette.muted),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: context.semantic.textMuted,
+                        ),
                       ),
                     ),
                 ],
@@ -701,9 +703,9 @@ class _FieldButton extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: const TextStyle(fontSize: 12, color: Palette.muted),
+                style: TextStyle(fontSize: 12, color: c.semantic.textMuted),
               ),
-              Text(value, style: const TextStyle(fontSize: 16)),
+              Text(value, style: TextStyle(fontSize: 16)),
             ],
           ),
         ),
@@ -729,7 +731,7 @@ class EditRequestPage extends ConsumerWidget {
               Text(message(e)),
               TextButton(
                 onPressed: () => ref.invalidate(provider),
-                child: const Text('Try again'),
+                child: Text('Try again'),
               ),
             ],
           ),

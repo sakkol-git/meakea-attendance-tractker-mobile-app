@@ -31,11 +31,11 @@ class AppPage extends ConsumerWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         if (ref.watch(cacheStaleProvider).asData?.value == true)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 16),
             child: Text(
               'Showing saved data. It may be out of date. Pull to refresh.',
-              style: TextStyle(color: Palette.amber),
+              style: TextStyle(color: context.semantic.warning),
             ),
           ),
         if (subtitle != null)
@@ -44,7 +44,7 @@ class AppPage extends ConsumerWidget {
             child: Text(
               subtitle!,
               style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: Palette.muted),
+                  ?.copyWith(color: context.semantic.textMuted),
             ),
           ),
         ...children,
@@ -152,7 +152,7 @@ class AsyncPanel<T> extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.cloud_off_outlined, color: Palette.muted),
+          Icon(Icons.cloud_off_outlined, color: context.semantic.textMuted),
           const SizedBox(height: 12),
           Text(message(e)),
           const SizedBox(height: 12),
@@ -197,7 +197,7 @@ class EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         children: [
-          Icon(icon, size: 36, color: Palette.muted),
+          Icon(icon, size: 36, color: context.semantic.textMuted),
           const SizedBox(height: 12),
           Text(
             title,
@@ -228,23 +228,31 @@ class StatusPill extends StatelessWidget {
         ].contains(status),
         danger = ['REJECTED', 'FAILED', 'INACTIVE'].contains(status),
         pending = ['PENDING', 'QUEUED', 'REVIEW_NEEDED'].contains(status);
+    final semantic = context.semantic;
     final color = success
-        ? const Color(0xFF17613F)
+        ? semantic.success
         : danger
-        ? Palette.danger
+        ? semantic.error
         : pending
-        ? Palette.amber
-        : Palette.muted;
+        ? semantic.warning
+        : semantic.textMuted;
+    final background = success
+        ? semantic.successBackground
+        : danger
+        ? semantic.errorBackground
+        : pending
+        ? semantic.warningBackground
+        : semantic.card;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: .09),
+        color: background,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         statusLabel(status),
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 14,
           height: 1.5,
           fontWeight: FontWeight.w600,
           color: color,
@@ -281,7 +289,10 @@ class InfoRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          child: Text(label, style: const TextStyle(color: Palette.muted)),
+          child: Text(
+            label,
+            style: TextStyle(color: context.semantic.textMuted),
+          ),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -322,7 +333,7 @@ class _BusyButtonState extends State<BusyButton> {
       if (error != null)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Text(error!, style: const TextStyle(color: Palette.danger)),
+          child: Text(error!, style: TextStyle(color: context.semantic.error)),
         ),
       FilledButton.icon(
         onPressed: busy || !widget.enabled

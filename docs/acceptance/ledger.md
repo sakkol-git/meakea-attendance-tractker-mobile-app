@@ -6,11 +6,11 @@ Run the focused suite with `fvm flutter test --name acceptance`. The red tests a
 
 | ID | Criterion | Testable pass condition | Audit status | Current evidence / next gate |
 | --- | --- | --- | --- | --- |
-| 01 | Brand consistency | Every in-app screen uses approved brand tokens and no feature literal colors. | Strong foundation | [Audit](../ENTERPRISE-UX-AUDIT.md); token audit pending. |
+| 01 | Brand consistency | Every in-app screen uses approved brand tokens and no feature literal colors. | Pass-evidenced for in-app color tokens; native asset gate remains | [Contrast report](contrast.md), `acceptance F03` literal-color test; native brand tracked under criterion 02. |
 | 02 | Native brand | Android/iOS icons, splash, app name and notification mark use the approved asset on installed devices. | Fail | Flutter iOS icon [finding F13](../ENTERPRISE-UX-AUDIT.md); asset and device gate. |
 | 03 | Hierarchy and density | Each role's primary task is visible at 360×640 without scrolling. | Partial | Role goldens pending. |
 | 04 | Typography | Essential status text is at least 14 logical pixels and Khmer names/numerals render without clipping. | Partial | Typography/device checks pending. |
-| 05 | Light/dark color | Functional normal text reaches 4.5:1 and non-text controls 3:1 in both themes. | Fail; Red | `acceptance F03 dark functional text meets 4.5 contrast`; [dark screenshot](../screenshots/audit-dark-leave.png). |
+| 05 | Light/dark color | Functional normal text reaches 4.5:1 and non-text controls 3:1 in both themes. | Pass-evidenced for semantic functional pairs; device review remains | [Contrast report](contrast.md), `acceptance F03` pair test, four dark visual goldens. |
 | 06 | Responsive/large text | Every main screen and dialog works at 360 px and 200% text with keyboard visible, without overflow. | Strong foundation, bounded; Red | Existing route renders; `acceptance F07 approval dialog keeps decision action visible with keyboard`. |
 | 07 | Screen readers | A person completes ten key journeys with TalkBack and VoiceOver and records spoken output. | Unverified; Human-gated | Manual script and signed runs pending. |
 | 08 | Touch targets/input | Every interactive target is at least 48×48 dp and keyboard focus is visible, ordered and operable. | Partial | Target/focus audit pending. |

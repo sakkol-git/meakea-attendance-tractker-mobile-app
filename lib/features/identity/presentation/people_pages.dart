@@ -65,7 +65,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
                 tooltip: 'Add employee',
                 onPressed: () =>
                     editEntity(context, ref, '/employees', 'employee'),
-                icon: const Icon(Icons.person_add_alt),
+                icon: Icon(Icons.person_add_alt),
               ),
             ]
           : null,
@@ -108,7 +108,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(16),
                         leading: CircleAvatar(
-                          backgroundColor: Palette.tint,
+                          backgroundColor: context.semantic.successBackground,
                           child: Text(
                             ('${(p['name'] as String? ?? p['fullName'] as String? ?? '').trim()}?')
                                 .substring(0, 1),
@@ -122,7 +122,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
                         subtitle: Text(
                           '${p['position'] ?? ''} · ${p['department'] ?? ''}',
                         ),
-                        trailing: const Icon(Icons.chevron_right),
+                        trailing: Icon(Icons.chevron_right),
                         onTap: () => showPerson(context, p, admin),
                       ),
                     ),
@@ -164,7 +164,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
               InfoRow('Position', person['position'] as String? ?? '—'),
               if (admin)
                 OutlinedButton.icon(
-                  icon: const Icon(Icons.event_available_outlined),
+                  icon: Icon(Icons.event_available_outlined),
                   onPressed: () {
                     Navigator.pop(c);
                     context.push(
@@ -174,7 +174,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
                           person['fullName'] as String?,
                     );
                   },
-                  label: const Text('Manage shift assignments'),
+                  label: Text('Manage shift assignments'),
                 ),
               if (admin)
                 OutlinedButton(
@@ -188,7 +188,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
                       existing: person,
                     );
                   },
-                  child: const Text('Edit employee'),
+                  child: Text('Edit employee'),
                 ),
             ],
           ),
@@ -210,7 +210,7 @@ class AdminListPage extends ConsumerWidget {
         IconButton(
           tooltip: 'Add record',
           onPressed: () => editEntity(context, ref, path, title),
-          icon: const Icon(Icons.add),
+          icon: Icon(Icons.add),
         ),
       ],
       children: [
@@ -223,7 +223,7 @@ class AdminListPage extends ConsumerWidget {
                   description: 'Add the first record to get started.',
                   action: TextButton(
                     onPressed: () => editEntity(context, ref, path, title),
-                    child: const Text('Add record'),
+                    child: Text('Add record'),
                   ),
                 )
               : Column(
@@ -239,9 +239,7 @@ class AdminListPage extends ConsumerWidget {
                             ),
                             title: Text(
                               r['name'] as String? ?? 'Record',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
                               kind == 'holidays'
@@ -252,7 +250,7 @@ class AdminListPage extends ConsumerWidget {
                                   ? '${r['entitled'] ?? 'Policy-defined'} days'
                                   : 'Organization record',
                             ),
-                            trailing: const Icon(Icons.edit_outlined, size: 20),
+                            trailing: Icon(Icons.edit_outlined, size: 20),
                             onTap: () => editEntity(
                               context,
                               ref,
@@ -370,7 +368,10 @@ Future<void> editEntity(
                       ),
                     ),
                   if (error != null)
-                    Text(error!, style: const TextStyle(color: Palette.danger)),
+                    Text(
+                      error!,
+                      style: TextStyle(color: context.semantic.error),
+                    ),
                 ],
               ),
             ),
@@ -379,7 +380,7 @@ Future<void> editEntity(
         actions: [
           TextButton(
             onPressed: busy ? null : () => Navigator.pop(c),
-            child: const Text('Cancel'),
+            child: Text('Cancel'),
           ),
           FilledButton(
             onPressed: busy

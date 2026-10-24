@@ -38,38 +38,45 @@ void main() {
     ('request', '/record/request/request-draft', 'EMPLOYEE'),
     ('approvals', '/approvals', 'MANAGER'),
   ]) {
-    testWidgets('render ${scenario.$1} mobile reference', (tester) async {
-      tester.view.physicalSize = const Size(402, 874);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final client = visualClient();
-      final container = ProviderContainer(
-        overrides: [
-          clientProvider.overrideWithValue(client),
-          clockProvider.overrideWithValue(() => DateTime(2026, 10, 23, 10)),
-          ...testRepositoryOverrides(HrRepository(client)),
-          settingsProvider.overrideWith(VisualSettings.new),
-        ],
+    for (final dark in [false, true]) {
+      testWidgets(
+        'render ${dark ? 'dark ' : ''}${scenario.$1} mobile reference',
+        (tester) async {
+          tester.view.physicalSize = const Size(402, 874);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final client = visualClient();
+          final container = ProviderContainer(
+            overrides: [
+              clientProvider.overrideWithValue(client),
+              clockProvider.overrideWithValue(() => DateTime(2026, 10, 23, 10)),
+              ...testRepositoryOverrides(HrRepository(client)),
+              settingsProvider.overrideWith(() => VisualSettings(dark: dark)),
+            ],
+          );
+          addTearDown(container.dispose);
+          const key = Key('screen');
+          await tester.pumpWidget(
+            UncontrolledProviderScope(
+              container: container,
+              child: const RepaintBoundary(key: key, child: HrFlowApp()),
+            ),
+          );
+          await tester.pumpAndSettle();
+          await container.read(sessionProvider.notifier).demo(scenario.$3);
+          container.read(routerProvider).go(scenario.$2);
+          await tester.pumpAndSettle();
+          expect(tester.takeException(), isNull);
+          await expectLater(
+            find.byKey(key),
+            matchesGoldenFile(
+              'goldens/${dark ? 'dark-' : ''}${scenario.$1}.png',
+            ),
+          );
+        },
       );
-      addTearDown(container.dispose);
-      const key = Key('screen');
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const RepaintBoundary(key: key, child: HrFlowApp()),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await container.read(sessionProvider.notifier).demo(scenario.$3);
-      container.read(routerProvider).go(scenario.$2);
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await expectLater(
-        find.byKey(key),
-        matchesGoldenFile('goldens/${scenario.$1}.png'),
-      );
-    });
+    }
   }
   testWidgets(
     'all employee and HR routes render at 360px with 200 percent text',
