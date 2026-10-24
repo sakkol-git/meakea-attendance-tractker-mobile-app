@@ -18,7 +18,7 @@ Run the focused suite with `fvm flutter test --name acceptance`. The red tests a
 | 10 | Search/pagination | A search or filter finds matching records on later pages without falsely displaying an empty state. | Fail; Red | `acceptance F02 search finds a request beyond the first page`. |
 | 11 | Context preservation | Unsaved edits require a discard decision; permitted drafts survive the agreed interruption scenarios. | Partial; Red | `acceptance F10 dirty admin dialog asks before discard`; storage policy pending. |
 | 12 | Form usability | Every form gives required/optional guidance, appropriate pickers, and an accurate review before submit. | Partial | Form-route inventory and scenarios pending. |
-| 13 | Workflow correctness | Every exposed editor reloads exactly the values saved, including IDs and shift weekdays. | Fail; Red | `acceptance F01 employee edit persists the selected department and position`; `acceptance F01 shift edit persists weekend workdays`. |
+| 13 | Workflow correctness | Every exposed editor reloads exactly the values saved, including IDs and shift weekdays. | Partial; F01 evidenced | `acceptance F01` tests: typed employee IDs, weekend shift and downstream assignment, directory/shift-rule entry points, department/position catalogs, and unknown-field rejection. Other workflow editors remain to be accepted. |
 | 14 | Leave policy | Leave forms show chargeable days, resulting balance and evidence rules; displayed amounts preserve hundredths. | Partial; Red | `acceptance F09 home displays hundredth-day balance unchanged`; policy cases pending. |
 | 15 | Overnight attendance | A 22:00–06:00 next-day correction stores both dates and shows original/proposed values to the reviewer. | Fail; Red | `acceptance F04 correction exposes a next-day checkout date` fails; `acceptance F04 overnight correction survives data-layer reload` passes for the local service. UI submission/reviewer test pending. |
 | 16 | Approval context | A reviewer sees balance/coverage, original/proposed values or stock impact as appropriate before deciding. | Partial | Decision context tests pending. |
@@ -51,3 +51,15 @@ The tests in this phase deliberately fail; Phase 1 and later work should turn th
 | `fvm flutter build web --release` | **Built `build/web`**; Flutter emitted its standard wasm dry-run suggestion, not a build failure. |
 
 The full `flutter test` suite is intentionally red in Phase 0. Do not interpret this as a regression in the original 72 tests, or mark the nine criteria passed before their acceptance assertions turn green.
+
+## P1-A verification, 24 October 2026
+
+The Directory, People administration, Shift rules, Shift policies, Departments and Positions entry points now use the feature-owned typed editor for their record type. Employee department/position selection sends IDs; shift days send a seven-day bitmask. The local service rejects unsupported employee, shift, department and position fields, instead of acknowledging ignored input.
+
+| Command | Observed result |
+| --- | --- |
+| `fvm flutter test test/acceptance/enterprise_regressions_test.dart --plain-name 'acceptance F01' --reporter expanded` | **6 passed**. |
+| `fvm flutter test test/*_test.dart --reporter expanded` | **72 passed**, 0 failed. |
+| `fvm flutter test --name acceptance --reporter expanded` | **7 passed, 7 expected failures** in later prompts. |
+| `fvm flutter analyze` | **No issues found**. |
+| `fvm flutter build web --release` | **Built `build/web`**. |

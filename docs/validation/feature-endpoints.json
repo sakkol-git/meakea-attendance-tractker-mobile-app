@@ -248,6 +248,13 @@
     },
     {
       "feature": "identity",
+      "key": "identity.shift.create",
+      "method": "POST",
+      "path": "/shifts",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
       "key": "identity.positions",
       "method": "GET",
       "path": "/positions",
@@ -255,10 +262,38 @@
     },
     {
       "feature": "identity",
+      "key": "identity.position.create",
+      "method": "POST",
+      "path": "/positions",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.position.edit",
+      "method": "PATCH",
+      "path": "/positions/{id}",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
       "key": "identity.departments",
       "method": "GET",
       "path": "/departments",
       "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.department.create",
+      "method": "POST",
+      "path": "/departments",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
+      "key": "identity.department.edit",
+      "method": "PATCH",
+      "path": "/departments/{id}",
+      "versioned": true
     },
     {
       "feature": "identity",
