@@ -7,6 +7,7 @@ import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
+import 'package:hrflow_mobile/core/leave_quantity.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -262,9 +263,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                   if (i > 0) const Divider(height: 24),
                   Row(
                     children: [
-                      Expanded(child: Text(balances[i].name)),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(balances[i].name),
+                            Text(
+                              leaveBalancePeriod(balances[i].year),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
                       Text(
-                        '${balances[i].available.toStringAsFixed(balances[i].available % 1 == 0 ? 0 : 1)} days',
+                        formatLeaveDays(balances[i].available),
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: Palette.teal,

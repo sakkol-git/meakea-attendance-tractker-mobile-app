@@ -8,6 +8,7 @@ import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
+import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
 
 class RequestFormPage extends ConsumerStatefulWidget {
   final String kind;
@@ -34,7 +35,10 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = ref
+        .read(clockProvider)()
+        .toUtc()
+        .add(CorrectionTime.companyOffset);
     from = to = DateTime(now.year, now.month, now.day);
     final initial = widget.initial;
     if (initial != null) {
@@ -80,8 +84,8 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
     final picked = await showDatePicker(
       context: context,
       initialDate: first ? from : to,
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 730)),
+      firstDate: ref.read(clockProvider)().subtract(const Duration(days: 365)),
+      lastDate: ref.read(clockProvider)().add(const Duration(days: 730)),
     );
     if (picked != null) {
       setState(() {
@@ -353,15 +357,17 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                           requestType != 'MATERIAL') ...[
                     const SizedBox(height: 20),
                     _FieldButton(
-                      label: correction ? 'Affected date' : 'From',
+                      label: correction ? 'Correct clock-in date' : 'From',
                       value: shortDate(iso(from)),
                       icon: Icons.calendar_today_outlined,
                       onTap: saving ? null : () => date(true),
                     ),
-                    if (leave || requestType == 'REMOTE_WORK') ...[
+                    if (leave ||
+                        correction ||
+                        requestType == 'REMOTE_WORK') ...[
                       const SizedBox(height: 12),
                       _FieldButton(
-                        label: 'To',
+                        label: correction ? 'Correct clock-out date' : 'To',
                         value: shortDate(iso(to)),
                         icon: Icons.calendar_today_outlined,
                         onTap: saving ? null : () => date(false),
@@ -421,6 +427,49 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                         icon: Icons.schedule_outlined,
                         onTap: saving ? null : () => time(false),
                       ),
+                      if (correction) ...[
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Company time zone: Asia/Phnom_Penh (UTC+07)',
+                        ),
+                        if (iso(to) != iso(from))
+                          const Text(
+                            'Ends next day',
+                            key: Key('correction-next-day'),
+                          ),
+                        const SizedBox(height: 12),
+                        const Text('Original recorded time'),
+                        AsyncPanel(
+                          value: ref.watch(sessionsProvider),
+                          retry: () => ref.invalidate(sessionsProvider),
+                          builder: (sessions) {
+                            final originals = sessions.where((s) {
+                              final day = s.clockIn.toUtc().add(
+                                CorrectionTime.companyOffset,
+                              );
+                              return iso(day) == iso(from);
+                            }).toList();
+                            if (originals.isEmpty) {
+                              return const Text(
+                                'No recorded session on this date',
+                              );
+                            }
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                for (final s in originals)
+                                  Text(
+                                    '${CorrectionTime.display(s.clockIn)} → ${CorrectionTime.display(s.clockOut)}',
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Proposed: ${CorrectionTime.display(CorrectionTime.instant(from, start.hour, start.minute))} → ${CorrectionTime.display(CorrectionTime.instant(to, end.hour, end.minute))}',
+                        ),
+                      ],
                     ],
                   ],
                   const SizedBox(height: 20),
@@ -491,20 +540,25 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       setState(() => error = 'Half-day requests must be on a single date.');
       return;
     }
-    if ((correction ||
-            requestType == 'LATE_ARRIVAL' ||
-            requestType == 'EARLY_LEAVE') &&
+    if (correction) {
+      final problem = CorrectionTime.validate(
+        CorrectionTime.instant(from, start.hour, start.minute),
+        CorrectionTime.instant(to, end.hour, end.minute),
+        ref.read(clockProvider)(),
+      );
+      if (problem != null) {
+        setState(() => error = problem);
+        return;
+      }
+    }
+    if (!correction &&
+        (requestType == 'LATE_ARRIVAL' || requestType == 'EARLY_LEAVE') &&
         (end.hour * 60 + end.minute <= start.hour * 60 + start.minute)) {
       setState(() => error = 'The end time must follow the start time.');
       return;
     }
-    String stamp(TimeOfDay t) => DateTime.utc(
-      from.year,
-      from.month,
-      from.day,
-      t.hour,
-      t.minute,
-    ).subtract(const Duration(hours: 7)).toIso8601String();
+    String stamp(DateTime date, TimeOfDay t) =>
+        CorrectionTime.instant(date, t.hour, t.minute).toIso8601String();
     final body = <String, dynamic>{
       'reason': reason.text.trim(),
       if (leave) ...{
@@ -515,8 +569,8 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       },
       if (correction) ...{
         'workDate': iso(from),
-        'newCheckIn': stamp(start),
-        'newCheckOut': stamp(end),
+        'newCheckIn': stamp(from, start),
+        'newCheckOut': stamp(to, end),
       },
       if (!leave && !correction) ...{
         'title': title.text.trim(),

@@ -50,6 +50,18 @@ extension WorkflowsDemo on LocalDataSource {
         _need(body.isNotEmpty, 'VALIDATION_ERROR', 'Provide request details.');
         final details = <String, dynamic>{...copyJson(body) as Map};
         if (populate) _validateCreate(path, details);
+        if (populate && path == '/attendance/corrections') {
+          details['previousSessions'] = copyJson(
+            _sessions
+                .where(
+                  (session) =>
+                      session['employeeId'] == employeeId &&
+                      _sessionDay(session) == details['workDate'] &&
+                      session['supersededBy'] == null,
+                )
+                .toList(),
+          );
+        }
         final row = <String, dynamic>{
           ...details,
           'id': _id(),

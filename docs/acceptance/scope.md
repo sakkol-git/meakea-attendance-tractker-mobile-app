@@ -12,4 +12,4 @@ User decisions received 24 October 2026 are recorded below. Where the reply was 
 | Approval policies | Delegation, escalation and bulk approval: in or explicitly out | Delegation in; escalation and bulk approval treated as out pending correction | User plus agent assumption, 24 Oct 2026 |
 | Sensitive drafts | None, encrypted local, or server-side storage | Server-side | User, 24 Oct 2026 |
 
-The overnight-correction maximum is currently 24 hours in the local service. It is a provisional named acceptance assumption, **not** a business-approved limit. Confirm or revise it with the time-zone decision before Phase 1-C is accepted.
+The overnight-correction maximum is `CorrectionTime.maximumDuration = 24 hours`. This is a provisional acceptance assumption matching the local service, **not** a business-approved limit. The launch zone is fixed `Asia/Phnom_Penh` (UTC+07, no daylight saving transitions); dates and clock times are serialized as UTC instants. Confirm or revise the duration before live launch.

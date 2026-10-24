@@ -295,7 +295,7 @@ extension LeaveCasesDemo on LocalDataSource {
       return _ok({
         'previewId': row['id'],
         'summary':
-            '${allocations.length} employee/type balances reviewed. ${(allocations.fold<int>(0, (v, r) => v + (r['units'] as int)) / 100).toStringAsFixed(2)} days will carry to ${year + 1}. Pending cross-year requests must be resolved.',
+            '${allocations.length} employee/type balances reviewed. ${formatLeaveDays(allocations.fold<int>(0, (v, r) => v + (r['units'] as int)) / 100)} will carry to ${year + 1}. Pending cross-year requests must be resolved.',
       }, status: 201);
     }
     if (r.path == '/leave/admin/year-end' && r.method == 'GET') {

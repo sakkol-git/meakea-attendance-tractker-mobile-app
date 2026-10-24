@@ -13,6 +13,8 @@ import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/features/identity/data/repository.dart';
 import 'package:hrflow_mobile/features/identity/data/session_client.dart';
+import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
+import 'package:hrflow_mobile/core/leave_quantity.dart';
 import 'package:hrflow_mobile/features/leave/domain/models.dart';
 import 'package:hrflow_mobile/features/requests/data/repository.dart';
 import 'package:hrflow_mobile/features/settings/domain/preferences_gateway.dart';
@@ -209,6 +211,82 @@ Future<ProviderContainer> _app(
 }
 
 void main() {
+  test('acceptance F09 leave quantities preserve hundredths and units', () {
+    const cases = <(num?, String)>[
+      (0, '0 days'),
+      (0.01, '0.01 days'),
+      (0.25, '0.25 days'),
+      (0.5, '0.5 days'),
+      (1, '1 day'),
+      (1.05, '1.05 days'),
+      (2.25, '2.25 days'),
+      (10, '10 days'),
+      (-1, '-1 day'),
+      (-2.25, '-2.25 days'),
+      (null, '— days'),
+      (double.nan, '— days'),
+    ];
+    for (final (input, expected) in cases) {
+      expect(formatLeaveDays(input), expected, reason: '$input');
+    }
+    expect(leaveBalancePeriod(2026), 'Valid through 31 Dec 2026');
+    expect(leaveBalancePeriod(null), 'Balance period unavailable');
+  });
+
+  test('acceptance F09 presentation does not format leave days ad hoc', () {
+    for (final path in [
+      'lib/features/dashboard/presentation/home_page.dart',
+      'lib/features/workflows/presentation/workflow_pages.dart',
+      'lib/features/leave/presentation/case_pages.dart',
+      'lib/features/reporting/presentation/case_pages.dart',
+    ]) {
+      final source = File(path).readAsStringSync();
+      expect(source, isNot(contains('toStringAsFixed(')), reason: path);
+      expect(
+        source,
+        isNot(matches(RegExp(r"\$\{[^}]+\}\s+days"))),
+        reason: path,
+      );
+    }
+  });
+
+  test('acceptance F04 correction timestamps cover overnight, midnight and boundaries', () {
+    final day = DateTime(2026, 10, 22);
+    final next = DateTime(2026, 10, 23);
+    final now = DateTime.utc(2026, 10, 24);
+    final start = CorrectionTime.instant(day, 22, 0);
+    final overnight = CorrectionTime.instant(next, 6, 0);
+    final midnight = CorrectionTime.instant(next, 0, 0);
+    expect(overnight.difference(start), const Duration(hours: 8));
+    expect(CorrectionTime.validate(start, overnight, now), isNull);
+    expect(CorrectionTime.validate(start, midnight, now), isNull);
+    expect(
+      CorrectionTime.validate(start, CorrectionTime.instant(day, 23, 0), now),
+      isNull,
+    );
+    expect(
+      CorrectionTime.validate(start, CorrectionTime.instant(day, 6, 0), now),
+      contains('next date'),
+    );
+    expect(
+      CorrectionTime.validate(
+        start,
+        CorrectionTime.instant(DateTime(2026, 10, 24), 1, 0),
+        now,
+      ),
+      contains('24 hours'),
+    );
+    expect(
+      CorrectionTime.validate(
+        CorrectionTime.instant(DateTime(2026, 10, 25), 8, 0),
+        CorrectionTime.instant(DateTime(2026, 10, 25), 9, 0),
+        now,
+      ),
+      contains('future'),
+    );
+    expect(CorrectionTime.display(overnight), '23/10/2026 06:00');
+  });
+
   test('acceptance F01 employee edit persists selected department and position IDs', () async {
     final c = _client();
     addTearDown(c.close);
@@ -596,6 +674,38 @@ void main() {
             .day,
         24,
       );
+    },
+  );
+
+  testWidgets(
+    'acceptance F04 reviewer sees original and proposed dated times',
+    (tester) async {
+      final c = _client();
+      addTearDown(c.close);
+      await c.demoLogin('EMPLOYEE');
+      final created = await c.request(
+        DataRequest(
+          'POST',
+          '/attendance/corrections',
+          body: {
+            'workDate': '2026-10-22',
+            'newCheckIn': '2026-10-22T15:00:00Z',
+            'newCheckOut': '2026-10-22T23:00:00Z',
+            'reason': 'Correct overnight session',
+          },
+          idempotencyKey: commandKey(),
+        ),
+      );
+      final row = created.data as Map;
+      expect(row['previousSessions'], isNotEmpty);
+      final container = await _app(tester, c);
+      await container.read(sessionProvider.notifier).demo('MANAGER');
+      container.read(routerProvider).go('/record/correction/${row['id']}');
+      await tester.pumpAndSettle();
+      expect(find.text('Original recorded time'), findsOneWidget);
+      expect(find.text('Proposed correction'), findsOneWidget);
+      expect(find.text('22/10/2026 22:00'), findsOneWidget);
+      expect(find.text('23/10/2026 06:00'), findsOneWidget);
     },
   );
 

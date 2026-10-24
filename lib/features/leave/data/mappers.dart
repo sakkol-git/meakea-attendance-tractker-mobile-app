@@ -10,5 +10,6 @@ abstract final class LeaveBalanceMapper {
     number(j, 'used'),
     number(j, 'pending'),
     number(j, 'available'),
+    year: j['year'] as int?,
   );
 }

@@ -15,6 +15,8 @@ import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 import 'package:hrflow_mobile/shared/domain/workflow_policy.dart';
+import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
+import 'package:hrflow_mobile/core/leave_quantity.dart';
 
 class WorkflowTile extends StatelessWidget {
   final WorkflowRecord record;
@@ -62,7 +64,7 @@ class WorkflowTile extends StatelessWidget {
                     StatusPill(r.status),
                     if (r.fields['days'] != null)
                       Text(
-                        '${r.fields['days']} days',
+                        formatLeaveDays(r.fields['days'] as num?),
                         style: const TextStyle(fontSize: 13),
                       ),
                     if (r.fields['approvalStage'] == 'HR')
@@ -162,7 +164,7 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                                   ),
                                 ),
                                 Text(
-                                  '${b.used} used · ${b.pending} pending',
+                                  '${formatLeaveDays(b.used)} used · ${formatLeaveDays(b.pending)} pending\n${leaveBalancePeriod(b.year)}',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: Palette.muted,
@@ -172,15 +174,8 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                             ),
                           ),
                           Text(
-                            b.available.toStringAsFixed(
-                              b.available % 1 == 0 ? 0 : 1,
-                            ),
+                            formatLeaveDays(b.available),
                             style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(width: 4),
-                          const Text(
-                            'days',
-                            style: TextStyle(color: Palette.muted),
                           ),
                         ],
                       ),
@@ -418,7 +413,10 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                         InfoRow('To', shortDate(r.fields['endDate'])),
                       ],
                       if (r.fields['days'] != null)
-                        InfoRow('Duration', '${r.fields['days']} days'),
+                        InfoRow(
+                          'Duration',
+                          formatLeaveDays(r.fields['days'] as num?),
+                        ),
                       if (r.fields['halfDay'] != null &&
                           r.fields['halfDay'] != 'NONE')
                         InfoRow('Day portion', r.fields['halfDay'].toString()),
@@ -427,15 +425,48 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                           'Affected date',
                           shortDate(r.fields['workDate']),
                         ),
+                      if (r.kind == 'correction') ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Original recorded time',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        if ((r.fields['previousSessions'] as List? ?? [])
+                            .isEmpty)
+                          const InfoRow('Original', 'No recorded session'),
+                        for (final raw
+                            in r.fields['previousSessions'] as List? ?? [])
+                          Builder(
+                            builder: (context) {
+                              final session = Map<String, dynamic>.from(
+                                raw as Map,
+                              );
+                              return InfoRow(
+                                'Original',
+                                '${CorrectionTime.display(DateTime.tryParse((session['checkInAt'] ?? session['clockIn'] ?? '').toString()))} → ${CorrectionTime.display(DateTime.tryParse((session['checkOutAt'] ?? session['clockOut'] ?? '').toString()))}',
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Proposed correction',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const InfoRow('Time zone', 'Asia/Phnom_Penh (UTC+07)'),
+                      ],
                       if (r.fields['newCheckIn'] != null)
                         InfoRow(
                           'Requested clock in',
-                          timeText(DateTime.tryParse(r.fields['newCheckIn'])),
+                          CorrectionTime.display(
+                            DateTime.tryParse(r.fields['newCheckIn']),
+                          ),
                         ),
                       if (r.fields['newCheckOut'] != null)
                         InfoRow(
                           'Requested clock out',
-                          timeText(DateTime.tryParse(r.fields['newCheckOut'])),
+                          CorrectionTime.display(
+                            DateTime.tryParse(r.fields['newCheckOut']),
+                          ),
                         ),
                       if (r.fields['type'] != null)
                         InfoRow(
