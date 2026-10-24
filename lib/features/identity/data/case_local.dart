@@ -252,7 +252,7 @@ extension IdentityCasesDemo on LocalDataSource {
       return _ok(row, status: 201, etag: '"1"');
     }
     final person = RegExp(
-      r'^/employees/([^/]+)(?:/(invite|roles|terminate|device|direct-reports))?$',
+      r'^/employees/([^/]+)(?:/(invite|roles|terminate|impact|device|direct-reports))?$',
     ).firstMatch(r.path);
     if (person != null && populate) {
       final id = person[1]!, action = person[2];
@@ -275,6 +275,45 @@ extension IdentityCasesDemo on LocalDataSource {
           _table('/employees').where((v) => v['managerId'] == id),
           r,
         );
+      }
+      if (r.method == 'POST' && action == 'impact') {
+        _version(r, row);
+        final pending = [
+          ..._table('/requests'),
+          ..._table('/leave/requests'),
+          ..._table('/attendance/corrections'),
+        ];
+        final ownPending = pending
+            .where((v) => v['employeeId'] == id && v['status'] == 'PENDING')
+            .length;
+        final openApprovals = pending
+            .where(
+              (v) => v['currentApproverId'] == id && v['status'] == 'PENDING',
+            )
+            .length;
+        final issued = _table('/requests')
+            .where((v) => v['employeeId'] == id)
+            .fold<int>(
+              0,
+              (total, request) =>
+                  total +
+                  (request['issuedQuantities'] as Map? ?? {}).values.fold<int>(
+                    0,
+                    (sum, quantity) => sum + (quantity as num).toInt(),
+                  ),
+            );
+        return _ok({
+          'employeeName': row['name'],
+          'currentRole': (row['roles'] as List?)?.firstOrNull ?? 'EMPLOYEE',
+          'newRole': body['role'],
+          'accessEnds': body['effectiveDate'] != null,
+          'pendingRequests': ownPending,
+          'assignedMaterials': issued,
+          'openApprovals': openApprovals,
+          'summary': body['effectiveDate'] != null
+              ? 'Access ends on ${body['effectiveDate']}. Review outstanding work before terminating employment.'
+              : 'Access role changes from ${(row['roles'] as List?)?.firstOrNull ?? 'EMPLOYEE'} to ${body['role']}.',
+        });
       }
       if (r.method == 'PATCH' && action == null) {
         _version(r, row);

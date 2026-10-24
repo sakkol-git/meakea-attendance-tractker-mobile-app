@@ -274,9 +274,19 @@ extension LeaveCasesDemo on LocalDataSource {
           );
           final available = _units(balance['available']);
           final units = available.clamp(0, cap < policyCap ? cap : policyCap);
+          final nextBalance = _leaveBalancesFor(
+            p['id'],
+            year + 1,
+          ).firstWhere((b) => b['leaveTypeId'] == balance['leaveTypeId']);
           allocations.add({
             'employeeId': p['id'],
+            'employeeName': p['name'],
             'leaveTypeId': balance['leaveTypeId'],
+            'leaveTypeName': balance['name'],
+            'currentBalance': available / 100,
+            'carriedOver': units / 100,
+            'forfeited': (available - units).clamp(0, 100000000) / 100,
+            'newBalance': (nextBalance['available'] as num) + units / 100,
             'units': units,
           });
         }
@@ -294,6 +304,18 @@ extension LeaveCasesDemo on LocalDataSource {
       _table('/leave/rollover-previews').add(row);
       return _ok({
         'previewId': row['id'],
+        'rows': allocations,
+        'affectedEmployees': allocations
+            .where((a) => (a['units'] as int) > 0)
+            .map((a) => a['employeeId'])
+            .toSet()
+            .length,
+        'totalCarried':
+            allocations.fold<int>(0, (v, a) => v + (a['units'] as int)) / 100,
+        'totalForfeited': allocations.fold<num>(
+          0,
+          (v, a) => v + (a['forfeited'] as num),
+        ),
         'summary':
             '${allocations.length} employee/type balances reviewed. ${formatLeaveDays(allocations.fold<int>(0, (v, r) => v + (r['units'] as int)) / 100)} will carry to ${year + 1}. Pending cross-year requests must be resolved.',
       }, status: 201);

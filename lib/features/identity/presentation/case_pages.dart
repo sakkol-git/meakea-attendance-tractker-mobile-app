@@ -177,6 +177,7 @@ const identityPanels = [
       CaseAction(
         'identity.employee.roles',
         'Change access role',
+        prepare: 'identity.employee.impact',
         fields: [
           CaseField(
             'role',
@@ -192,10 +193,12 @@ const identityPanels = [
           reason,
         ],
         when: ownerOnly,
+        destructive: true,
       ),
       CaseAction(
         'identity.employee.terminate',
         'End employment',
+        prepare: 'identity.employee.impact',
         fields: [
           CaseField(
             'effectiveDate',

@@ -233,6 +233,139 @@ void main() {
     expect(leaveBalancePeriod(null), 'Balance period unavailable');
   });
 
+  test(
+    'acceptance F05 rollover preview returns explainable rows and totals',
+    () async {
+      final c = _client();
+      addTearDown(c.close);
+      await c.demoLogin('HR_ADMIN');
+      final result = await c.request(
+        DataRequest(
+          'POST',
+          '/leave/admin/year-end/preview',
+          body: {
+            'fromYear': 2026,
+            'carryLimit': 2.25,
+            'reason': 'Year-end review',
+          },
+          idempotencyKey: commandKey(),
+        ),
+      );
+      final body = result.data as Map;
+      final rows = (body['rows'] as List).cast<Map>();
+      expect(rows, isNotEmpty);
+      expect(body['previewId'], isNotEmpty);
+      expect(body['affectedEmployees'], greaterThan(0));
+      for (final row in rows) {
+        expect(row['employeeName'], isNotEmpty);
+        expect(row['leaveTypeName'], isNotEmpty);
+        expect(
+          (row['currentBalance'] as num) - (row['carriedOver'] as num),
+          closeTo(row['forfeited'] as num, .001),
+        );
+        expect(row['newBalance'], isA<num>());
+      }
+      expect(
+        (body['totalCarried'] as num),
+        closeTo(
+          rows.fold<num>(0, (sum, row) => sum + (row['carriedOver'] as num)),
+          .001,
+        ),
+      );
+    },
+  );
+
+  testWidgets(
+    'acceptance F05 rollover review shows totals and named confirmation',
+    (tester) async {
+      final c = _client();
+      final container = await _app(tester, c);
+      await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+      container.read(routerProvider).go('/features/leave.rollovers');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Prepare year-end rollover').first);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Approved maximum carry-over days'),
+        '2.25',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Reason'),
+        'Year-end review',
+      );
+      await tester.tap(find.text('Review changes'));
+      await tester.pumpAndSettle();
+      expect(find.text('Employees affected'), findsOneWidget);
+      expect(find.text('Total carried'), findsOneWidget);
+      expect(find.text('Search preview'), findsOneWidget);
+      expect(find.text('Prepare year-end rollover').last, findsOneWidget);
+    },
+  );
+
+  testWidgets('acceptance F05 fractional adjustment shows resulting balance', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    container.read(routerProvider).go('/features/leave.balances');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Adjust entitlement').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Adjust entitlement').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(
+        TextFormField,
+        'Adjustment in days (positive or negative)',
+      ),
+      '-0.25',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reason'),
+      'Correct accrual',
+    );
+    await tester.tap(find.text('Review changes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Current balance'), findsOneWidget);
+    expect(find.text('Change'), findsOneWidget);
+    expect(find.text('Resulting balance'), findsOneWidget);
+    expect(find.text('-0.25 days'), findsWidgets);
+    expect(find.text('Adjust entitlement').last, findsOneWidget);
+  });
+
+  testWidgets('acceptance F05 termination requires reason and shows impact', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    container.read(routerProvider).go('/features/identity.people');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('End employment').first);
+    await tester.tap(find.text('End employment').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Review impact'), findsOneWidget);
+    await tester.tap(find.text('Review impact'));
+    await tester.pumpAndSettle();
+    expect(find.text('This field is required'), findsWidgets);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reason'),
+      'Employment ended',
+    );
+    await tester.tap(find.text('Review impact'));
+    await tester.pumpAndSettle();
+    expect(find.text('Employee'), findsWidgets);
+    expect(find.text('Pending requests'), findsOneWidget);
+    expect(find.text('Assigned materials'), findsOneWidget);
+    expect(find.text('Open approvals'), findsOneWidget);
+    expect(find.text('End employment').last, findsOneWidget);
+  });
+
   test('acceptance F09 presentation does not format leave days ad hoc', () {
     for (final path in [
       'lib/features/dashboard/presentation/home_page.dart',

@@ -14,6 +14,7 @@ import '../../app/providers.dart';
 import '../../core/protocol.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../core/leave_quantity.dart';
 import '../domain/cases.dart';
 import '../domain/models.dart';
 
@@ -311,6 +312,8 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
   String? error, fingerprint;
   String key = commandKey(), commitKey = commandKey();
   Map<String, dynamic>? prepared;
+  String previewSearch = '';
+  int previewPage = 0;
   @override
   void initState() {
     super.initState();
@@ -517,13 +520,59 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
                   if (review) ...[
                     for (final field in action.fields)
                       InfoRow(field.label, reviewLabel(field)),
+                    if (action.key == 'leave.adjust' &&
+                        widget.record != null) ...[
+                      InfoRow(
+                        'Current balance',
+                        formatLeaveDays(
+                          widget.record!.values['available'] as num?,
+                        ),
+                      ),
+                      InfoRow(
+                        'Change',
+                        formatLeaveDays(payload()['delta'] as num?),
+                      ),
+                      InfoRow(
+                        'Resulting balance',
+                        formatLeaveDays(
+                          (widget.record!.values['available'] as num? ?? 0) +
+                              (payload()['delta'] as num? ?? 0),
+                        ),
+                      ),
+                    ],
+                    if (prepared?['employeeName'] != null) ...[
+                      InfoRow('Employee', prepared!['employeeName'].toString()),
+                      InfoRow(
+                        'Current access',
+                        prepared!['currentRole'].toString(),
+                      ),
+                      if (prepared!['newRole'] != null)
+                        InfoRow('New access', prepared!['newRole'].toString()),
+                      if (prepared!['accessEnds'] == true)
+                        const InfoRow('Access', 'Ends on the effective date'),
+                      InfoRow(
+                        'Pending requests',
+                        '${prepared!['pendingRequests']}',
+                      ),
+                      InfoRow(
+                        'Assigned materials',
+                        '${prepared!['assignedMaterials']}',
+                      ),
+                      InfoRow(
+                        'Open approvals',
+                        '${prepared!['openApprovals']}',
+                      ),
+                    ],
                     if (prepared?['summary'] != null)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(prepared!['summary'].toString()),
                       ),
+                    if (prepared?['rows'] is List) ...buildPreviewRows(),
                     Text(
-                      'Confirm these changes. A reason and the resulting action are recorded where required.',
+                      action.destructive
+                          ? 'This action changes access or removes a resource. Your reason is recorded in the audit history.'
+                          : 'Confirm these changes. A reason and the resulting action are recorded where required.',
                     ),
                   ] else
                     for (final field in action.fields)
@@ -560,19 +609,113 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
                   },
             child: Text(review ? 'Revise' : 'Go back'),
           ),
-          FilledButton(
-            onPressed: busy ? null : submit,
-            child: Text(
-              busy
-                  ? 'Saving…'
-                  : review
-                  ? 'Confirm'
-                  : 'Review changes',
+          if (action.destructive)
+            OutlinedButton(
+              onPressed: busy ? null : submit,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: context.semantic.error,
+                side: BorderSide(color: context.semantic.error),
+              ),
+              child: Text(
+                busy
+                    ? 'Saving…'
+                    : review
+                    ? action.label
+                    : 'Review impact',
+              ),
+            )
+          else
+            FilledButton(
+              onPressed: busy ? null : submit,
+              child: Text(
+                busy
+                    ? 'Saving…'
+                    : review
+                    ? action.label
+                    : 'Review changes',
+              ),
             ),
-          ),
         ],
       ),
     );
+  }
+
+  List<Widget> buildPreviewRows() {
+    final rows = (prepared!['rows'] as List)
+        .map((value) => Map<String, dynamic>.from(value as Map))
+        .where(
+          (row) => '${row['employeeName']} ${row['leaveTypeName']}'
+              .toLowerCase()
+              .contains(previewSearch.toLowerCase()),
+        )
+        .toList();
+    final start = previewPage * 10;
+    final visible = rows.skip(start).take(10);
+    return [
+      InfoRow('Employees affected', '${prepared!['affectedEmployees']}'),
+      InfoRow(
+        'Total carried',
+        formatLeaveDays(prepared!['totalCarried'] as num?),
+      ),
+      InfoRow(
+        'Total forfeited',
+        formatLeaveDays(prepared!['totalForfeited'] as num?),
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        decoration: const InputDecoration(
+          labelText: 'Search preview',
+          prefixIcon: Icon(Icons.search),
+        ),
+        onChanged: (value) => setState(() {
+          previewSearch = value.trim();
+          previewPage = 0;
+        }),
+      ),
+      const SizedBox(height: 8),
+      Text('${rows.length} employee/type rows · page ${previewPage + 1}'),
+      for (final row in visible)
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${row['employeeName']} · ${row['leaveTypeName']}',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                InfoRow(
+                  'Current',
+                  formatLeaveDays(row['currentBalance'] as num?),
+                ),
+                InfoRow('Carry', formatLeaveDays(row['carriedOver'] as num?)),
+                InfoRow('Forfeit', formatLeaveDays(row['forfeited'] as num?)),
+                InfoRow(
+                  'New balance',
+                  formatLeaveDays(row['newBalance'] as num?),
+                ),
+              ],
+            ),
+          ),
+        ),
+      Row(
+        children: [
+          TextButton(
+            onPressed: previewPage == 0
+                ? null
+                : () => setState(() => previewPage--),
+            child: const Text('Previous rows'),
+          ),
+          TextButton(
+            onPressed: start + 10 >= rows.length
+                ? null
+                : () => setState(() => previewPage++),
+            child: const Text('Next rows'),
+          ),
+        ],
+      ),
+    ];
   }
 
   String reviewLabel(CaseField field) {

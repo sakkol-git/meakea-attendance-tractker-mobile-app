@@ -1,4 +1,5 @@
 import '../../../shared/presentation/case_page.dart';
+import '../../../shared/presentation/case_fields.dart';
 
 const notificationsPanels = [
   CasePanel(
@@ -15,6 +16,7 @@ const notificationsPanels = [
       CaseAction(
         'notifications.device.remove',
         'Remove this device',
+        fields: [reason],
         destructive: true,
       ),
     ],

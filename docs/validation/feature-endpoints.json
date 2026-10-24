@@ -199,6 +199,13 @@
     },
     {
       "feature": "identity",
+      "key": "identity.employee.impact",
+      "method": "POST",
+      "path": "/employees/{id}/impact",
+      "versioned": true
+    },
+    {
+      "feature": "identity",
       "key": "identity.employee.terminate",
       "method": "POST",
       "path": "/employees/{id}/terminate",

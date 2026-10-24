@@ -38,6 +38,7 @@ extension NotificationCases on LocalDataSource {
     }
     final m = RegExp(r'^/notifications/devices/([^/]+)$').firstMatch(r.path);
     if (m != null && r.method == 'DELETE') {
+      _reason(b);
       final row = rows
           .where((v) => v['id'] == m[1] && v['employeeId'] == employeeId)
           .firstOrNull;

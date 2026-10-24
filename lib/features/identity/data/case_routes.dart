@@ -55,6 +55,12 @@ const identityCaseRoutes = <String, CaseRoute>{
     versioned: true,
     single: false,
   ),
+  'identity.employee.impact': CaseRoute(
+    '/employees/{id}/impact',
+    method: 'POST',
+    versioned: true,
+    single: false,
+  ),
   'identity.employee.terminate': CaseRoute(
     '/employees/{id}/terminate',
     method: 'POST',
