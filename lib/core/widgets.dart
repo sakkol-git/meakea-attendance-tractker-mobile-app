@@ -85,6 +85,8 @@ class AppPage extends ConsumerWidget {
                   '/requests',
                   '/leave',
                   '/profile',
+                  '/approvals',
+                  '/workflows',
                 ].contains(
                   GoRouter.of(context).routeInformationProvider.value.uri.path,
                 )

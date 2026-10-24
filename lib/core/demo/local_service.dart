@@ -287,6 +287,10 @@ class LocalDataSource implements DataSource {
         'reason': 'Personal appointment',
         'status': 'PENDING',
         'version': 1,
+        'createdAt': _now()
+            .toUtc()
+            .subtract(const Duration(days: 3))
+            .toIso8601String(),
         'decisions': [],
       },
     ]);

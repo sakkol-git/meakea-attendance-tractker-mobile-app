@@ -9,6 +9,8 @@ import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/leave_quantity.dart';
 
+import 'role_tasks.dart';
+
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
   @override
@@ -79,7 +81,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        RoleTasks(p),
+        const SizedBox(height: 12),
         AsyncPanel(
           value: today,
           retry: () => ref.invalidate(todayProvider),
@@ -88,7 +91,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             final open = sessions.where((s) => s.clockOut == null).firstOrNull;
             final recent = sessions.lastOrNull;
             return Container(
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(p.manages ? 16 : 24),
               decoration: BoxDecoration(
                 color: context.semantic.heroBackground,
                 borderRadius: BorderRadius.circular(24),
@@ -127,21 +130,23 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: p.manages ? 10 : 20),
                   Text(
-                    open == null
+                    p.manages
+                        ? 'Your attendance'
+                        : open == null
                         ? (recent == null
                               ? 'Ready for a\nproductive day?'
                               : 'Your workday,\nwell recorded.')
                         : 'One task at\na time.',
                     style: TextStyle(
                       color: context.semantic.onHero,
-                      fontSize: 30,
+                      fontSize: p.manages ? 20 : 30,
                       height: 1.3,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: p.manages ? 12 : 24),
                   Row(
                     children: [
                       Expanded(
@@ -164,7 +169,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: p.manages ? 12 : 24),
                   Theme(
                     data: Theme.of(context).copyWith(
                       filledButtonTheme: FilledButtonThemeData(

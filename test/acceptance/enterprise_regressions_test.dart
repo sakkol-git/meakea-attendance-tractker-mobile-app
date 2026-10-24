@@ -9,6 +9,7 @@ import 'package:hrflow_mobile/app.dart';
 import 'package:hrflow_mobile/app/composition.dart';
 import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/app/cases.dart';
+import 'package:hrflow_mobile/app/feature_panels.dart';
 import 'package:hrflow_mobile/core/demo/local_service.dart';
 import 'package:hrflow_mobile/core/data/cache/cached_source.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
@@ -23,6 +24,7 @@ import 'package:hrflow_mobile/features/requests/data/repository.dart';
 import 'package:hrflow_mobile/features/settings/domain/preferences_gateway.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/workflow_pages.dart';
 import 'package:hrflow_mobile/shared/domain/cases.dart';
+import 'package:hrflow_mobile/shared/presentation/case_page.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 
 // Red tests: each assertion states the required behavior, never the known defect.
@@ -84,6 +86,36 @@ class _CompetingReviewerLeave extends LeaveDataRepository {
       employeeName: record.employeeName,
     );
     return changed!;
+  }
+}
+
+class _LongHistoryLeave extends LeaveDataRepository {
+  _LongHistoryLeave(super.client);
+  @override
+  Future<WorkflowRecord> detail(String kind, String id) async {
+    final record = await super.detail(kind, id);
+    return WorkflowRecord(
+      id: record.id,
+      employeeId: record.employeeId,
+      title: record.title,
+      status: record.status,
+      reason: record.reason,
+      kind: record.kind,
+      version: record.version,
+      employeeName: record.employeeName,
+      fields: {
+        ...record.fields,
+        'decisions': List.generate(
+          60,
+          (index) => {
+            'actor': 'Reviewer $index',
+            'action': 'COMMENT',
+            'note': 'History event $index',
+            'at': '2026-10-23T03:00:00Z',
+          },
+        ),
+      },
+    );
   }
 }
 
@@ -1066,6 +1098,8 @@ void main() {
       await container.read(sessionProvider.notifier).demo('MANAGER');
       container.read(routerProvider).go('/approvals');
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Personal leave'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Personal leave'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Approve request'));
@@ -1109,6 +1143,8 @@ void main() {
       );
       await container.read(sessionProvider.notifier).demo('MANAGER');
       container.read(routerProvider).go('/approvals');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Personal leave'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Personal leave'));
       await tester.pumpAndSettle();
@@ -1162,6 +1198,8 @@ void main() {
         ),
         findsOneWidget,
       );
+      await tester.ensureVisible(find.text('Personal leave'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Personal leave'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Approve request'));
@@ -1178,6 +1216,30 @@ void main() {
       expect(confirm.onPressed, isNull);
     },
   );
+  testWidgets('acceptance F06 HR finds a deep task through Work search', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    container.read(routerProvider).go('/workflows');
+    await tester.pumpAndSettle();
+    final task = featurePanels.lastWhere(
+      (panel) =>
+          panel.key.startsWith('reporting.') &&
+          canOpenPanel(panel, container.read(sessionProvider).profile!),
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Search tasks'),
+      task.title,
+    );
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ListTile, task.title), findsOneWidget);
+    await tester.tap(find.widgetWithText(ListTile, task.title));
+    await tester.pumpAndSettle();
+    expect(find.byType(FeatureCasesPage), findsOneWidget);
+    expect(find.text(task.title), findsWidgets);
+  });
   testWidgets('acceptance F10 dirty admin dialog asks before discard', (
     tester,
   ) async {
@@ -1281,6 +1343,60 @@ void main() {
         (policy['warnings'] as List).join(' '),
         contains('requires 3 days of notice'),
       );
+    },
+  );
+  testWidgets(
+    'acceptance F06 manager and HR see their work on the first viewport',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final c = _client();
+      final container = await _app(tester, c);
+      for (final (role, label) in [
+        ('MANAGER', 'Needs my decision'),
+        ('HR_ADMIN', 'Exceptions to review'),
+      ]) {
+        await container.read(sessionProvider.notifier).demo(role);
+        container.read(routerProvider).go('/home');
+        await tester.pumpAndSettle();
+        expect(find.text(label), findsOneWidget);
+        expect(tester.getBottomLeft(find.text(label)).dy, lessThan(560));
+      }
+    },
+  );
+
+  testWidgets(
+    'acceptance F06 detail action stays visible through long history',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final c = _client();
+      final container = await _app(
+        tester,
+        c,
+        additional: [
+          workflowRepositoryProvider('leave')
+              .overrideWithValue(_LongHistoryLeave(c)),
+        ],
+      );
+      await container.read(sessionProvider.notifier).demo('MANAGER');
+      container.read(routerProvider).go('/approvals');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Personal leave'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Personal leave'));
+      await tester.pumpAndSettle();
+      final action = find.text('Approve request');
+      expect(action, findsOneWidget);
+      final before = tester.getBottomRight(action).dy;
+      await tester.drag(find.byType(ListView).last, const Offset(0, -1800));
+      await tester.pumpAndSettle();
+      expect(tester.getBottomRight(action).dy, before);
+      expect(before, lessThan(640));
     },
   );
 

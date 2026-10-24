@@ -1,0 +1,7 @@
+# P3-A role navigation evidence and boundaries
+
+The workspace uses five tabs per role. Employees see Home, Activity, Requests, Leave, Profile. Managers replace Leave with Approvals. HR and owners see Home, Activity, Work, Approvals, Profile. Leave remains reachable from the home shortcuts and Work directory for roles whose tab is replaced. The two privileged tabs are routed through the same role guard used by deep links; the server must still enforce authorization.
+
+The Work directory supports search across authorized task names, descriptions and groups, with four recently opened shortcuts retained for the app session. A manager's home shows pending approvals and the oldest timestamp when supplied; HR/owner also sees pending corrections and open attendance sessions. The local sample pending leave has a created-at instant so the age can be demonstrated. No document-expiry source exists yet, so the UI does not invent a count.
+
+Request detail actions use a persistent bottom area. The decision dialog, action bar, list and detail are separate feature-owned files. A 60-event history test verifies that scrolling does not move the action. Employee-to-request and employee-to-balance deep links still require an authorized, scoped server query and are open. `form_page.dart` and the shared case editor remain oversized; split them by feature as those workflows are revised, rather than adding new logic to them.

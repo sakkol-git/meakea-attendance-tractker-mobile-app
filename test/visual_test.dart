@@ -34,6 +34,9 @@ void main() {
   });
   for (final scenario in [
     ('home', '/home', 'EMPLOYEE'),
+    ('manager-home', '/home', 'MANAGER'),
+    ('hr-home', '/home', 'HR_ADMIN'),
+    ('owner-home', '/home', 'OWNER'),
     ('leave', '/leave', 'EMPLOYEE'),
     ('request', '/record/request/request-draft', 'EMPLOYEE'),
     ('approvals', '/approvals', 'MANAGER'),

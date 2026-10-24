@@ -19,6 +19,7 @@ import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/features/identity/presentation/auth_page.dart';
 import 'package:hrflow_mobile/features/dashboard/presentation/home_page.dart';
+import 'package:hrflow_mobile/features/dashboard/presentation/workspace_navigation.dart';
 import 'package:hrflow_mobile/features/attendance/presentation/activity_page.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/form_page.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/workflow_pages.dart';
@@ -95,6 +96,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, _) => const WorkflowListPage('leave'),
           ),
           GoRoute(path: '/profile', builder: (_, _) => const ProfilePage()),
+          GoRoute(path: '/approvals', builder: (_, _) => const ApprovalPage()),
+          GoRoute(path: '/workflows', builder: (_, _) => const WorkflowHub()),
         ],
       ),
       GoRoute(
@@ -133,7 +136,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const NotificationsPage(),
       ),
       GoRoute(path: '/schedule', builder: (_, _) => const SchedulePage()),
-      GoRoute(path: '/approvals', builder: (_, _) => const ApprovalPage()),
       GoRoute(
         path: '/profile/edit',
         builder: (_, _) => const EditProfilePage(),
@@ -161,7 +163,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/edit/request/:id',
         builder: (_, s) => EditRequestPage(s.pathParameters['id']!),
       ),
-      GoRoute(path: '/workflows', builder: (_, _) => const WorkflowHub()),
       GoRoute(
         path: '/features/:key',
         builder: (_, s) => FeatureCasesPage(
@@ -268,13 +269,6 @@ class WorkspaceShell extends ConsumerWidget {
     required this.location,
     required this.child,
   });
-  static const paths = [
-    '/home',
-    '/activity',
-    '/requests',
-    '/leave',
-    '/profile',
-  ];
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final local = ref.watch(clientProvider).isLocal;
@@ -320,36 +314,9 @@ class WorkspaceShell extends ConsumerWidget {
           Expanded(child: child),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: paths.indexOf(location).clamp(0, 4),
-        onDestinationSelected: (i) => context.go(paths[i]),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.schedule_outlined),
-            selectedIcon: Icon(Icons.schedule),
-            label: 'Activity',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment),
-            label: 'Requests',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.spa_outlined),
-            selectedIcon: Icon(Icons.spa),
-            label: 'Leave',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+      bottomNavigationBar: WorkspaceNavigation(
+        profile: ref.watch(sessionProvider).profile!,
+        location: location,
       ),
     );
   }
