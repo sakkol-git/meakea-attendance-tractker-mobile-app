@@ -146,6 +146,7 @@ const leavePanels = [
       'allowHalfDay': 'Half-day leave',
       'requiresAttachment': 'Evidence required',
       'maxDaysPerRequest': 'Maximum request days',
+      'minNoticeDays': 'Minimum notice days',
     },
     actions: [
       CaseAction(
@@ -173,6 +174,14 @@ const leavePanels = [
             minimum: 1,
             maximum: 366,
             initial: 60,
+          ),
+          CaseField(
+            'minNoticeDays',
+            'Minimum notice days',
+            kind: FieldKind.integer,
+            minimum: 0,
+            maximum: 365,
+            initial: 0,
           ),
           CaseField(
             'allowHalfDay',

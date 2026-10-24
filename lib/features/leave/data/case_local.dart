@@ -225,6 +225,14 @@ extension LeaveCasesDemo on LocalDataSource {
         'VALIDATION_ERROR',
         'Choose a valid request limit.',
       );
+      _need(
+        body['minNoticeDays'] == null ||
+            (body['minNoticeDays'] is int &&
+                body['minNoticeDays'] >= 0 &&
+                body['minNoticeDays'] <= 365),
+        'VALIDATION_ERROR',
+        'Choose a valid minimum notice.',
+      );
       type.addAll({
         'annualDays': entitlement / 100,
         'entitled': entitlement / 100,
@@ -232,6 +240,7 @@ extension LeaveCasesDemo on LocalDataSource {
         'allowHalfDay': body['allowHalfDay'] == true,
         'requiresAttachment': body['requiresAttachment'] == true,
         'maxDaysPerRequest': body['maxDaysPerRequest'],
+        'minNoticeDays': body['minNoticeDays'] ?? 0,
       });
       type['version']++;
       _auditAction('LEAVE_POLICY_UPDATED', type['id']);

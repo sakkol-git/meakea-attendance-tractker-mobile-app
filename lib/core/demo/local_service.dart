@@ -677,6 +677,7 @@ class LocalDataSource implements DataSource {
 
   DataResponse _dispatch(DataRequest r) {
     final result =
+        _handleFormDrafts(r) ??
         _operationsCases(r) ??
         _handleIdentity(r) ??
         _handleLeave(r) ??
@@ -692,6 +693,52 @@ class LocalDataSource implements DataSource {
       'DEMO_NOT_IMPLEMENTED',
       'This operation needs an agreed API contract.',
     );
+  }
+
+  DataResponse? _handleFormDrafts(DataRequest request) {
+    if (request.path == '/form-drafts' && request.method == 'DELETE') {
+      _table('/form-drafts')
+          .removeWhere((row) => row['employeeId'] == employeeId);
+      return _ok({'cleared': true});
+    }
+    final match = RegExp(r'^/form-drafts/(leave|correction|request)$')
+        .firstMatch(request.path);
+    if (match == null) return null;
+    final kind = match[1]!;
+    final rows = _table('/form-drafts');
+    final existing = rows
+        .where((row) => row['employeeId'] == employeeId && row['kind'] == kind)
+        .firstOrNull;
+    if (request.method == 'GET') {
+      return _ok({
+        'payload': existing?['payload'],
+        'updatedAt': existing?['updatedAt'],
+      });
+    }
+    if (request.method == 'DELETE') {
+      rows.removeWhere(
+        (row) => row['employeeId'] == employeeId && row['kind'] == kind,
+      );
+      return _ok({'cleared': true});
+    }
+    if (request.method == 'PUT') {
+      final payload = request.body?['payload'];
+      _need(
+        payload is Map && payload['schema'] == 1,
+        'VALIDATION_ERROR',
+        'Invalid form draft.',
+      );
+      final row = <String, dynamic>{
+        'employeeId': employeeId,
+        'kind': kind,
+        'payload': copyJson(payload),
+        'updatedAt': _now().toUtc().toIso8601String(),
+      };
+      if (existing != null) rows.remove(existing);
+      rows.add(row);
+      return _ok({'updatedAt': row['updatedAt']});
+    }
+    return null;
   }
 
   @override

@@ -84,6 +84,7 @@ class CachedDataSource implements DataSource {
       r.method == 'GET' &&
       _scope != null &&
       !r.path.startsWith('/auth') &&
+      !r.path.startsWith('/form-drafts') &&
       !r.path.contains('/attachments') &&
       !r.path.contains('/exports') &&
       !r.path.startsWith('/audit');

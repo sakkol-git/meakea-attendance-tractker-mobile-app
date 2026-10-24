@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+import 'dart:async';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 
 import 'package:flutter/material.dart';
@@ -9,6 +13,8 @@ import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
+import 'package:hrflow_mobile/core/leave_quantity.dart';
+import 'package:hrflow_mobile/shared/presentation/case_page.dart';
 
 class RequestFormPage extends ConsumerStatefulWidget {
   final String kind;
@@ -23,13 +29,19 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   final title = TextEditingController(),
       reason = TextEditingController(),
       quantity = TextEditingController(text: '1');
-  String? type, material;
+  String? type, material, materialName;
+  final materialLabels = <String, String>{};
   final additionalMaterials = <JsonMap>[];
   String halfDay = 'NONE', requestType = 'GENERAL';
   late DateTime from, to;
   TimeOfDay start = const TimeOfDay(hour: 8, minute: 30),
       end = const TimeOfDay(hour: 17, minute: 30);
   String? key, lastPayload;
+  String? evidenceName;
+  Uint8List? evidenceBytes;
+  Timer? draftDebounce;
+  Future<void> draftWrite = Future.value();
+  bool restoring = false;
   bool dirty = false, saving = false;
   String? error;
   @override
@@ -70,14 +82,108 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       start = parseTime(initial.fields['fromTime'] as String?, start);
       end = parseTime(initial.fields['toTime'] as String?, end);
     }
+    if (initial == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => restoreDraft());
+    }
   }
 
   @override
   void dispose() {
+    draftDebounce?.cancel();
     title.dispose();
     reason.dispose();
     quantity.dispose();
     super.dispose();
+  }
+
+  JsonMap draftPayload() => {
+    'schema': 1,
+    'title': title.text,
+    'reason': reason.text,
+    'quantity': quantity.text,
+    'type': type,
+    'material': material,
+    'materialName': materialName,
+    'materialLabels': materialLabels,
+    'additionalMaterials': additionalMaterials,
+    'halfDay': halfDay,
+    'requestType': requestType,
+    'from': iso(from),
+    'to': iso(to),
+    'startHour': start.hour,
+    'startMinute': start.minute,
+    'endHour': end.hour,
+    'endMinute': end.minute,
+  };
+
+  void markDirty() {
+    if (restoring) return;
+    dirty = true;
+    if (widget.initial != null) return;
+    draftDebounce?.cancel();
+    final repository = ref.read(workflowRepositoryProvider(widget.kind));
+    draftDebounce = Timer(const Duration(milliseconds: 400), () {
+      final payload = draftPayload();
+      draftWrite = draftWrite
+          .then((_) => repository.saveFormDraft(widget.kind, payload))
+          .catchError((Object failure) {
+            if (mounted) {
+              setState(
+                () => error = 'Draft could not be saved: ${message(failure)}',
+              );
+            }
+          });
+    });
+  }
+
+  Future<void> restoreDraft() async {
+    try {
+      final saved = await ref
+          .read(workflowRepositoryProvider(widget.kind))
+          .readFormDraft(widget.kind);
+      if (!mounted || dirty || saved == null || saved['schema'] != 1) return;
+      restoring = true;
+      setState(() {
+        title.text = saved['title'] as String? ?? '';
+        reason.text = saved['reason'] as String? ?? '';
+        quantity.text = saved['quantity'] as String? ?? '1';
+        type = saved['type'] as String?;
+        material = saved['material'] as String?;
+        materialName = saved['materialName'] as String?;
+        materialLabels
+          ..clear()
+          ..addAll(
+            (saved['materialLabels'] as Map? ?? {}).map(
+              (key, value) => MapEntry(key.toString(), value.toString()),
+            ),
+          );
+        additionalMaterials
+          ..clear()
+          ..addAll(
+            (saved['additionalMaterials'] as List? ?? []).map(
+              (item) => JsonMap.from(item as Map),
+            ),
+          );
+        halfDay = saved['halfDay'] as String? ?? 'NONE';
+        requestType = saved['requestType'] as String? ?? 'GENERAL';
+        from = DateTime.tryParse(saved['from'] as String? ?? '') ?? from;
+        to = DateTime.tryParse(saved['to'] as String? ?? '') ?? to;
+        start = TimeOfDay(
+          hour: saved['startHour'] as int? ?? 8,
+          minute: saved['startMinute'] as int? ?? 30,
+        );
+        end = TimeOfDay(
+          hour: saved['endHour'] as int? ?? 17,
+          minute: saved['endMinute'] as int? ?? 30,
+        );
+        dirty = true;
+      });
+      restoring = false;
+    } catch (failure) {
+      if (mounted) {
+        setState(() => error = 'Draft recovery failed: ${message(failure)}');
+      }
+    }
   }
 
   Future<void> date(bool first) async {
@@ -89,7 +195,6 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
     );
     if (picked != null) {
       setState(() {
-        dirty = true;
         if (first) {
           from = picked;
           if (to.isBefore(from)) to = from;
@@ -97,6 +202,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
           to = picked;
         }
       });
+      markDirty();
     }
   }
 
@@ -107,20 +213,47 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
     );
     if (picked != null) {
       setState(() {
-        dirty = true;
         if (first) {
           start = picked;
         } else {
           end = picked;
         }
       });
+      markDirty();
     }
   }
 
   String iso(DateTime d) => d.toIso8601String().substring(0, 10);
+  LeavePreviewQuery? get previewQuery => type == null
+      ? null
+      : (typeId: type!, from: iso(from), to: iso(to), halfDay: halfDay);
+
+  Future<void> chooseEvidence() async {
+    final picked = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+    );
+    if (picked.isEmpty || !mounted) return;
+    final file = picked.first;
+    final length = await file.length();
+    if (length == null || length > 10 * 1024 * 1024) {
+      setState(() => error = 'Choose a PDF or image smaller than 10 MB.');
+      return;
+    }
+    final bytes = await file.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      evidenceName = file.name;
+      evidenceBytes = bytes;
+      dirty = true;
+      error = null;
+    });
+  }
+
   Future<bool> discard() async {
     if (!dirty) return true;
-    return await showDialog<bool>(
+    final confirmed =
+        await showDialog<bool>(
           context: context,
           builder: (c) => AlertDialog(
             title: Text('Discard this draft?'),
@@ -138,12 +271,39 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
           ),
         ) ??
         false;
+    if (!confirmed || widget.initial != null) return confirmed;
+    draftDebounce?.cancel();
+    try {
+      await draftWrite;
+      await ref
+          .read(workflowRepositoryProvider(widget.kind))
+          .clearFormDraft(widget.kind);
+      return true;
+    } catch (failure) {
+      if (mounted) {
+        setState(
+          () => error = 'Could not discard server draft: ${message(failure)}',
+        );
+      }
+      return false;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final leave = widget.kind == 'leave',
         correction = widget.kind == 'correction';
+    final selectedPolicy = ref
+        .watch(collectionProvider('/leave/types'))
+        .asData
+        ?.value
+        .where((row) => row['id'] == type)
+        .firstOrNull;
+    final halfDayAllowed =
+        selectedPolicy != null && selectedPolicy['allowHalfDay'] != false;
+    final leavePreview = leave && previewQuery != null
+        ? ref.watch(leavePreviewProvider(previewQuery!))
+        : null;
     return PopScope(
       canPop: !dirty,
       onPopInvokedWithResult: (didPop, _) async {
@@ -167,7 +327,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
         children: [
           Form(
             key: form,
-            onChanged: () => dirty = true,
+            onChanged: markDirty,
             child: Surface(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -193,7 +353,15 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                         ],
                         onChanged: saving
                             ? null
-                            : (v) => setState(() => type = v),
+                            : (v) => setState(() {
+                                type = v;
+                                if (types.firstWhere(
+                                      (row) => row['id'] == v,
+                                    )['allowHalfDay'] ==
+                                    false) {
+                                  halfDay = 'NONE';
+                                }
+                              }),
                         validator: (v) =>
                             v == null ? 'Choose a leave type' : null,
                       ),
@@ -243,38 +411,60 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                     ),
                     if (requestType == 'MATERIAL') ...[
                       const SizedBox(height: 16),
-                      AsyncPanel(
-                        value: ref.watch(collectionProvider('/materials')),
-                        retry: () =>
-                            ref.invalidate(collectionProvider('/materials')),
-                        builder: (values) => DropdownButtonFormField<String>(
-                          key: ValueKey(
-                            'material-${additionalMaterials.length}-$material',
-                          ),
-                          isExpanded: true,
-                          itemHeight: null,
-                          initialValue: material,
-                          decoration: const InputDecoration(
-                            labelText: 'Material',
-                          ),
-                          items: [
-                            for (final v in values.where(
-                              (v) =>
-                                  v['status'] != 'ARCHIVED' &&
-                                  !additionalMaterials.any(
-                                    (m) => m['materialId'] == v['id'],
-                                  ),
-                            ))
-                              DropdownMenuItem(
-                                value: v['id'] as String,
-                                child: Text(v['name'] as String),
+                      FormField<String>(
+                        key: ValueKey(
+                          'material-${additionalMaterials.length}-$material',
+                        ),
+                        initialValue: material,
+                        validator: (value) =>
+                            value == null && additionalMaterials.isEmpty
+                            ? 'Choose a material'
+                            : null,
+                        builder: (field) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Text('Material · Required'),
+                            OutlinedButton.icon(
+                              icon: Icon(Icons.search),
+                              label: Text(
+                                materialName ?? material ?? 'Search materials',
+                              ),
+                              onPressed: saving
+                                  ? null
+                                  : () async {
+                                      final selected =
+                                          await showPagedCaseLookup(
+                                            context,
+                                            'requests.inventory',
+                                            'material',
+                                          );
+                                      if (selected == null || !mounted) return;
+                                      if (additionalMaterials.any(
+                                        (item) =>
+                                            item['materialId'] == selected.id,
+                                      )) {
+                                        setState(
+                                          () => error =
+                                              'This material is already added.',
+                                        );
+                                        return;
+                                      }
+                                      setState(() {
+                                        material = selected.id;
+                                        materialName = selected.title;
+                                        materialLabels[selected.id] =
+                                            selected.title;
+                                      });
+                                      field.didChange(selected.id);
+                                      markDirty();
+                                    },
+                            ),
+                            if (field.hasError)
+                              Text(
+                                field.errorText!,
+                                style: TextStyle(color: context.semantic.error),
                               ),
                           ],
-                          onChanged: (v) => setState(() => material = v),
-                          validator: (v) =>
-                              v == null && additionalMaterials.isEmpty
-                              ? 'Choose a material'
-                              : null,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -300,15 +490,8 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                         Card(
                           child: ListTile(
                             title: Text(
-                              ref
-                                      .watch(collectionProvider('/materials'))
-                                      .asData
-                                      ?.value
-                                      .where(
-                                        (m) => m['id'] == item['materialId'],
-                                      )
-                                      .firstOrNull?['name']
-                                      ?.toString() ??
+                              materialLabels[item['materialId']] ??
+                                  item['materialId']?.toString() ??
                                   'Material',
                             ),
                             subtitle: Text('Quantity: ${item['quantity']}'),
@@ -316,9 +499,12 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                               tooltip: 'Remove material',
                               onPressed: saving
                                   ? null
-                                  : () => setState(
-                                      () => additionalMaterials.remove(item),
-                                    ),
+                                  : () {
+                                      setState(
+                                        () => additionalMaterials.remove(item),
+                                      );
+                                      markDirty();
+                                    },
                               icon: Icon(Icons.close),
                             ),
                           ),
@@ -341,10 +527,11 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                                     'quantity': qty,
                                   });
                                   material = null;
+                                  materialName = null;
                                   quantity.text = '1';
-                                  dirty = true;
                                   error = null;
                                 });
+                                markDirty();
                               },
                         icon: Icon(Icons.add),
                         label: Text('Add another material'),
@@ -373,7 +560,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                         onTap: saving ? null : () => date(false),
                       ),
                     ],
-                    if (leave) ...[
+                    if (leave && halfDayAllowed) ...[
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         isExpanded: true,
@@ -406,6 +593,57 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                         style: TextStyle(
                           fontSize: 12,
                           color: context.semantic.textMuted,
+                        ),
+                      ),
+                    ],
+                    if (leave && previewQuery != null) ...[
+                      const SizedBox(height: 16),
+                      AsyncPanel(
+                        value: leavePreview!,
+                        retry: () =>
+                            ref.invalidate(leavePreviewProvider(previewQuery!)),
+                        builder: (preview) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Before you submit',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            InfoRow(
+                              'Chargeable',
+                              formatLeaveDays(preview.chargeableDays),
+                            ),
+                            InfoRow(
+                              'Available before',
+                              formatLeaveDays(preview.balanceBefore),
+                            ),
+                            InfoRow(
+                              'Balance after',
+                              formatLeaveDays(preview.balanceAfter),
+                            ),
+                            if (preview.minimumNoticeDays > 0)
+                              InfoRow(
+                                'Minimum notice',
+                                '${preview.minimumNoticeDays} days',
+                              ),
+                            for (final warning in preview.warnings)
+                              Text(
+                                warning,
+                                style: TextStyle(color: context.semantic.error),
+                              ),
+                            if (preview.evidenceRequired) ...[
+                              Text(
+                                'Supporting evidence is required before submission.',
+                              ),
+                              OutlinedButton.icon(
+                                onPressed: saving ? null : chooseEvidence,
+                                icon: Icon(Icons.attach_file),
+                                label: Text(
+                                  evidenceName ?? 'Choose PDF or image',
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
@@ -542,6 +780,27 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       setState(() => error = 'Half-day requests must be on a single date.');
       return;
     }
+    if (leave && previewQuery != null) {
+      try {
+        final preview = await ref.read(
+          leavePreviewProvider(previewQuery!).future,
+        );
+        if (!mounted) return;
+        if (preview.warnings.isNotEmpty) {
+          setState(() => error = preview.warnings.first);
+          return;
+        }
+        if (preview.evidenceRequired && evidenceBytes == null) {
+          setState(
+            () => error = 'Supporting evidence is required before submission.',
+          );
+          return;
+        }
+      } catch (failure) {
+        if (mounted) setState(() => error = message(failure));
+        return;
+      }
+    }
     if (correction) {
       final problem = CorrectionTime.validate(
         CorrectionTime.instant(from, start.hour, start.minute),
@@ -637,6 +896,8 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       error = null;
     });
     try {
+      draftDebounce?.cancel();
+      await draftWrite;
       WorkflowRecord record;
       if (widget.initial != null) {
         await ref
@@ -656,6 +917,14 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
         record = await ref
             .read(workflowUseCasesProvider(widget.kind))
             .create(widget.kind, body, key!);
+        if (leave && evidenceBytes != null) {
+          await ref
+              .read(workflowRepositoryProvider('leave'))
+              .attach(record, evidenceName!, evidenceBytes!);
+        }
+        await ref
+            .read(workflowRepositoryProvider(widget.kind))
+            .clearFormDraft(widget.kind);
       }
       ref.invalidate(recordsProvider);
       ref.invalidate(balancesProvider);

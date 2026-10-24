@@ -12,3 +12,19 @@ class LeaveBalance {
     this.year,
   });
 }
+
+class LeavePreview {
+  final double chargeableDays, balanceBefore, balanceAfter;
+  final bool allowHalfDay, evidenceRequired;
+  final int minimumNoticeDays;
+  final List<String> warnings;
+  const LeavePreview({
+    required this.chargeableDays,
+    required this.balanceBefore,
+    required this.balanceAfter,
+    required this.allowHalfDay,
+    required this.evidenceRequired,
+    required this.minimumNoticeDays,
+    required this.warnings,
+  });
+}

@@ -11,4 +11,10 @@ abstract interface class LeaveRepository
         WorkflowRepository,
         AttachmentsRepository {
   Future<List<LeaveBalance>> balances();
+  Future<LeavePreview> preview(
+    String typeId,
+    String startDate,
+    String endDate,
+    String halfDay,
+  );
 }

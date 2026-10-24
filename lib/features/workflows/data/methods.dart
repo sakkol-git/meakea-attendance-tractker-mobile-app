@@ -7,6 +7,23 @@ import 'package:hrflow_mobile/shared/domain/workflow.dart';
 import 'package:hrflow_mobile/core/data/resource_repository.dart';
 
 mixin WorkflowsMethods on ResourceRepository {
+  Future<JsonMap?> readFormDraft(String kind) async {
+    final response = object(
+      (await client.request(DataRequest('GET', '/form-drafts/$kind'))).data,
+    );
+    return response['payload'] == null ? null : object(response['payload']);
+  }
+
+  Future<void> saveFormDraft(String kind, JsonMap payload) async {
+    await client.request(
+      DataRequest('PUT', '/form-drafts/$kind', body: {'payload': payload}),
+    );
+  }
+
+  Future<void> clearFormDraft(String kind) async {
+    await client.request(DataRequest('DELETE', '/form-drafts/$kind'));
+  }
+
   Future<void> updateDraft(
     WorkflowRecord record,
     String title,

@@ -55,6 +55,17 @@ class BrokenDisk implements CacheStore {
 }
 
 void main() {
+  test('sensitive server form drafts never enter the client cache', () async {
+    final server = Server();
+    final source = CachedDataSource(server, MemoryCacheStore());
+    addTearDown(source.close);
+    await source.bind('tenant:employee:hr');
+    await source.send(const DataRequest('GET', '/form-drafts/leave'));
+    await source.send(const DataRequest('GET', '/form-drafts/leave'));
+    expect(server.reads, 2);
+    expect(source.hits, 0);
+  });
+
   test(
     'shift edits invalidate assignment snapshots and today attendance together',
     () async {

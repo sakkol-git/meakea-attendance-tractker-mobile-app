@@ -89,3 +89,18 @@ final caseOptionsProvider = FutureProvider.autoDispose
         'This catalog is too large for a mobile selector. Ask your administrator to narrow the available choices.',
       );
     });
+
+typedef LookupQuery = ({String collection, String search, int page});
+final caseLookupPageProvider = FutureProvider.autoDispose
+    .family<List<CaseRecord>, LookupQuery>(
+      (ref, query) => ref
+          .watch(caseGatewayProvider(query.collection.split('.').first))
+          .cases(
+            query.collection,
+            filters: {
+              'page': '${query.page}',
+              'size': '25',
+              if (query.search.isNotEmpty) 'search': query.search,
+            },
+          ),
+    );

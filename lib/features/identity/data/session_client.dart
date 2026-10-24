@@ -328,6 +328,11 @@ class ClientData implements SessionGateway, ApiClient {
     _workspaceGeneration++;
     final generation = ++_generation;
     try {
+      try {
+        await source.send(const DataRequest('DELETE', '/form-drafts'));
+      } catch (_) {
+        // Session erasure still proceeds when the server is unavailable.
+      }
       if (!isLocal) {
         String? saved;
         await _credentialOperation(() async {

@@ -338,7 +338,8 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
   final form = GlobalKey<FormState>();
   final controllers = <String, TextEditingController>{};
   final values = <String, dynamic>{};
-  bool busy = false, review = false;
+  final lookupLabels = <String, String>{};
+  bool busy = false, review = false, dirty = false;
   String? error, fingerprint;
   String key = commandKey(), commitKey = commandKey();
   Map<String, dynamic>? prepared;
@@ -377,6 +378,30 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<bool> discard() async {
+    if (!dirty) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialog) => AlertDialog(
+            title: Text('Discard ${widget.action.label.toLowerCase()}?'),
+            content: const Text(
+              'Your unsaved changes in this form will be lost.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialog, false),
+                child: const Text('Keep editing'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialog, true),
+                child: const Text('Discard changes'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   bool validDate(String value) {
@@ -437,6 +462,31 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
           10,
         ),
       );
+    }
+  }
+
+  Future<void> selectTime(CaseField field) async {
+    final raw = controllers[field.key]!.text.split(':');
+    final hour = raw.length == 2 ? int.tryParse(raw[0]) : null;
+    final minute = raw.length == 2 ? int.tryParse(raw[1]) : null;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime:
+          hour != null &&
+              minute != null &&
+              hour >= 0 &&
+              hour < 24 &&
+              minute >= 0 &&
+              minute < 60
+          ? TimeOfDay(hour: hour, minute: minute)
+          : const TimeOfDay(hour: 9, minute: 0),
+    );
+    if (picked != null && mounted) {
+      setState(
+        () => controllers[field.key]!.text =
+            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}',
+      );
+      dirty = true;
     }
   }
 
@@ -505,6 +555,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
         etag: widget.record?.etag,
       );
       if (!mounted) return;
+      dirty = false;
       ref.invalidate(caseRowsProvider);
       ref.invalidate(caseOptionsProvider);
       ref.invalidate(balancesProvider);
@@ -525,7 +576,13 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
   Widget build(BuildContext context) {
     final action = widget.action;
     return PopScope(
-      canPop: !busy,
+      canPop: !busy && !dirty,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (!didPop && !busy && await discard() && mounted) {
+          setState(() => dirty = false);
+          Navigator.pop(this.context);
+        }
+      },
       child: AlertDialog(
         title: Text(
           review ? 'Review ${action.label.toLowerCase()}' : action.label,
@@ -534,6 +591,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
           constraints: const BoxConstraints(maxWidth: 480),
           child: Form(
             key: form,
+            onChanged: () => dirty = true,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -627,14 +685,17 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
           TextButton(
             onPressed: busy
                 ? null
-                : () {
+                : () async {
                     if (review) {
                       setState(() {
                         review = false;
                         prepared = null;
                       });
                     } else {
-                      Navigator.pop(context);
+                      if (await discard() && context.mounted) {
+                        setState(() => dirty = false);
+                        Navigator.pop(context);
+                      }
                     }
                   },
             child: Text(review ? 'Revise' : 'Go back'),
@@ -770,20 +831,13 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
     }
     if (field.kind == FieldKind.date) return shortDate(value?.toString());
     if (field.kind == FieldKind.lookup) {
-      return ref
-              .read(caseOptionsProvider(field.lookup!))
-              .asData
-              ?.value
-              .where(
-                (r) =>
-                    (field.valueField == 'id'
-                        ? r.id
-                        : r.values[field.valueField]?.toString()) ==
-                    value,
-              )
-              .firstOrNull
-              ?.title ??
-          'Selection unavailable — revise before confirming';
+      return lookupLabels[field.key] ??
+          widget
+              .record
+              ?.values['${field.key.replaceFirst(RegExp(r'Id$'), '')}Name']
+              ?.toString() ??
+          value?.toString() ??
+          'No selection';
     }
     return businessValue(value);
   }
@@ -848,16 +902,55 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
     }
     if (field.kind == FieldKind.choice) return choice(field, field.choices);
     if (field.kind == FieldKind.lookup) {
-      return AsyncPanel(
-        value: ref.watch(caseOptionsProvider(field.lookup!)),
-        retry: () => ref.invalidate(caseOptionsProvider(field.lookup!)),
-        builder: (rows) => choice(field, {
-          for (final row in rows)
-            (field.valueField == 'id'
-                    ? row.id
-                    : row.values[field.valueField].toString()):
-                row.title,
-        }),
+      return FormField<String>(
+        initialValue: values[field.key] as String?,
+        validator: (v) => field.required && (v == null || v.isEmpty)
+            ? 'Choose ${field.label.toLowerCase()}'
+            : null,
+        builder: (state) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              '${field.label} · ${field.required ? 'Required' : 'Optional'}',
+            ),
+            OutlinedButton.icon(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final selected = await showPagedCaseLookup(
+                        context,
+                        field.lookup!,
+                        field.label,
+                      );
+                      if (selected == null || !mounted) return;
+                      final id = field.valueField == 'id'
+                          ? selected.id
+                          : selected.values[field.valueField]?.toString();
+                      setState(() {
+                        values[field.key] = id;
+                        lookupLabels[field.key] = selected.title;
+                        dirty = true;
+                      });
+                      state.didChange(id);
+                    },
+              icon: Icon(Icons.search),
+              label: Text(
+                lookupLabels[field.key] ??
+                    widget
+                        .record
+                        ?.values['${field.key.replaceFirst(RegExp(r'Id$'), '')}Name']
+                        ?.toString() ??
+                    (values[field.key]?.toString() ??
+                        'Search ${field.label.toLowerCase()}'),
+              ),
+            ),
+            if (state.hasError)
+              Text(
+                state.errorText!,
+                style: TextStyle(color: context.semantic.error),
+              ),
+          ],
+        ),
       );
     }
     return TextFormField(
@@ -871,11 +964,18 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
           : TextInputType.text,
       decoration: InputDecoration(
         labelText: field.label,
+        helperText: field.required ? 'Required' : 'Optional',
         suffixIcon: field.kind == FieldKind.date
             ? IconButton(
                 tooltip: 'Choose ${field.label.toLowerCase()}',
                 onPressed: busy ? null : () => selectDate(field),
                 icon: Icon(Icons.calendar_today_outlined),
+              )
+            : field.kind == FieldKind.time
+            ? IconButton(
+                tooltip: 'Choose ${field.label.toLowerCase()}',
+                onPressed: busy ? null : () => selectTime(field),
+                icon: Icon(Icons.schedule_outlined),
               )
             : null,
       ),
@@ -889,7 +989,10 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
       initialValue: choices.containsKey(current) ? current : null,
       isExpanded: true,
       itemHeight: null,
-      decoration: InputDecoration(labelText: field.label),
+      decoration: InputDecoration(
+        labelText: field.label,
+        helperText: field.required ? 'Required' : 'Optional',
+      ),
       items: choices.entries
           .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value)))
           .toList(),
@@ -897,6 +1000,113 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
       validator: (v) => field.required && v == null
           ? 'Choose ${field.label.toLowerCase()}'
           : null,
+    );
+  }
+}
+
+Future<CaseRecord?> showPagedCaseLookup(
+  BuildContext context,
+  String collection,
+  String label,
+) => showDialog<CaseRecord>(
+  context: context,
+  builder: (_) => _PagedLookupDialog(collection, label),
+);
+
+class _PagedLookupDialog extends ConsumerStatefulWidget {
+  final String collection, label;
+  const _PagedLookupDialog(this.collection, this.label);
+  @override
+  ConsumerState<_PagedLookupDialog> createState() => _PagedLookupDialogState();
+}
+
+class _PagedLookupDialogState extends ConsumerState<_PagedLookupDialog> {
+  String search = '';
+  int page = 0;
+  Timer? debounce;
+  @override
+  void dispose() {
+    debounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = caseLookupPageProvider((
+      collection: widget.collection,
+      search: search,
+      page: page,
+    ));
+    final value = ref.watch(provider);
+    return AlertDialog(
+      title: Text('Choose ${widget.label.toLowerCase()}'),
+      content: SizedBox(
+        width: 480,
+        height: 460,
+        child: Column(
+          children: [
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Search all records',
+                prefixIcon: Icon(Icons.search),
+              ),
+              onChanged: (text) {
+                debounce?.cancel();
+                debounce = Timer(const Duration(milliseconds: 300), () {
+                  if (mounted) {
+                    setState(() {
+                      search = text.trim();
+                      page = 0;
+                    });
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: AsyncPanel(
+                value: value,
+                retry: () => ref.invalidate(provider),
+                builder: (rows) => rows.isEmpty
+                    ? const Center(child: Text('No matches'))
+                    : ListView(
+                        children: [
+                          for (final row in rows)
+                            ListTile(
+                              title: Text(row.title),
+                              subtitle: Text(row.id),
+                              onTap: () => Navigator.pop(context, row),
+                            ),
+                        ],
+                      ),
+              ),
+            ),
+            if (value.asData != null)
+              Row(
+                children: [
+                  Text('Page ${page + 1}'),
+                  const Spacer(),
+                  TextButton(
+                    onPressed: page == 0 ? null : () => setState(() => page--),
+                    child: const Text('Previous'),
+                  ),
+                  TextButton(
+                    onPressed: value.asData!.value.length < 25
+                        ? null
+                        : () => setState(() => page++),
+                    child: const Text('Next'),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+      ],
     );
   }
 }

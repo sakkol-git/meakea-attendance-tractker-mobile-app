@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hrflow_mobile/app.dart';
 import 'package:hrflow_mobile/app/composition.dart';
 import 'package:hrflow_mobile/app/providers.dart';
+import 'package:hrflow_mobile/app/cases.dart';
 import 'package:hrflow_mobile/core/demo/local_service.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/theme.dart';
@@ -1048,8 +1049,258 @@ void main() {
     await tester.tap(find.byTooltip('Add record'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).last, 'New department');
+    await tester.tap(find.text('Go back'));
+    await tester.pumpAndSettle();
+    expect(find.text('Discard add department?'), findsOneWidget);
+    expect(find.text('Keep editing'), findsOneWidget);
+  });
+
+  testWidgets('acceptance F10 legacy admin dialog also guards unsaved work', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(tester, c);
+    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    container.read(routerProvider).go('/manage/holidays');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Add record'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Founders Day');
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(find.text('Discard this draft?'), findsOneWidget);
+    expect(find.text('Discard new Company holidays?'), findsOneWidget);
+  });
+
+  test(
+    'acceptance F10 leave preview applies workdays and policy warnings',
+    () async {
+      final c = _client();
+      addTearDown(c.close);
+      await c.demoLogin('EMPLOYEE');
+      Future<Map> preview(
+        String from,
+        String to, {
+        String half = 'NONE',
+        String type = 'annual',
+      }) async =>
+          (await c.request(
+                DataRequest(
+                  'POST',
+                  '/leave/requests/preview',
+                  body: {
+                    'leaveTypeId': type,
+                    'startDate': from,
+                    'endDate': to,
+                    'halfDay': half,
+                  },
+                  idempotencyKey: commandKey(),
+                ),
+              )).data
+              as Map;
+      final weekday = await preview('2026-10-26', '2026-10-26');
+      expect(weekday['chargeableDays'], 1);
+      expect(weekday['balanceAfter'], (weekday['balanceBefore'] as num) - 1);
+      final weekend = await preview('2026-10-24', '2026-10-25');
+      expect(weekend['chargeableDays'], 0);
+      expect(
+        weekend['warnings'],
+        contains('No scheduled workdays in this period.'),
+      );
+      await c.demoLogin('HR_ADMIN');
+      await c.request(
+        DataRequest(
+          'PUT',
+          '/leave/admin/policies/sick',
+          ifMatch: '"1"',
+          body: {
+            'annualDays': 10,
+            'carryOverMax': 0,
+            'maxDaysPerRequest': 60,
+            'allowHalfDay': false,
+            'requiresAttachment': true,
+            'minNoticeDays': 3,
+            'reason': 'Updated medical policy',
+          },
+        ),
+      );
+      await c.demoLogin('EMPLOYEE');
+      final policy = await preview(
+        '2026-10-26',
+        '2026-10-26',
+        type: 'sick',
+        half: 'AM',
+      );
+      expect(policy['allowHalfDay'], false);
+      expect(policy['evidenceRequired'], true);
+      expect(policy['minimumNoticeDays'], 3);
+      expect(
+        (policy['warnings'] as List).join(' '),
+        contains('does not allow half days'),
+      );
+      expect(
+        (policy['warnings'] as List).join(' '),
+        contains('requires 3 days of notice'),
+      );
+    },
+  );
+
+  testWidgets('acceptance F10 required leave evidence blocks submission', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final c = _client();
+    addTearDown(c.close);
+    await c.demoLogin('HR_ADMIN');
+    await c.request(
+      DataRequest(
+        'PUT',
+        '/leave/admin/policies/sick',
+        ifMatch: '"1"',
+        body: {
+          'annualDays': 10,
+          'carryOverMax': 0,
+          'maxDaysPerRequest': 60,
+          'allowHalfDay': false,
+          'requiresAttachment': true,
+          'minNoticeDays': 0,
+          'reason': 'Evidence policy',
+        },
+      ),
+    );
+    final container = await _app(
+      tester,
+      c,
+      additional: [
+        clockProvider.overrideWithValue(() => DateTime(2026, 10, 23, 10)),
+      ],
+    );
+    await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+    container.read(routerProvider).go('/new/leave');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Leave type'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sick leave').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Day portion'), findsNothing);
+    expect(
+      find.text('Supporting evidence is required before submission.'),
+      findsOneWidget,
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reason'),
+      'Medical appointment',
+    );
+    await tester.ensureVisible(find.text('Send for approval'));
+    await tester.tap(find.text('Send for approval'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Supporting evidence is required before submission.'),
+      findsNWidgets(2),
+    );
+    expect(
+      container.read(routerProvider).routeInformationProvider.value.uri.path,
+      '/new/leave',
+    );
+  });
+
+  test(
+    'acceptance F10 server draft survives reload and is erased on logout',
+    () async {
+      final c = _client();
+      addTearDown(c.close);
+      await c.demoLogin('EMPLOYEE');
+      const payload = {
+        'schema': 1,
+        'reason': 'A private draft',
+        'type': 'annual',
+      };
+      await c.request(
+        DataRequest('PUT', '/form-drafts/leave', body: {'payload': payload}),
+      );
+      final seed = jsonDecode(
+        File('assets/data/demo-seed.json').readAsStringSync(),
+      ) as JsonMap;
+      final restoredSource = LocalDataSource(
+        seed,
+        populate: true,
+        now: () => DateTime.utc(2026, 10, 23, 3),
+      );
+      restoredSource.restore((c.source as LocalDataSource).snapshot());
+      final resumed = ClientData.forTest(restoredSource);
+      addTearDown(resumed.close);
+      await resumed.demoLogin('EMPLOYEE');
+      final recovered = await resumed.request(
+        const DataRequest('GET', '/form-drafts/leave'),
+      );
+      expect((recovered.data as Map)['payload']['reason'], 'A private draft');
+      await resumed.logout();
+      await resumed.demoLogin('EMPLOYEE');
+      final afterLogout = await resumed.request(
+        const DataRequest('GET', '/form-drafts/leave'),
+      );
+      expect((afterLogout.data as Map)['payload'], isNull);
+    },
+  );
+
+  test(
+    'acceptance F10 lookup searches the server before selecting a page',
+    () async {
+      final c = _client();
+      addTearDown(c.close);
+      final repo = _PagedPeople(c);
+      final container = ProviderContainer(
+        overrides: [
+          ...composeFeatures(
+            c,
+            preferences: const _Preferences(),
+          ).where((base) => base.origin != identityRepositoryProvider),
+          identityRepositoryProvider.overrideWithValue(repo),
+        ],
+      );
+      addTearDown(container.dispose);
+      final results = await container.read(
+        caseLookupPageProvider((
+          collection: 'identity.people',
+          search: 'Special Person',
+          page: 0,
+        )).future,
+      );
+      expect(repo.lastSearch, 'Special Person');
+      expect(results.single.title, 'Special Person');
+    },
+  );
+
+  testWidgets('acceptance F10 form restores server draft after navigation', (
+    tester,
+  ) async {
+    final c = _client();
+    final container = await _app(
+      tester,
+      c,
+      additional: [
+        clockProvider.overrideWithValue(() => DateTime(2026, 10, 23, 10)),
+      ],
+    );
+    await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+    container.read(routerProvider).go('/new/leave');
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Reason'),
+      'A remembered reason',
+    );
+    await tester.pump(const Duration(milliseconds: 450));
+    await tester.pumpAndSettle();
+    final stored = await c.request(
+      const DataRequest('GET', '/form-drafts/leave'),
+    );
+    expect((stored.data as Map)['payload']['reason'], 'A remembered reason');
+    container.read(routerProvider).go('/home');
+    await tester.pumpAndSettle();
+    container.read(routerProvider).go('/new/leave');
+    await tester.pumpAndSettle();
+    expect(find.text('A remembered reason'), findsOneWidget);
   });
 }
