@@ -129,6 +129,13 @@
     },
     {
       "feature": "identity",
+      "key": "identity.audit",
+      "method": "GET",
+      "path": "/audit-logs",
+      "versioned": false
+    },
+    {
+      "feature": "identity",
       "key": "identity.assignments",
       "method": "GET",
       "path": "/shift-assignments",

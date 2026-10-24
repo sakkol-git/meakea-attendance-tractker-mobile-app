@@ -920,32 +920,79 @@ void main() {
 
   testWidgets('acceptance F08 audit rows retain time of day', (tester) async {
     final c = _client();
-    final container = await _app(
-      tester,
-      c,
-      additional: [
-        collectionProvider('/audit-logs').overrideWith(
-          (ref) async => [
-            {
-              'action': 'EMPLOYEE_UPDATED',
-              'actor': 'HR',
-              'at': '2026-10-23T09:15:00+07:00',
-            },
-            {
-              'action': 'EMPLOYEE_UPDATED',
-              'actor': 'HR',
-              'at': '2026-10-23T16:45:00+07:00',
-            },
-          ],
-        ),
-      ],
+    addTearDown(c.close);
+    await c.demoLogin('HR_ADMIN');
+    final original = await c.request(
+      DataRequest('GET', '/employees/demo-employee'),
     );
+    final first = await c.request(
+      DataRequest(
+        'PATCH',
+        '/employees/demo-employee',
+        body: {'name': 'Sok Dara One'},
+        ifMatch: original.etag,
+      ),
+    );
+    await c.request(
+      DataRequest(
+        'PATCH',
+        '/employees/demo-employee',
+        body: {'name': 'Sok Dara Two'},
+        ifMatch: first.etag,
+      ),
+    );
+    final auditBefore = await c.request(DataRequest('GET', '/audit-logs'));
+    final actor =
+        ((auditBefore.data as Map)['items'] as List).first['actor'] as String;
+    final container = await _app(tester, c);
     await container.read(sessionProvider.notifier).demo('HR_ADMIN');
     container.read(routerProvider).go('/audit');
     await tester.pumpAndSettle();
-    expect(find.textContaining('HR ·'), findsNWidgets(2));
-    expect(find.textContaining('09:15'), findsOneWidget);
-    expect(find.textContaining('16:45'), findsOneWidget);
+    expect(find.textContaining(actor), findsNWidgets(2));
+    expect(find.textContaining('10:00:00'), findsOneWidget);
+    expect(find.textContaining('10:00:01'), findsOneWidget);
+    await tester.tap(find.textContaining('10:00:01'));
+    await tester.pumpAndSettle();
+    expect(find.text('Target'), findsOneWidget);
+    expect(find.textContaining('Sok Dara One → Sok Dara Two'), findsOneWidget);
+    final filtered = await c.request(
+      DataRequest(
+        'GET',
+        '/audit-logs',
+        query: {
+          'actor': actor,
+          'action': 'EMPLOYEE_UPDATED',
+          'target': 'demo-employee',
+          'from': '2026-10-23',
+          'to': '2026-10-23',
+          'page': '0',
+          'size': '25',
+        },
+      ),
+    );
+    expect((filtered.data as Map)['total'], 2);
+  });
+
+  test('acceptance F08 audit filters are sent to the server', () async {
+    final server = _QueryServer();
+    final client = ClientData.forTest(server);
+    addTearDown(client.close);
+    await IdentityDataRepository(client).cases(
+      'identity.audit',
+      filters: {
+        'actor': 'Sok',
+        'action': 'EMPLOYEE_UPDATED',
+        'target': 'demo-employee',
+        'from': '2026-10-23',
+        'to': '2026-10-24',
+        'page': '1',
+        'size': '25',
+      },
+    );
+    expect(server.last?.path, '/audit-logs');
+    expect(server.last?.query['actor'], 'Sok');
+    expect(server.last?.query['target'], 'demo-employee');
+    expect(server.last?.query['page'], '1');
   });
 
   testWidgets(

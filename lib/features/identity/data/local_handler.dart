@@ -131,7 +131,49 @@ extension IdentityDemo on LocalDataSource {
     }
     if (r.path == '/audit-logs' && r.method == 'GET') {
       _need(_admin, 'FORBIDDEN', 'HR access is required.', status: 403);
-      return _page(_audit, r);
+      return _page(
+        _audit
+            .where(
+              (row) =>
+                  (r.query['actor']?.isEmpty ?? true) ||
+                  row['actor'].toString().toLowerCase().contains(
+                    r.query['actor']!.toLowerCase(),
+                  ),
+            )
+            .where(
+              (row) =>
+                  (r.query['action']?.isEmpty ?? true) ||
+                  row['action'].toString().toLowerCase().contains(
+                    r.query['action']!.toLowerCase(),
+                  ),
+            )
+            .where(
+              (row) =>
+                  (r.query['target']?.isEmpty ?? true) ||
+                  row['entityId'].toString().toLowerCase().contains(
+                    r.query['target']!.toLowerCase(),
+                  ),
+            )
+            .where(
+              (row) =>
+                  (r.query['from']?.isEmpty ?? true) ||
+                  row['at']
+                          .toString()
+                          .substring(0, 10)
+                          .compareTo(r.query['from']!) >=
+                      0,
+            )
+            .where(
+              (row) =>
+                  (r.query['to']?.isEmpty ?? true) ||
+                  row['at']
+                          .toString()
+                          .substring(0, 10)
+                          .compareTo(r.query['to']!) <=
+                      0,
+            ),
+        r,
+      );
     }
     return _catalogue(r, [
       '/employees',

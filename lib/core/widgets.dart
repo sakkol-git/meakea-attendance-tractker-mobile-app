@@ -395,5 +395,15 @@ String timeText(DateTime? value) {
   return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 }
 
+String companyTimestamp(String? value) {
+  final instant = DateTime.tryParse(value ?? '');
+  if (instant == null) return 'Time unavailable';
+  final local = instant.toUtc().add(const Duration(hours: 7));
+  final date = shortDate(local.toIso8601String().substring(0, 10));
+  final clock =
+      '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}:${local.second.toString().padLeft(2, '0')}';
+  return '$date · $clock UTC+07';
+}
+
 String durationText(Duration value) =>
     '${value.inHours}h ${value.inMinutes.remainder(60)}m';

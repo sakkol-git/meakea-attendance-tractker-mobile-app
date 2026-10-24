@@ -712,7 +712,9 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                     children: [
                       _TimelineItem(
                         title: 'Request created',
-                        subtitle: shortDate(r.fields['createdAt']),
+                        subtitle: companyTimestamp(
+                          r.fields['createdAt']?.toString(),
+                        ),
                         icon: Icons.add_circle_outline,
                       ),
                       for (final decision in decisions)
@@ -720,7 +722,7 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                           title:
                               '${decision['actor'] ?? 'Reviewer'} · ${statusLabel(decision['action'] as String? ?? '')}',
                           subtitle:
-                              '${decision['note'] ?? ''}${decision['note']?.toString().isNotEmpty == true ? '\n' : ''}${shortDate(decision['at'])}',
+                              '${decision['note'] ?? ''}${decision['note']?.toString().isNotEmpty == true ? '\n' : ''}${companyTimestamp(decision['at']?.toString())}',
                           icon: Icons.check_circle_outline,
                         ),
                       if (r.status == 'PENDING')

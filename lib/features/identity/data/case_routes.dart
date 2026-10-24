@@ -1,6 +1,7 @@
 import 'package:hrflow_mobile/core/data/case_repository.dart';
 
 const identityCaseRoutes = <String, CaseRoute>{
+  'identity.audit': CaseRoute('/audit-logs'),
   'identity.assignments': CaseRoute('/shift-assignments'),
   'identity.assignment.close': CaseRoute(
     '/shift-assignments/{id}/close',

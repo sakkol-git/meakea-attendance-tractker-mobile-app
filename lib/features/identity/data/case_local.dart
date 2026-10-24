@@ -317,6 +317,7 @@ extension IdentityCasesDemo on LocalDataSource {
       }
       if (r.method == 'PATCH' && action == null) {
         _version(r, row);
+        final before = copyJson(row) as JsonMap;
         _need(
           body.keys.every(
             {
@@ -354,12 +355,19 @@ extension IdentityCasesDemo on LocalDataSource {
           row['position'] = _find('/positions', body['positionId'])['name'];
         }
         row['version']++;
-        _auditAction('EMPLOYEE_UPDATED', id);
+        _auditAction(
+          'EMPLOYEE_UPDATED',
+          id,
+          reason: body['reason'] as String?,
+          before: before,
+          after: row,
+        );
         return _ok(row, etag: '"${row['version']}"');
       }
       if (['invite', 'roles', 'terminate', 'device'].contains(action) &&
           ['POST', 'PUT'].contains(r.method)) {
         _version(r, row);
+        final before = copyJson(row) as JsonMap;
         if (action == 'roles') {
           _need(
             _actor == 'OWNER' && id != employeeId,
@@ -406,7 +414,13 @@ extension IdentityCasesDemo on LocalDataSource {
           row['deviceId'] = body['deviceId'];
         }
         row['version']++;
-        _auditAction('EMPLOYEE_${action!.toUpperCase()}', id);
+        _auditAction(
+          'EMPLOYEE_${action!.toUpperCase()}',
+          id,
+          reason: body['reason'] as String?,
+          before: before,
+          after: row,
+        );
         return _ok(row, etag: '"${row['version']}"');
       }
     }

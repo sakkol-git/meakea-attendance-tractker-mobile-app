@@ -231,7 +231,10 @@ class _FeatureCasesState extends ConsumerState<FeatureCasesPage> {
                                 if (row.values[detail.key] != null)
                                   InfoRow(
                                     detail.value,
-                                    businessValue(row.values[detail.key]),
+                                    businessDetail(
+                                      detail.key,
+                                      row.values[detail.key],
+                                    ),
                                   ),
                               if (row.values['message'] is String)
                                 Padding(
@@ -279,10 +282,37 @@ String businessValue(Object? value) {
     return value.where((v) => v is String || v is num).join(' · ');
   }
   if (value is num) return value.toString();
-  final string = value.toString();
-  return RegExp(r'^\d{4}-\d{2}-\d{2}').hasMatch(string)
-      ? shortDate(string)
-      : statusLabel(string);
+  return statusLabel(value.toString());
+}
+
+String businessDetail(String key, Object? value) {
+  if (value == null) return '—';
+  if ({
+    'createdAt',
+    'updatedAt',
+    'registeredAt',
+    'lastSeenAt',
+    'deliveredAt',
+    'at',
+    'generatedAt',
+    'asOf',
+  }.contains(key)) {
+    return companyTimestamp(value.toString());
+  }
+  if ({
+    'date',
+    'workDate',
+    'startDate',
+    'endDate',
+    'validFrom',
+    'validTo',
+    'hireDate',
+    'effectiveDate',
+    'terminationDate',
+  }.contains(key)) {
+    return shortDate(value.toString());
+  }
+  return businessValue(value);
 }
 
 Future<void> showCaseEditor(
@@ -738,6 +768,7 @@ class _CaseEditorState extends ConsumerState<_CaseEditor> {
     if (field.kind == FieldKind.choice) {
       return field.choices[value] ?? businessValue(value);
     }
+    if (field.kind == FieldKind.date) return shortDate(value?.toString());
     if (field.kind == FieldKind.lookup) {
       return ref
               .read(caseOptionsProvider(field.lookup!))

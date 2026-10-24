@@ -27,7 +27,7 @@ Run the focused suite with `fvm flutter test --name acceptance`. The red tests a
 | 19 | Material fulfillment | Full/partial issue respects available stock and remaining request quantity and displays both in history. | Strong local foundation / partial UX | Confirmation/history scenarios pending. |
 | 20 | Calendar planning | A month/week view shows per-day leave coverage and an accessible person-level alternative. | Partial | Coverage test pending. |
 | 21 | Reporting | Reports show period comparisons, saved segments, source drill-down and precise generated-at timestamps. | Partial | Report scenarios pending. |
-| 22 | Audit explainability | Two same-day events show distinct times, actor, target, reason and before/after changes. | Partial; Red | `acceptance F08 audit rows retain time of day`; detail/filter tests pending. |
+| 22 | Audit explainability | Two same-day events show distinct times, actor, target, reason and before/after changes. | Partial; F08 client/local evidenced | `acceptance F08` tests verify distinct same-day times, employee change detail, local filters and remote query parameters. Other mutation types still need authoritative server audit fields. |
 | 23 | States and recovery | Writes distinguish conflict, failure and unknown outcome, each with a usable recovery action. | Strong foundation / partial recovery | Conflict/timeout tests pending. |
 | 24 | Offline trust | Every stale resource shows last update time and unavailable offline actions explain why. | Partial | Cache/offline UI tests pending. |
 | 25 | Concurrency UX | A stale decision can reload, compare and resubmit with input preserved; unknown outcomes do not duplicate. | Strong transport foundation / partial UX | Competing-reviewer and lost-response tests pending. |

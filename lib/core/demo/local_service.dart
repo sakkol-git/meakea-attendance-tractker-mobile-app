@@ -514,13 +514,38 @@ class LocalDataSource implements DataSource {
     );
   }
 
-  void _auditAction(String action, String id) {
+  void _auditAction(
+    String action,
+    String id, {
+    String? reason,
+    JsonMap? before,
+    JsonMap? after,
+  }) {
+    var at = _now().toUtc();
+    final previousAt = DateTime.tryParse(
+      _audit.firstOrNull?['at'] as String? ?? '',
+    );
+    if (previousAt != null && !at.isAfter(previousAt)) {
+      at = previousAt.add(const Duration(seconds: 1));
+    }
+    final keys = {...?before?.keys, ...?after?.keys}
+      ..removeAll({'version', 'etag', 'token', 'password', 'secret'});
+    final changes = <String, dynamic>{
+      for (final field in keys)
+        if (canonicalJson(before?[field]) != canonicalJson(after?[field]))
+          field: {
+            'before': copyJson(before?[field]),
+            'after': copyJson(after?[field]),
+          },
+    };
     _audit.insert(0, {
       'id': _id(),
       'action': action,
       'actor': profile['name'],
       'entityId': id,
-      'at': _now().toUtc().toIso8601String(),
+      'at': at.toIso8601String(),
+      'reason': ?reason,
+      if (changes.isNotEmpty) 'changes': changes,
     });
   }
 
