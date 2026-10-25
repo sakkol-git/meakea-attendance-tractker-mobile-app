@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Dart formatting | PASS | [Format output](validation/dart-format.txt) |
 | Flutter analyzer | PASS | [Analyzer output](validation/flutter-analyze.txt) |
-| Automated suite | PASS, 147 tests; 1 live-gateway test skipped because credentials were not supplied | Current `fvm flutter test`; [earlier captured output](validation/flutter-test.txt) |
+| Automated suite | PASS, 148 tests; 1 live-gateway test skipped because credentials were not supplied | Current `fvm flutter test`; [earlier captured output](validation/flutter-test.txt) |
 | Release web preview | PASS | [Build output](validation/flutter-build-web.txt) |
 | Shared demo seed | PASS | Root `python3 scripts/sync-client-demo-data.py --check` |
 | Diff whitespace | PASS | `git diff --check` in mobile |
