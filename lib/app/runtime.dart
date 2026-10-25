@@ -8,14 +8,16 @@ import 'package:hrflow_mobile/core/data/pending_commands.dart';
 import 'package:hrflow_mobile/features/identity/data/session_client.dart';
 import 'package:hrflow_mobile/core/data/cache/cached_source.dart';
 
-String message(Object e) => e is DataFailure
-    ? switch (e.status) {
-        401 => 'Your session expired. Please sign in again.',
-        403 => 'You do not have permission to perform this action.',
-        412 => 'This record changed. Refresh it before making a decision.',
-        _ => e.message,
-      }
-    : 'Something went wrong. Please try again.';
+String message(Object e) {
+  if (e is! DataFailure) return 'Something went wrong. Please try again.';
+  final detail = switch (e.status) {
+    401 => 'Your session expired. Please sign in again.',
+    403 => 'You do not have permission to perform this action.',
+    412 => 'This record changed. Refresh it before making a decision.',
+    _ => e.message,
+  };
+  return e.traceId == null ? detail : '$detail Reference: ${e.traceId}.';
+}
 
 enum WriteFailureKind { conflict, failed, unknown }
 

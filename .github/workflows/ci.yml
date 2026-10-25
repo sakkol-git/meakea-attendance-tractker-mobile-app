@@ -22,4 +22,7 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --debug
+      - name: Build remote release APK
+        run: flutter build apk --release --dart-define=DATA_SOURCE=remote --dart-define=API_BASE_URL=https://example.invalid/api/v1
+      - name: Build explicit demo web artifact
+        run: flutter build web --release --dart-define=ALLOW_DEMO_RELEASE=true

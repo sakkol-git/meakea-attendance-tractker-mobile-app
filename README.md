@@ -1,6 +1,6 @@
 # HRFlow mobile
 
-Flutter employee and management client with a persistent local demonstration and a separately selected remote API adapter. The app replaces the generated counter scaffold. Current delivery: 24 October 2026.
+Flutter employee and management client with a persistent local demonstration and a separately selected remote API adapter. The app replaces the generated counter scaffold. Current delivery: 25 October 2026.
 
 ## Run
 
@@ -13,6 +13,8 @@ fvm flutter run
 ```
 
 Local mode is the default. Choose Employee, Manager, HR, or Owner from the demo sign-in screen. All identities and data are fictional. Changes survive app restart on that device; Profile → Reset demo clears them. Mobile and web do not share demo state.
+
+Release builds refuse implicit local mode. Build an intentionally labeled demonstration artifact with `--dart-define=ALLOW_DEMO_RELEASE=true`. A production release must set `DATA_SOURCE=remote` and `API_BASE_URL`.
 
 ```sh
 fvm flutter run --dart-define=DATA_SOURCE=remote --dart-define=API_BASE_URL=https://hr.example.com/api/v1
@@ -36,7 +38,7 @@ English copy is implemented; the bundled Kantumruy Pro font also supports Khmer 
 
 ## Architecture and integration
 
-Read [architecture and cache policy](docs/ARCHITECTURE.md), [API adapter contract](docs/API-INTEGRATION.md), [workflow coverage](docs/WORKFLOW-COVERAGE.md), and [validation record](docs/VALIDATION.md).
+Read [architecture and cache policy](docs/ARCHITECTURE.md), [API adapter contract](docs/API-INTEGRATION.md), [workflow coverage](docs/WORKFLOW-COVERAGE.md), [validation record](docs/VALIDATION.md), [manual client UAT](docs/CLIENT-UAT.md), and [client quality gates](docs/CLIENT-QUALITY.md).
 
 **Feature-first clean architecture:** each business module owns domain, application, data and presentation folders. `app/composition.dart` injects independent feature repositories; shared infrastructure handles transport, cache and storage. Domain models and workflow policy are independent of Flutter and storage. Application providers depend on ports; data adapters implement those ports. Riverpod composes dependencies and asynchronous state, GoRouter handles guarded navigation, encrypted Hive caches remote reads, and native secure storage holds tokens and encryption keys. Generic catalog metadata and command paths remain explicit provisional extension boundaries rather than generated OpenAPI types.
 
@@ -46,10 +48,10 @@ Read [architecture and cache policy](docs/ARCHITECTURE.md), [API adapter contrac
 fvm dart format --output=none --set-exit-if-changed lib test
 fvm flutter analyze
 fvm flutter test
-fvm flutter build web --release
+fvm flutter build web --release --dart-define=ALLOW_DEMO_RELEASE=true
 fvm flutter doctor -v
 ```
 
-The web target is a mobile-layout preview, not the Nuxt web client. Screen reference images are in `test/goldens/`. Android needs an installed SDK; the existing `.github/workflows/ci.yml` runs `flutter build apk --debug` on an Android-capable CI runner. iOS needs Xcode, signing and device testing. Native device acceptance remains open.
+The web target is a mobile-layout preview, not the Nuxt web client. Screen reference images are in `test/goldens/`. Android needs an installed SDK; the existing `.github/workflows/ci.yml` compiles a remote-mode release APK with a reserved non-routable example URL and separately packages the explicit demo web artifact. These builds verify configuration and compilation, not connectivity. iOS needs Xcode, signing and device testing. Native device acceptance remains open.
 
 This directory is an independent Git repository nested under the parent HRFlow repository. Review and save mobile changes here; parent commits do not include them. No commit or deployment is performed by this delivery.

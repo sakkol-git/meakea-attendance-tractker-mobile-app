@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hrflow_mobile/app.dart';
+import 'package:hrflow_mobile/app/configuration.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/features/identity/data/session_client.dart';
 import 'package:hrflow_mobile/app/composition.dart';
@@ -17,7 +18,22 @@ Future<void> main() async {
     ], await rootBundle.loadString('assets/fonts/OFL.txt'));
   });
   try {
-    final client = await ClientData.create();
+    const dataSource = String.fromEnvironment(
+      'DATA_SOURCE',
+      defaultValue: 'local',
+    );
+    const allowDemoRelease = bool.fromEnvironment('ALLOW_DEMO_RELEASE');
+    const apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+    validateClientConfiguration(
+      release: kReleaseMode,
+      dataSource: dataSource,
+      allowDemoRelease: allowDemoRelease,
+      apiBaseUrl: apiBaseUrl,
+    );
+    final client = await ClientData.create(
+      mode: dataSource,
+      apiBaseUrl: apiBaseUrl,
+    );
     runApp(
       DevicePreview(
         enabled: !kReleaseMode,
