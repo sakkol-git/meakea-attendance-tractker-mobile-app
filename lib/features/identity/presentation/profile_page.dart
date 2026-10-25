@@ -13,7 +13,7 @@ class ProfilePage extends ConsumerWidget {
     final p = ref.watch(sessionProvider).profile!;
     final local = ref.watch(clientProvider).isLocal;
     return AppPage(
-      title: 'Your workspace',
+      title: 'Personal profile',
       children: [
         Surface(
           child: Column(
@@ -45,40 +45,10 @@ class ProfilePage extends ConsumerWidget {
             ],
           ),
         ),
-        const SectionTitle('Your account'),
-        const _Link(Icons.apps_outlined, 'All workflows', '/workflows'),
+        const SectionTitle('Account settings'),
         _Link(Icons.person_outline, 'Personal information', '/profile/edit'),
         _Link(Icons.shield_outlined, 'Security & device lock', '/security'),
         _Link(Icons.tune_outlined, 'Preferences', '/preferences'),
-        if (p.manages) ...[
-          const SectionTitle('Team workspace'),
-          _Link(Icons.fact_check_outlined, 'Approvals', '/approvals'),
-          _Link(Icons.people_outline, 'People directory', '/directory'),
-          const _Link(
-            Icons.schedule_outlined,
-            'Team attendance',
-            '/team-attendance',
-          ),
-          _Link(Icons.bar_chart_outlined, 'Reports & exports', '/reports'),
-        ],
-        if (p.administers) ...[
-          const SectionTitle('Organization'),
-          _Link(
-            Icons.account_tree_outlined,
-            'Departments',
-            '/manage/departments',
-          ),
-          _Link(Icons.work_outline, 'Positions', '/manage/positions'),
-          _Link(Icons.schedule_outlined, 'Shift rules', '/manage/shifts'),
-          _Link(Icons.event_outlined, 'Company holidays', '/manage/holidays'),
-          _Link(Icons.policy_outlined, 'Leave types', '/manage/leave-types'),
-          _Link(
-            Icons.inventory_2_outlined,
-            'Materials catalog',
-            '/manage/materials',
-          ),
-          _Link(Icons.history_outlined, 'Audit activity', '/audit'),
-        ],
         const SectionTitle('About HRFlow'),
         _Link(Icons.info_outline, 'About this workspace', '/about'),
         if (local) ...[

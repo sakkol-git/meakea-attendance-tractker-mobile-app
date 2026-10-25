@@ -5,10 +5,12 @@
 ## Select remote mode
 
 ```sh
-fvm flutter run --dart-define=DATA_SOURCE=remote --dart-define=API_BASE_URL=https://hr.example.com/api/v1
+fvm flutter run --dart-define=DATA_SOURCE=remote --dart-define=API_BASE_URL=https://hr.example.com/api/v1 --dart-define=FILE_ORIGINS=https://files.example.com
 ```
 
 The absolute base must end in `/api/v1`; a deployment prefix and optional trailing slash are supported. HTTPS is required except loopback HTTP for development. Credentials, fragments and queries in the base are rejected. Build-time defines are public configuration and require a rebuild to change.
+
+`FILE_ORIGINS` is a comma-separated list of trusted HTTPS origins for signed attachment and export transfers. The API origin is trusted automatically. A signed URL outside that set fails closed.
 
 All paths below are relative to that base. JSON success bodies use `application/json`; failures use a JSON problem object such as:
 
@@ -24,7 +26,7 @@ Responses may be 200/201/202 with JSON or 204 without a body. HTTP redirects are
 
 ## Common response shapes
 
-Collections must return `{ "items": [...], "total": 123 }`, with non-negative integer total. Requests include zero-based `page` and `size`. Workflow pages use size 25; supporting collections use 100. The server must honor stable ordering and pagination. Incomplete/empty pages before total are errors. Catalog fetches stop at 10,000 records with an explicit error.
+Collections must return `{ "items": [...], "page": 0, "size": 25, "total": 123 }`, with non-negative integer total. Requests include zero-based `page` and `size` between 1 and 100. Workflow pages use size 25; supporting collections use 100. The server must honor stable ordering and pagination. Incomplete/empty pages before total are errors. General collection fetches stop at 10,000 records; selectors stop at 1,000 choices and should use server search for larger catalogs.
 
 Searchable workflow lists (`/requests/me`, `/leave/requests/me` and the three `/pending` approval queues) now send optional `search`, `status` and `sort` query parameters. People directory and feature administration lists send `search` with `page` and `size`. The backend must apply search/filter/sort **before** pagination and return the filtered `total`; changing a query resets the client to page zero. `status=CLOSED` is a grouped filter for `REJECTED`, `CANCELLED`, `FULFILLED` and `CLOSED` records. `sort=oldest` or `newest` orders by `createdAt` with a stable ID tie-breaker. Empty results must mean the complete filtered set is empty, not merely that the current page lacked matches. These semantics need an accepted OpenAPI definition and live acceptance before remote rollout.
 
@@ -33,7 +35,7 @@ IDs are opaque nonempty strings that must fit the current safe path alphabet (lo
 Profile:
 
 ```json
-{"employeeId":"employee-a","tenantId":"tenant-a","roles":["EMPLOYEE"],"name":"Sok Dara","email":"dara@example.test","department":"Product","position":"Designer","organization":"Example Co","phone":"+855..."}
+{"employeeId":"employee-a","tenantId":"tenant-a","roles":["EMPLOYEE"],"name":"Sok Dara","email":"dara@example.test","department":"Product","position":"Designer","organization":"Example Co","phone":"+855...","timeZone":"Asia/Phnom_Penh"}
 ```
 
 Supported effective roles, in priority order: OWNER, HR_ADMIN, MANAGER, EMPLOYEE. Optional display fields have safe defaults; tenant and employee identity and roles are required. Production authorization must evaluate actual relationships and approval membership, not just these coarse UI roles.
@@ -52,7 +54,7 @@ Workflow record:
 {"id":"request-a","employeeId":"employee-a","employeeName":"Sok Dara","title":"External monitor","reason":"Design work","status":"DRAFT","version":1,"type":"MATERIAL","decisions":[],"attachments":[]}
 ```
 
-Leave also returns leaveTypeId, startDate, endDate, halfDay and numeric days. Corrections return workDate, newCheckIn and newCheckOut. Decision entries use actor, action, note and at. Attachments use id, name and numeric size. Material approval can return `status:PENDING, approvalStage:HR`; otherwise a decided record must reflect the actual next status. The backend owns its chain resolution, not the client.
+Leave also returns leaveTypeId, startDate, endDate, portion and numeric days. The shared portion values are `FULL_DAY`, `MORNING` and `AFTERNOON`. Corrections return workDate, newCheckIn and newCheckOut. Decision entries use actor, action, note and at. Attachments use id, name and numeric size. Material approval can return `status:PENDING, approvalStage:HR`; otherwise a decided record must reflect the actual next status. The backend owns its chain resolution, not the client.
 
 Leave balance:
 
@@ -66,7 +68,7 @@ Inbox item: id, title, optional body, boolean read, optional recordId and kind (
 
 | Method/path | Request | Response |
 | --- | --- | --- |
-| POST `/auth/login` | tenantSlug, email, password | accessToken, refreshToken |
+| POST `/auth/login` | tenant, email, password | accessToken and refreshToken for native clients; web uses its secure refresh cookie |
 | POST `/auth/refresh` | refreshToken | rotated accessToken and refreshToken |
 | GET `/auth/me` | — | Profile above; always uncached |
 | POST `/auth/logout` | refreshToken | 204; revoke the server token family |
@@ -79,11 +81,11 @@ The adapter uses a refresh-token JSON body and native secure storage. If the acc
 
 The machine-readable [candidate endpoint inventory](validation/feature-endpoints.json) lists every feature-owned case route and its method/version precondition. The source of truth for actual calls is `lib/features/<feature>/data/` and shared workflow adapters. These routes are implementation requirements proposed to the server team, **not accepted server endpoints**. The backend in this checkout does not implement them.
 
-Attendance uses GET `/attendance/today`, `/attendance/me`, `/attendance/team`, POST `/attendance/check-in` and `/attendance/check-out`, and versioned POST `/attendance/sessions/{id}/confirm` or `/reject`. Check-in sends deviceId, UTC occurredAt and `source:TAP`; checkout also sends sessionId. Corrections use `/attendance/corrections`, `/pending`, `/{id}` and `/{id}/approve` or `/reject`. The review/daily-status/evidence/manual-entry additions are in the endpoint inventory. Foreground evidence sends a historical-style batch to `/attendance/evidence`; the server must validate consent, site, device and replay. The phone does not run attendance inference. The local demo uses a fixed UTC+07 company calendar; generalized tenant timezone rules require acceptance.
+Attendance uses GET `/attendance/today`, `/attendance/me`, `/attendance/team`, POST `/attendance/check-in` and `/attendance/check-out`, and versioned POST `/attendance/sessions/{id}/confirm` or `/reject`. Check-in sends deviceId, UTC occurredAt and `source:TAP`; checkout also sends sessionId. Remote correction review uses GET `/attendance/corrections?status=PENDING`, then `/{id}` and `/{id}/approve` or `/reject`. The local demo retains `/attendance/corrections/pending`. The review/daily-status/evidence/manual-entry additions are in the endpoint inventory. Foreground evidence sends a historical-style batch to `/attendance/evidence`; the server must validate consent, site, device and replay. The phone does not run attendance inference. The local demo uses a fixed UTC+07 company calendar; generalized tenant timezone rules require acceptance.
 
-Leave uses GET `/leave/balances/me`, `/leave/types`, and paginated own/pending requests; POST `/leave/requests` and versioned `/{id}/approve`, `/reject`, `/cancel`. Request bodies include leaveTypeId, startDate, endDate, halfDay (`NONE`, `AM`, `PM`) and reason. The local implementation additionally demonstrates exact hundredth reservations, future approved cancellation, HR ledger adjustment, year-end preview/apply and independent conflict review. Their candidate paths and version requirements are in the inventory. The server must own transactionality, balance authority, calendar cutoffs and compensation.
+Leave uses GET `/leave/balances/me`, `/leave/types`, and paginated own/pending requests; POST `/leave/requests` and versioned `/{id}/approve`, `/reject`, `/cancel`. Request bodies include leaveTypeId, startDate, endDate, portion (`FULL_DAY`, `MORNING`, `AFTERNOON`) and reason. The local implementation additionally demonstrates exact hundredth reservations, future approved cancellation, HR ledger adjustment, year-end preview/apply and independent conflict review. Their candidate paths and version requirements are in the inventory. The server must own transactionality, balance authority, calendar cutoffs and compensation.
 
-General/material/time requests use POST `/requests`, PATCH `/requests/{id}`, GET own/pending/detail and versioned `/{id}/submit`, `/approve`, `/reject`, `/cancel`, `/fulfill`. Draft updates include type-specific items, quantity, dates and times; explicit null or empty list clears values from a previous category. The local demo snapshots reviewer chains and allows partial stock-aware material issue. Server chain membership, stock reservation and ledger changes must be enforced atomically. Candidate admin routes for request types, chains, stock receipt and comments are in the inventory.
+General/material/time requests use POST `/requests`, PATCH `/requests/{id}`, GET `/requests/me`, GET `/requests/inbox` for reviewer queues, detail and versioned `/{id}/submit`, `/approve`, `/reject`, `/cancel`, `/fulfill`. The local demo retains `/requests/pending`. Draft updates include type-specific items, quantity, dates and times; explicit null or empty list clears values from a previous category. The local demo snapshots reviewer chains and allows partial stock-aware material issue. Server chain membership, stock reservation and ledger changes must be enforced atomically. Candidate admin routes for request types, chains, stock receipt and comments are in the inventory.
 
 Employee directory and shift support use paginated GET `/employees`, `/departments`, `/positions`, `/shifts`, `/holidays`, `/materials`, `/audit-logs`; HR catalog creation/update uses POST/PATCH with If-Match on updates. Effective-dated assignments use GET/POST `/employees/{id}/shifts`; POST sends shiftId, validFrom and nullable validTo. The GET history route is a **provisional extension**. Assignment close, company, site, employee lifecycle, roles and invitations are listed in the inventory. A server must enforce tenant/relationship access and overlapping effective dates.
 
@@ -116,6 +118,10 @@ High-impact previews are authoritative and version-bound. `POST /leave/admin/yea
 
 Audit reads use paged `GET /audit-logs` with `page`, `size`, `actor`, `action`, `target`, `from`, and `to` filters. Filtering happens before paging; results are newest first with stable, distinct timestamps. Each row supplies `id`, `at` (ISO instant), `actor`, `action`, `entityId`, optional `reason`, and optional `changes` mapping field names to `{before, after}`. The client displays exact company-local time with `UTC+07`, without inferring a timestamp from arbitrary string content. Sensitive secrets must never appear in `changes`.
 
-Leave forms call `POST /leave/requests/preview` with `leaveTypeId`, `startDate`, `endDate`, and `halfDay`. The response supplies `chargeableDays`, `balanceBefore`, `balanceAfter`, `allowHalfDay`, `evidenceRequired`, `minimumNoticeDays`, and `warnings[]`. The gateway calculates scheduled workdays, holidays, accounting-year balances, overlap, evidence and notice policy and must revalidate at submission; the local adapter is a demonstration policy. Required evidence is selected before submission and attached through the existing attachment contract after request creation, before the client announces success.
+Leave forms call `POST /leave/requests/preview` with `leaveTypeId`, `startDate`, `endDate`, and `portion`. The response supplies `chargeableDays`, `balanceBefore`, `balanceAfter`, `allowHalfDay`, `evidenceRequired`, `minimumNoticeDays`, and `warnings[]`. The gateway calculates scheduled workdays, holidays, accounting-year balances, overlap, evidence and notice policy and must revalidate at submission; the local adapter is a demonstration policy. Required evidence is selected before submission and attached through the existing attachment contract after request creation, before the client announces success.
 
 Sensitive in-progress form drafts use authenticated, tenant- and employee-scoped `GET`, `PUT`, and `DELETE /form-drafts/{leave|correction|request}`. `GET` returns `{payload, updatedAt}` (null payload when absent), `PUT` accepts `{payload:{schema:1,...}}`, and `DELETE /form-drafts` clears all of the account's drafts on explicit logout. The client debounces writes, restores on form re-entry, never places these reads in its client cache, and excludes attachment bytes. The gateway must persist drafts server-side, authorize every request, prevent cross-tenant access, return `Cache-Control: no-store`, and erase on logout. In local demo mode the synthetic service is saved with other fictional demo data on the device; this is not the remote sensitive-draft storage contract.
+
+## Shared contract checks
+
+The parent HRFlow repository owns `contracts/openapi.json`. Its current working copy is a broad provisional consumer inventory whose operations are marked pending; only the leave detail/approval fixture currently has cross-client adapter evidence. This repository contains generated copies, shared synthetic fixtures and a bundle receipt under `contracts/`. Run `python3 contracts/check-bundle.py` for local integrity; run the parent `scripts/contracts.py check` with both client checkouts for source freshness. Inventory does not establish provider implementation, business acceptance or live security acceptance.

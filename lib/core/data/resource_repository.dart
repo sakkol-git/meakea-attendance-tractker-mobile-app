@@ -19,13 +19,20 @@ abstract class ResourceRepository {
 
   Future<dynamic> get(String path) async =>
       (await client.request(DataRequest('GET', path))).data;
-  Future<List<JsonMap>> collection(String path) async {
+  Future<List<JsonMap>> collection(
+    String path, {
+    Map<String, String> query = const {},
+  }) async {
     if (client.isLocal) return items(await get(path));
     final rows = <JsonMap>[];
     const size = 100;
     for (var page = 0; page < 100; page++) {
       final response = await client.request(
-        DataRequest('GET', path, query: {'page': '$page', 'size': '$size'}),
+        DataRequest(
+          'GET',
+          path,
+          query: {...query, 'page': '$page', 'size': '$size'},
+        ),
       );
       final body = object(response.data), batch = items(response.data);
       final total = requiredInt(body, 'total');

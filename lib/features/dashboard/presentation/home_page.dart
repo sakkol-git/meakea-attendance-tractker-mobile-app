@@ -42,44 +42,57 @@ class _HomePageState extends ConsumerState<HomePage> {
             child: Icon(Icons.notifications_outlined),
           ),
         ),
+        IconButton(
+          tooltip: 'Personal profile',
+          onPressed: () => context.push('/profile'),
+          icon: const Icon(Icons.person_outline),
+        ),
         const SizedBox(width: 8),
       ],
       children: [
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 25,
-              backgroundColor: context.semantic.successBackground,
-              child: Text(
-                p.name
-                    .split(' ')
-                    .where((s) => s.isNotEmpty)
-                    .map((s) => s[0])
-                    .take(2)
-                    .join(),
-                style: TextStyle(
-                  color: context.semantic.selectedNav,
-                  fontWeight: FontWeight.w600,
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.push('/profile'),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 25,
+                  backgroundColor: context.semantic.successBackground,
+                  child: Text(
+                    p.name
+                        .split(' ')
+                        .where((s) => s.isNotEmpty)
+                        .map((s) => s[0])
+                        .take(2)
+                        .join(),
+                    style: TextStyle(
+                      color: context.semantic.selectedNav,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hello, ${p.name.split(' ').first}',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Hello, ${p.name.split(' ').first}',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      Text(
+                        p.position,
+                        style: TextStyle(color: context.semantic.textMuted),
+                      ),
+                    ],
                   ),
-                  Text(
-                    p.position,
-                    style: TextStyle(color: context.semantic.textMuted),
-                  ),
-                ],
-              ),
+                ),
+                Icon(Icons.chevron_right, color: context.semantic.textMuted),
+              ],
             ),
-          ],
+          ),
         ),
         RoleTasks(p),
         const SizedBox(height: 12),

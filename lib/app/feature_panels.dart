@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/theme.dart';
 import '../core/widgets.dart';
 
 import 'package:hrflow_mobile/features/identity/domain/models.dart';
@@ -73,6 +74,32 @@ class WorkflowHub extends ConsumerWidget {
       title: 'All workflows',
       subtitle: 'Find an authorized task by name or feature.',
       children: [
+        Surface(
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(
+              radius: 20,
+              backgroundColor: context.semantic.successBackground,
+              child: Text(
+                actor.name
+                    .split(' ')
+                    .where((s) => s.isNotEmpty)
+                    .map((s) => s[0])
+                    .take(2)
+                    .join(),
+                style: TextStyle(
+                  color: context.semantic.selectedNav,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            title: Text(actor.name),
+            subtitle: Text('${actor.position} · ${actor.role}'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/profile'),
+          ),
+        ),
+        const SizedBox(height: 12),
         TextField(
           decoration: const InputDecoration(
             labelText: 'Search tasks',
@@ -111,22 +138,44 @@ class WorkflowHub extends ConsumerWidget {
                 onTap: () => open(item.$1, item.$2),
               ),
             ),
-        if (actor.manages && matches('Approval queue'))
-          Card(
-            child: ListTile(
-              title: const Text('Approval queue'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => open('Approval queue', '/approvals'),
-            ),
-          ),
-        if (actor.administers && matches('Assign employee shifts'))
-          Card(
-            child: ListTile(
-              title: const Text('Assign employee shifts'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => open('Assign employee shifts', '/directory'),
-            ),
-          ),
+        if (actor.manages) ...[
+          if (query.isEmpty) const SectionTitle('Team workspace'),
+          for (final item in [
+            ('Approval queue', '/approvals'),
+            ('People directory', '/directory'),
+            ('Team attendance', '/team-attendance'),
+            ('Reports & exports', '/reports'),
+          ])
+            if (matches(item.$1))
+              Card(
+                child: ListTile(
+                  title: Text(item.$1),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => open(item.$1, item.$2),
+                ),
+              ),
+        ],
+        if (actor.administers) ...[
+          if (query.isEmpty) const SectionTitle('Organization'),
+          for (final item in [
+            ('Departments', '/manage/departments'),
+            ('Positions', '/manage/positions'),
+            ('Shift rules', '/manage/shifts'),
+            ('Assign employee shifts', '/directory'),
+            ('Company holidays', '/manage/holidays'),
+            ('Leave types', '/manage/leave-types'),
+            ('Materials catalog', '/manage/materials'),
+            ('Audit activity', '/audit'),
+          ])
+            if (matches(item.$1))
+              Card(
+                child: ListTile(
+                  title: Text(item.$1),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => open(item.$1, item.$2),
+                ),
+              ),
+        ],
         for (final group in groups.entries) ...[
           if (featurePanels.any(
             (p) =>

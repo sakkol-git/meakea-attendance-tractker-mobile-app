@@ -44,6 +44,18 @@ mixin WorkflowsMethods on ResourceRepository {
       : kind == 'correction'
       ? '/attendance/corrections'
       : '/requests';
+
+  String listPathFor(String kind, bool pending) {
+    if (!pending) {
+      return kind == 'correction' ? pathFor(kind) : '${pathFor(kind)}/me';
+    }
+    if (client.isLocal) return '${pathFor(kind)}/pending';
+    if (kind == 'request') return '/requests/inbox';
+    return kind == 'correction'
+        ? '/attendance/corrections'
+        : '${pathFor(kind)}/pending';
+  }
+
   Future<RecordPage> recordsPage(
     String kind, {
     bool pending = false,
@@ -54,13 +66,7 @@ mixin WorkflowsMethods on ResourceRepository {
     String sort = '',
     int minAgeDays = 0,
   }) async {
-    final path =
-        pathFor(kind) +
-        (pending
-            ? '/pending'
-            : kind == 'correction'
-            ? ''
-            : '/me');
+    final path = listPathFor(kind, pending);
     final result = await client.request(
       DataRequest(
         'GET',
@@ -69,7 +75,8 @@ mixin WorkflowsMethods on ResourceRepository {
           'page': '$page',
           'size': '$size',
           if (search.isNotEmpty) 'search': search,
-          if (status.isNotEmpty) 'status': status,
+          if (status.isNotEmpty || (pending && kind == 'correction'))
+            'status': status.isEmpty ? 'PENDING' : status,
           if (sort.isNotEmpty) 'sort': sort,
           if (minAgeDays > 0) 'minAgeDays': '$minAgeDays',
         },
@@ -96,16 +103,11 @@ mixin WorkflowsMethods on ResourceRepository {
     String kind, {
     bool pending = false,
   }) async {
-    final path =
-        pathFor(kind) +
-        (pending
-            ? '/pending'
-            : kind == 'correction'
-            ? ''
-            : '/me');
-    return (await collection(path))
-        .map((r) => WorkflowRecordMapper.fromJson(r, kind))
-        .toList();
+    final path = listPathFor(kind, pending);
+    return (await collection(
+      path,
+      query: {if (pending && kind == 'correction') 'status': 'PENDING'},
+    )).map((r) => WorkflowRecordMapper.fromJson(r, kind)).toList();
   }
 
   Future<WorkflowRecord> detail(String kind, String id) async {

@@ -1,0 +1,25 @@
+name: Mobile checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 contracts/check-bundle.py
+      - name: Read repository Flutter pin
+        id: sdk
+        run: python3 -c 'import json,os; open(os.environ["GITHUB_OUTPUT"], "a").write("version=" + json.load(open(".fvmrc"))["flutter"] + "\n")'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.sdk.outputs.version }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --debug

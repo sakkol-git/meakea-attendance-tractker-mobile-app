@@ -107,6 +107,7 @@ void main() {
         'tenantId': 'first',
         'employeeId': 'first',
         'roles': ['EMPLOYEE'],
+        'timeZone': 'Asia/Phnom_Penh',
       }),
     );
     await rejected;
@@ -292,6 +293,7 @@ class AccountSwitchServer implements DataSource {
         'employeeId': 'other-employee',
         'roles': ['EMPLOYEE'],
         'name': 'Other employee',
+        'timeZone': 'Asia/Phnom_Penh',
       });
     }
     throw StateError('Unexpected route: ${request.path}');
@@ -343,7 +345,7 @@ class ProfileRaceServer implements DataSource {
   @override
   Future<DataResponse> send(DataRequest request) async {
     if (request.path == '/auth/login') {
-      tenant = request.body!['tenantSlug'] as String;
+      tenant = request.body!['tenant'] as String;
       return DataResponse(200, {
         'accessToken': '$tenant-access',
         'refreshToken': '$tenant-refresh',
@@ -357,6 +359,7 @@ class ProfileRaceServer implements DataSource {
       'tenantId': tenant,
       'employeeId': tenant,
       'roles': ['EMPLOYEE'],
+      'timeZone': 'Asia/Phnom_Penh',
     });
   }
 

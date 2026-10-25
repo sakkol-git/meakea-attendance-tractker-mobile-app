@@ -186,7 +186,7 @@ class ClientData implements SessionGateway, ApiClient {
       DataRequest(
         'POST',
         '/auth/login',
-        body: {'tenantSlug': tenant, 'email': email, 'password': password},
+        body: {'tenant': tenant, 'email': email, 'password': password},
       ),
     );
     if (epoch != _generation) {

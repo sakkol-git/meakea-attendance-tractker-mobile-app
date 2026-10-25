@@ -42,19 +42,12 @@ const _work = WorkspaceTab(
   Icons.work_outline,
   Icons.work,
 );
-const _profile = WorkspaceTab(
-  '/profile',
-  'Profile',
-  Icons.person_outline,
-  Icons.person,
-);
-
 List<WorkspaceTab> workspaceTabs(Profile profile) => [
   _home,
   _activity,
-  if (profile.administers) _work else _requests,
-  if (profile.manages) _approvals else _leave,
-  _profile,
+  _requests,
+  if (profile.manages || profile.administers) _approvals else _leave,
+  _work,
 ];
 
 class WorkspaceNavigation extends StatelessWidget {
@@ -66,13 +59,21 @@ class WorkspaceNavigation extends StatelessWidget {
     required this.location,
   });
 
+  int _selectedIndex(List<WorkspaceTab> tabs) {
+    final direct = tabs.indexWhere((tab) => tab.path == location);
+    if (direct >= 0) return direct;
+    if (location.startsWith('/profile')) {
+      final workIndex = tabs.indexWhere((tab) => tab.path == '/workflows');
+      if (workIndex >= 0) return workIndex;
+    }
+    return 0;
+  }
+
   @override
   Widget build(BuildContext context) {
     final tabs = workspaceTabs(profile);
     return NavigationBar(
-      selectedIndex: tabs
-          .indexWhere((tab) => tab.path == location)
-          .clamp(0, tabs.length - 1),
+      selectedIndex: _selectedIndex(tabs),
       onDestinationSelected: (index) => context.go(tabs[index].path),
       destinations: [
         for (final tab in tabs)

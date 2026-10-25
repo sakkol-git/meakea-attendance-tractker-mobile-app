@@ -48,4 +48,34 @@ void main() {
     expect(rows.length, actual.length, reason: 'No duplicate route entries');
     expect(actual, fromCode);
   });
+
+  test(
+    'every feature route is present in the synchronized OpenAPI inventory',
+    () {
+      final openApi = jsonDecode(
+        File('contracts/openapi.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      final paths = openApi['paths'] as Map<String, dynamic>;
+      final inventory = jsonDecode(
+        File('docs/validation/feature-endpoints.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      for (final route
+          in (inventory['routes'] as List).cast<Map<String, dynamic>>()) {
+        final operation = paths[route['path']] as Map<String, dynamic>?;
+        expect(
+          operation?[route['method'].toString().toLowerCase()],
+          isNotNull,
+          reason: '${route['method']} ${route['path']} must be synchronized',
+        );
+      }
+      expect(paths['/approvals/delegations'], contains('get'));
+      expect(paths['/approvals/delegations'], contains('post'));
+      expect(paths['/form-drafts/{kind}'], contains('get'));
+      expect(paths['/form-drafts/{kind}'], contains('put'));
+      expect(
+        paths['/leave/requests/{id}/attachments/presign'],
+        contains('post'),
+      );
+    },
+  );
 }

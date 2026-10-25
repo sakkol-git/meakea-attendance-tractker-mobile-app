@@ -133,7 +133,7 @@ void main() {
       'leaveTypeId': 'annual',
       'startDate': '2026-12-31',
       'endDate': '2027-01-04',
-      'halfDay': 'NONE',
+      'portion': 'FULL_DAY',
       'reason': 'Family travel across year',
     }, commandKey());
     expect(
@@ -161,7 +161,7 @@ void main() {
       'leaveTypeId': 'annual',
       'startDate': '2026-10-26',
       'endDate': '2026-10-26',
-      'halfDay': 'AM',
+      'portion': 'MORNING',
       'reason': 'Morning appointment',
     }, commandKey());
     expect(half.fields['days'], 0.5);

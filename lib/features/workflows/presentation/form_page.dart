@@ -32,7 +32,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   String? type, material, materialName;
   final materialLabels = <String, String>{};
   final additionalMaterials = <JsonMap>[];
-  String halfDay = 'NONE', requestType = 'GENERAL';
+  String portion = 'FULL_DAY', requestType = 'GENERAL';
   late DateTime from, to;
   TimeOfDay start = const TimeOfDay(hour: 8, minute: 30),
       end = const TimeOfDay(hour: 17, minute: 30);
@@ -106,7 +106,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
     'materialName': materialName,
     'materialLabels': materialLabels,
     'additionalMaterials': additionalMaterials,
-    'halfDay': halfDay,
+    'portion': portion,
     'requestType': requestType,
     'from': iso(from),
     'to': iso(to),
@@ -164,7 +164,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
               (item) => JsonMap.from(item as Map),
             ),
           );
-        halfDay = saved['halfDay'] as String? ?? 'NONE';
+        portion = saved['portion'] as String? ?? 'FULL_DAY';
         requestType = saved['requestType'] as String? ?? 'GENERAL';
         from = DateTime.tryParse(saved['from'] as String? ?? '') ?? from;
         to = DateTime.tryParse(saved['to'] as String? ?? '') ?? to;
@@ -226,7 +226,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   String iso(DateTime d) => d.toIso8601String().substring(0, 10);
   LeavePreviewQuery? get previewQuery => type == null
       ? null
-      : (typeId: type!, from: iso(from), to: iso(to), halfDay: halfDay);
+      : (typeId: type!, from: iso(from), to: iso(to), portion: portion);
 
   Future<void> chooseEvidence() async {
     final picked = await FilePicker.pickFiles(
@@ -359,7 +359,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                                       (row) => row['id'] == v,
                                     )['allowHalfDay'] ==
                                     false) {
-                                  halfDay = 'NONE';
+                                  portion = 'FULL_DAY';
                                 }
                               }),
                         validator: (v) =>
@@ -565,27 +565,27 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
                       DropdownButtonFormField<String>(
                         isExpanded: true,
                         itemHeight: null,
-                        initialValue: halfDay,
+                        initialValue: portion,
                         decoration: const InputDecoration(
                           labelText: 'Day portion',
                         ),
                         items: const [
                           DropdownMenuItem(
-                            value: 'NONE',
+                            value: 'FULL_DAY',
                             child: Text('Full day'),
                           ),
                           DropdownMenuItem(
-                            value: 'AM',
+                            value: 'MORNING',
                             child: Text('Morning only'),
                           ),
                           DropdownMenuItem(
-                            value: 'PM',
+                            value: 'AFTERNOON',
                             child: Text('Afternoon only'),
                           ),
                         ],
                         onChanged: saving
                             ? null
-                            : (v) => setState(() => halfDay = v!),
+                            : (v) => setState(() => portion = v!),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -776,7 +776,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       setState(() => error = 'The end date must follow the start date.');
       return;
     }
-    if (leave && halfDay != 'NONE' && from != to) {
+    if (leave && portion != 'FULL_DAY' && from != to) {
       setState(() => error = 'Half-day requests must be on a single date.');
       return;
     }
@@ -826,7 +826,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
         'leaveTypeId': type,
         'startDate': iso(from),
         'endDate': iso(to),
-        'halfDay': halfDay,
+        'portion': portion,
       },
       if (correction) ...{
         'workDate': iso(from),

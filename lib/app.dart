@@ -10,6 +10,7 @@ import 'package:hrflow_mobile/features/identity/presentation/schedule_page.dart'
 import 'package:hrflow_mobile/features/settings/presentation/settings_pages.dart';
 import 'package:hrflow_mobile/features/reporting/presentation/reports_page.dart';
 import 'package:hrflow_mobile/features/identity/presentation/audit_page.dart';
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -261,6 +262,8 @@ class _HrFlowAppState extends ConsumerState<HrFlowApp>
     return MaterialApp.router(
       title: 'HRFlow',
       debugShowCheckedModeBanner: false,
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
       theme: appTheme(),
       darkTheme: appTheme(dark: true),
       themeMode: settings.dark ? ThemeMode.dark : ThemeMode.light,

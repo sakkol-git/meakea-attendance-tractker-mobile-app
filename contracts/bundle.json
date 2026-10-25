@@ -1,0 +1,9 @@
+{
+  "source": "HRFlow backend repository / contracts",
+  "version": "0.1.0",
+  "files": {
+    "openapi.json": "efd9fc26a3802d277b8462410ca47a07f1a266c7c3ab790410d30dde6619ba86",
+    "fixtures/leave-approval.json": "556f630f12b5cabfe10d4e6fd037d6146232433a5768fea314192919ae242a30",
+    "check-bundle.py": "13b6f64a4478f23d85bf4be0b18be11a567e362b54a6a57c62ab07cb51e48cf8"
+  }
+}

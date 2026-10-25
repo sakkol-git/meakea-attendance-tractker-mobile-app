@@ -49,7 +49,7 @@ extension LeaveDemo on LocalDataSource {
         });
       }
     }
-    if (body['halfDay'] != 'NONE' && body['halfDay'] != null) {
+    if (body['portion'] != 'FULL_DAY' && body['portion'] != null) {
       _need(
         start == end,
         'VALIDATION_ERROR',
@@ -63,7 +63,7 @@ extension LeaveDemo on LocalDataSource {
       days = days / 2;
       if (portions.isNotEmpty) {
         portions.first['units'] = 50;
-        portions.first['portion'] = body['halfDay'];
+        portions.first['portion'] = body['portion'];
       }
     }
     _need(
@@ -147,7 +147,7 @@ extension LeaveDemo on LocalDataSource {
         }
       }
       final allowHalfDay = type!['allowHalfDay'] != false;
-      final half = body['halfDay'] != null && body['halfDay'] != 'NONE';
+      final half = body['portion'] != null && body['portion'] != 'FULL_DAY';
       if (half && from == to && allowHalfDay) units ~/= 2;
       final balance = _leaveBalancesFor(
         employeeId,

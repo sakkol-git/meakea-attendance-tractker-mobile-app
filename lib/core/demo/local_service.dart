@@ -85,7 +85,7 @@ class LocalDataSource implements DataSource {
       _ => 'Product designer',
     },
     'phone': '+855 12 345 678',
-    'timezone': 'Asia/Phnom_Penh',
+    'timeZone': 'Asia/Phnom_Penh',
     ...?_rows['/profile-overrides']
         ?.where((v) => v['employeeId'] == employeeId)
         .firstOrNull,
@@ -497,15 +497,16 @@ class LocalDataSource implements DataSource {
       }).toList();
     }
     final total = list.length;
-    final page = int.tryParse(r.query['page'] ?? '0') ?? 0,
-        size = int.tryParse(r.query['size'] ?? '$total') ?? total;
+    final page = int.tryParse(r.query['page'] ?? '0'),
+        size = int.tryParse(r.query['size'] ?? '${total.clamp(1, 100)}');
     _need(
-      page >= 0 && size >= 0 && size <= 1000,
-      'VALIDATION_ERROR',
-      'Invalid page or size.',
+      page != null && page >= 0 && size != null && size >= 1 && size <= 100,
+      'INVALID_PAGINATION',
+      'Use page 0 or higher and size 1–100.',
+      status: 400,
     );
     final selected = r.query.containsKey('size')
-        ? list.skip(page * size).take(size).toList()
+        ? list.skip(page! * size!).take(size).toList()
         : list;
     return _ok({'items': selected, 'total': total, 'page': page, 'size': size});
   }

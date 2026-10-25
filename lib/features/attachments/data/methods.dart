@@ -22,6 +22,17 @@ mixin AttachmentsMethods on ResourceRepository {
         'Choose a file smaller than 10 MB.',
       );
     }
+    final ext = name.split('.').last.toLowerCase();
+    final type = switch (ext) {
+      'pdf' => 'application/pdf',
+      'png' => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      _ => throw const DataFailure(
+        422,
+        'FILE_TYPE_UNSUPPORTED',
+        'Choose a PDF, PNG or JPEG file.',
+      ),
+    };
     if (client.isLocal) {
       await command(
         '${record.kind == 'leave' ? '/leave/requests' : '/requests'}/${record.id}/attachments',
@@ -33,13 +44,6 @@ mixin AttachmentsMethods on ResourceRepository {
       );
       return;
     }
-    final ext = name.split('.').last.toLowerCase();
-    final type = switch (ext) {
-      'pdf' => 'application/pdf',
-      'png' => 'image/png',
-      'jpg' || 'jpeg' => 'image/jpeg',
-      _ => 'application/octet-stream',
-    };
     final presign = object(
       (await command(
         '${record.kind == 'leave' ? '/leave/requests' : '/requests'}/${record.id}/attachments/presign',
@@ -118,14 +122,24 @@ mixin AttachmentsMethods on ResourceRepository {
 
   Uri fileUrl(String value) {
     final u = Uri.tryParse(value);
+    const apiBase = String.fromEnvironment('API_BASE_URL');
+    const configured = String.fromEnvironment('FILE_ORIGINS');
+    final trustedOrigins = <String>{
+      if (Uri.tryParse(apiBase)?.hasAuthority == true)
+        Uri.parse(apiBase).origin,
+      for (final origin in configured.split(','))
+        if (Uri.tryParse(origin.trim())?.hasAuthority == true)
+          Uri.parse(origin.trim()).origin,
+    };
     if (u == null ||
         u.scheme != 'https' ||
         u.host.isEmpty ||
-        u.userInfo.isNotEmpty) {
+        u.userInfo.isNotEmpty ||
+        (trustedOrigins.isNotEmpty && !trustedOrigins.contains(u.origin))) {
       throw const DataFailure(
         0,
         'INVALID_FILE_URL',
-        'The API returned an invalid signed file URL.',
+        'The signed file URL is outside the configured storage origins.',
       );
     }
     return u;

@@ -857,6 +857,18 @@ void main() {
     },
   );
 
+  test('remote approval inbox uses canonical routes', () async {
+    final server = _QueryServer();
+    final client = ClientData.forTest(server);
+    addTearDown(client.close);
+    final repo = RequestsDataRepository(client);
+    await repo.recordsPage('request', pending: true, status: 'PENDING');
+    expect(server.last?.path, '/requests/inbox');
+    await repo.recordsPage('correction', pending: true, status: 'PENDING');
+    expect(server.last?.path, '/attendance/corrections');
+    expect(server.last?.query['status'], 'PENDING');
+  });
+
   testWidgets(
     'acceptance F02 approval search sends the query to its repositories',
     (tester) async {
@@ -1404,7 +1416,7 @@ void main() {
       Future<Map> preview(
         String from,
         String to, {
-        String half = 'NONE',
+        String portion = 'FULL_DAY',
         String type = 'annual',
       }) async =>
           (await c.request(
@@ -1415,7 +1427,7 @@ void main() {
                     'leaveTypeId': type,
                     'startDate': from,
                     'endDate': to,
-                    'halfDay': half,
+                    'portion': portion,
                   },
                   idempotencyKey: commandKey(),
                 ),
@@ -1452,7 +1464,7 @@ void main() {
         '2026-10-26',
         '2026-10-26',
         type: 'sick',
-        half: 'AM',
+        portion: 'MORNING',
       );
       expect(policy['allowHalfDay'], false);
       expect(policy['evidenceRequired'], true);

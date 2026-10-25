@@ -78,10 +78,10 @@ final caseOptionsProvider = FutureProvider.autoDispose
       for (var page = 0; page < 10; page++) {
         final batch = await gateway.cases(
           key,
-          filters: {'page': '$page', 'size': '1000'},
+          filters: {'page': '$page', 'size': '100'},
         );
         result.addAll(batch);
-        if (batch.length < 1000) return result;
+        if (batch.length < 100) return result;
       }
       throw const DataFailure(
         422,

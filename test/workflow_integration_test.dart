@@ -117,7 +117,7 @@ void main() {
       'leaveTypeId': 'annual',
       'startDate': '2026-11-02',
       'endDate': '2026-11-03',
-      'halfDay': 'NONE',
+      'portion': 'FULL_DAY',
       'reason': 'Family visit',
     }, commandKey());
     final pending = (await repository.balances()).firstWhere(
@@ -152,7 +152,7 @@ void main() {
       'leaveTypeId': 'annual',
       'startDate': '2026-11-04',
       'endDate': '2026-11-04',
-      'halfDay': 'NONE',
+      'portion': 'FULL_DAY',
       'reason': 'Another appointment',
     }, commandKey());
     source.setDemoRole('MANAGER');

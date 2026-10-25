@@ -94,9 +94,9 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                           'Duration',
                           formatLeaveDays(r.fields['days'] as num?),
                         ),
-                      if (r.fields['halfDay'] != null &&
-                          r.fields['halfDay'] != 'NONE')
-                        InfoRow('Day portion', r.fields['halfDay'].toString()),
+                      if (r.fields['portion'] != null &&
+                          r.fields['portion'] != 'FULL_DAY')
+                        InfoRow('Day portion', r.fields['portion'].toString()),
                       if (r.fields['workDate'] != null)
                         InfoRow(
                           'Affected date',

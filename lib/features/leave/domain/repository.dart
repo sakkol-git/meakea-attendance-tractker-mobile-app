@@ -15,6 +15,6 @@ abstract interface class LeaveRepository
     String typeId,
     String startDate,
     String endDate,
-    String halfDay,
+    String portion,
   );
 }

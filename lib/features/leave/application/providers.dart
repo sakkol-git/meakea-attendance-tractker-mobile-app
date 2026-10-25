@@ -14,11 +14,11 @@ typedef LeavePreviewQuery = ({
   String typeId,
   String from,
   String to,
-  String halfDay,
+  String portion,
 });
 final leavePreviewProvider = FutureProvider.autoDispose
     .family<LeavePreview, LeavePreviewQuery>(
       (ref, query) => ref
           .watch(leaveRepositoryProvider)
-          .preview(query.typeId, query.from, query.to, query.halfDay),
+          .preview(query.typeId, query.from, query.to, query.portion),
     );

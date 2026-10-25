@@ -15,7 +15,7 @@ mixin LeaveMethods on ResourceRepository {
     String typeId,
     String startDate,
     String endDate,
-    String halfDay,
+    String portion,
   ) async {
     final row = object(
       (await client.request(
@@ -26,7 +26,7 @@ mixin LeaveMethods on ResourceRepository {
             'leaveTypeId': typeId,
             'startDate': startDate,
             'endDate': endDate,
-            'halfDay': halfDay,
+            'portion': portion,
           },
           idempotencyKey: commandKey(),
         ),

@@ -7,7 +7,8 @@ class Profile {
       position,
       organization,
       phone,
-      tenantId;
+      tenantId,
+      timeZone;
   const Profile({
     required this.id,
     required this.name,
@@ -18,6 +19,7 @@ class Profile {
     this.organization = 'HRFlow',
     this.phone = '',
     this.tenantId = '',
+    this.timeZone = 'Asia/Phnom_Penh',
   });
   bool get manages => ['MANAGER', 'HR_ADMIN', 'OWNER'].contains(role);
   bool get administers => ['HR_ADMIN', 'OWNER'].contains(role);

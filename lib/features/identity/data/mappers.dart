@@ -13,6 +13,7 @@ abstract final class ProfileMapper {
     position: text(j, 'position'),
     organization: text(j, 'organization', 'HRFlow'),
     phone: text(j, 'phone'),
+    timeZone: requiredText(j, 'timeZone'),
   );
 }
 

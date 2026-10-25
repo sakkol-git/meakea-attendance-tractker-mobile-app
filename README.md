@@ -50,6 +50,6 @@ fvm flutter build web --release
 fvm flutter doctor -v
 ```
 
-The web target is a mobile-layout preview, not the Nuxt web client. Screen reference images are in `test/goldens/`. Android needs an installed SDK; iOS needs Xcode, signing and device testing. Neither platform toolchain is available on this machine, so native build/device acceptance remains open.
+The web target is a mobile-layout preview, not the Nuxt web client. Screen reference images are in `test/goldens/`. Android needs an installed SDK; the existing `.github/workflows/ci.yml` runs `flutter build apk --debug` on an Android-capable CI runner. iOS needs Xcode, signing and device testing. Native device acceptance remains open.
 
 This directory is an independent Git repository nested under the parent HRFlow repository. Review and save mobile changes here; parent commits do not include them. No commit or deployment is performed by this delivery.

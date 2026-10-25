@@ -18,22 +18,22 @@ void main() {
       'Activity',
       'Requests',
       'Leave',
-      'Profile',
+      'Work',
     ]);
     expect(workspaceTabs(_profile('MANAGER')).map((tab) => tab.label), [
       'Home',
       'Activity',
       'Requests',
       'Approvals',
-      'Profile',
+      'Work',
     ]);
     for (final role in ['HR_ADMIN', 'OWNER']) {
       expect(workspaceTabs(_profile(role)).map((tab) => tab.label), [
         'Home',
         'Activity',
-        'Work',
+        'Requests',
         'Approvals',
-        'Profile',
+        'Work',
       ]);
     }
   });
