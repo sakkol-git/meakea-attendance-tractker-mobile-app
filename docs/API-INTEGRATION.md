@@ -73,7 +73,7 @@ Inbox item: id, title, optional body, boolean read, optional recordId and kind (
 | GET `/auth/me` | — | Profile above; always uncached |
 | POST `/auth/logout` | refreshToken | 204; revoke the server token family |
 | POST `/auth/change-password` | currentPassword, newPassword | 204 or JSON success |
-| PATCH `/profile` | name, phone | Updated profile |
+| PATCH `/auth/profile` | name, timeZone | Updated profile |
 
 The adapter uses a refresh-token JSON body and native secure storage. If the accepted server instead uses HttpOnly cookies, PKCE, MFA, account recovery challenges or different tenant resolution, implement that protocol at this boundary. The current recovery link displays an HR-contact instruction; it does not falsely simulate account recovery.
 

@@ -29,11 +29,11 @@ mixin IdentityMethods on ResourceRepository {
     ),
   );
   Future<Profile> saveProfile(JsonMap values) async {
-    // Explicit client extension; keep mapping here until the active backend contract is published.
     return ProfileMapper.fromJson(
       object(
-        (await client.request(DataRequest('PATCH', '/profile', body: values)))
-            .data,
+        (await client.request(
+          DataRequest('PATCH', '/auth/profile', body: values),
+        )).data,
       ),
     );
   }

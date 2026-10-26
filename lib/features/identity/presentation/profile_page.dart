@@ -186,19 +186,19 @@ class EditProfilePage extends ConsumerStatefulWidget {
 
 class _EditProfileState extends ConsumerState<EditProfilePage> {
   final form = GlobalKey<FormState>();
-  late TextEditingController name, phone;
+  late TextEditingController name, timeZone;
   @override
   void initState() {
     super.initState();
     final p = ref.read(sessionProvider).profile!;
     name = TextEditingController(text: p.name);
-    phone = TextEditingController(text: p.phone);
+    timeZone = TextEditingController(text: p.timeZone);
   }
 
   @override
   void dispose() {
     name.dispose();
-    phone.dispose();
+    timeZone.dispose();
     super.dispose();
   }
 
@@ -221,20 +221,22 @@ class _EditProfileState extends ConsumerState<EditProfilePage> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: phone,
-                decoration: const InputDecoration(labelText: 'Phone number'),
-                keyboardType: TextInputType.phone,
-                autofillHints: const [AutofillHints.telephoneNumber],
+                controller: timeZone,
+                decoration: const InputDecoration(
+                  labelText: 'Time zone',
+                  hintText: 'Asia/Phnom_Penh',
+                ),
+                autocorrect: false,
                 validator: (v) =>
-                    v != null &&
-                        v.isNotEmpty &&
-                        !RegExp(r'^\+?[0-9 ()-]{7,20}$').hasMatch(v)
-                    ? 'Enter a valid phone number'
+                    v == null ||
+                        !RegExp(r'^[A-Za-z_]+(?:/[A-Za-z0-9_+.-]+)+$')
+                            .hasMatch(v.trim())
+                    ? 'Enter an IANA time zone such as Asia/Phnom_Penh'
                     : null,
               ),
               const SizedBox(height: 16),
               Text(
-                'Your work email, position and department are managed by HR.',
+                'Your work email, phone, position and department are managed by HR.',
                 style: TextStyle(color: context.semantic.textMuted),
               ),
               const SizedBox(height: 24),
@@ -247,7 +249,7 @@ class _EditProfileState extends ConsumerState<EditProfilePage> {
                       .read(identityRepositoryProvider)
                       .saveProfile({
                         'name': name.text.trim(),
-                        'phone': phone.text.trim(),
+                        'timeZone': timeZone.text.trim(),
                       });
                   ref.read(sessionProvider.notifier).updateProfile(profile);
                   if (context.mounted) {

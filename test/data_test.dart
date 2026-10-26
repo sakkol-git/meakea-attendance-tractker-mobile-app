@@ -50,22 +50,42 @@ void main() {
     now: now,
   );
 
-  test('local password change matches the canonical success response', () async {
-    final result = await local().send(
-      DataRequest(
-        'POST',
-        '/auth/change-password',
-        body: {
-          'currentPassword': 'current-password',
-          'newPassword': 'replacement-password',
-        },
-        idempotencyKey: commandKey(),
-      ),
-    );
+  test(
+    'local password change matches the canonical success response',
+    () async {
+      final result = await local().send(
+        DataRequest(
+          'POST',
+          '/auth/change-password',
+          body: {
+            'currentPassword': 'current-password',
+            'newPassword': 'replacement-password',
+          },
+          idempotencyKey: commandKey(),
+        ),
+      );
 
-    expect(result.status, 200);
-    expect(result.data, {'message': 'Password changed.'});
-  });
+      expect(result.status, 200);
+      expect(result.data, {'message': 'Password changed.'});
+    },
+  );
+
+  test(
+    'local profile update uses the canonical auth route and fields',
+    () async {
+      final result = await local().send(
+        DataRequest(
+          'PATCH',
+          '/auth/profile',
+          body: {'name': 'Updated User', 'timeZone': 'Asia/Tokyo'},
+        ),
+      );
+
+      expect(result.status, 200);
+      expect(result.data['name'], 'Updated User');
+      expect(result.data['timeZone'], 'Asia/Tokyo');
+    },
+  );
 
   test('local replay, conflicting body, role/version guards, notification and isolated reads', () async {
     final source = local();

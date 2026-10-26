@@ -119,13 +119,13 @@ extension IdentityDemo on LocalDataSource {
     if (r.path == '/auth/change-password' && r.method == 'POST') {
       return _ok({'message': 'Password changed.'});
     }
-    if (r.path == '/profile' && r.method == 'PATCH') {
+    if (r.path == '/auth/profile' && r.method == 'PATCH') {
       final overrides = _rows.putIfAbsent('/profile-overrides', () => []);
       overrides.removeWhere((v) => v['employeeId'] == employeeId);
       overrides.add({
         'employeeId': employeeId,
         'name': body['name'] ?? profile['name'],
-        'phone': body['phone'] ?? profile['phone'],
+        'timeZone': body['timeZone'] ?? profile['timeZone'],
       });
       return _ok(profile);
     }

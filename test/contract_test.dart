@@ -11,6 +11,7 @@ class ContractServer implements DataSource {
   String get mode => 'remote';
   final pages = <int>[];
   String? match;
+  DataRequest? lastRequest;
   final row = <String, dynamic>{
     'id': 'record-a',
     'employeeId': 'employee-a',
@@ -19,6 +20,17 @@ class ContractServer implements DataSource {
   };
   @override
   Future<DataResponse> send(DataRequest r) async {
+    lastRequest = r;
+    if (r.path == '/auth/profile' && r.method == 'PATCH') {
+      return DataResponse(200, {
+        'userId': 'user-a',
+        'employeeId': 'employee-a',
+        'tenantId': 'tenant-a',
+        'name': r.body!['name'],
+        'roles': ['EMPLOYEE'],
+        'timeZone': r.body!['timeZone'],
+      });
+    }
     if (r.method == 'POST') {
       match = r.ifMatch;
       return DataResponse(200, row, etag: '"opaque-command-revision"');
@@ -55,6 +67,20 @@ void main() {
     );
     expect(decided.etag, '"opaque-command-revision"');
     expect(server.match, '"opaque-revision-abc"');
+  });
+  test('profile update uses the implemented auth contract', () async {
+    final server = ContractServer();
+    final profile = await HrRepository(ClientData.forTest(server))
+        .saveProfile({'name': 'Updated User', 'timeZone': 'Asia/Tokyo'});
+
+    expect(server.lastRequest?.method, 'PATCH');
+    expect(server.lastRequest?.path, '/auth/profile');
+    expect(server.lastRequest?.body, {
+      'name': 'Updated User',
+      'timeZone': 'Asia/Tokyo',
+    });
+    expect(profile.name, 'Updated User');
+    expect(profile.timeZone, 'Asia/Tokyo');
   });
   test(
     'remote catalogue pagination does not truncate the first page',

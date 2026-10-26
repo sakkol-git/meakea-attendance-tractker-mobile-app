@@ -1,0 +1,12 @@
+title = "HRFlow mobile secret scan"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated OpenAPI SHA-256 receipt is public metadata"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^contracts/bundle\.json$''']
+regexTarget = "line"
+regexes = ['''^\s*"openapi\.json":\s*"[a-f0-9]{64}",?\s*$''']

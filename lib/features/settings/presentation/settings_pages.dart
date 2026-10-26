@@ -216,7 +216,7 @@ class _PasswordState extends ConsumerState<PasswordPage> {
                 obscureText: true,
                 decoration: const InputDecoration(labelText: 'New password'),
                 validator: (v) =>
-                    (v?.length ?? 0) < 12 ? 'Use at least 12 characters' : null,
+                    (v?.length ?? 0) < 8 ? 'Use at least 8 characters' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
