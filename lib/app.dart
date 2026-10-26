@@ -2,6 +2,7 @@ import 'features/notifications/application/push.dart';
 import 'features/identity/presentation/setup_page.dart';
 import 'features/attendance/presentation/evidence_page.dart';
 import 'app/feature_panels.dart';
+import 'app/workspace_banner.dart';
 import 'shared/presentation/case_page.dart';
 
 import 'package:hrflow_mobile/features/attendance/presentation/team_page.dart';
@@ -288,27 +289,7 @@ class WorkspaceShell extends ConsumerWidget {
     return Scaffold(
       body: Column(
         children: [
-          if (local)
-            SafeArea(
-              bottom: false,
-              child: Container(
-                width: double.infinity,
-                color: context.semantic.successBackground,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 5,
-                  horizontal: 16,
-                ),
-                child: Text(
-                  'DEMO WORKSPACE  ·  Fictional data',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: context.semantic.success,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
+          if (local) const WorkspaceDemoBanner(),
           if (ref.watch(cacheStaleProvider).asData?.value == true)
             MaterialBanner(
               content: const Text('Showing saved data. It may be out of date.'),

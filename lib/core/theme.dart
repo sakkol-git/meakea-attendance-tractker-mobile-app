@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:hrflow_mobile/core/design_tokens.dart';
+
 abstract final class Palette {
   static const teal = Color(0xFF006151),
       ink = Color(0xFF172B29),
@@ -176,37 +178,46 @@ ThemeData appTheme({bool dark = false}) {
       color: semantic.card,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         side: BorderSide(color: semantic.divider),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: semantic.card,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+      ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         borderSide: BorderSide(color: semantic.disabled),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x4,
+        vertical: AppSpacing.x4,
+      ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: dark ? semantic.successBackground : Palette.teal,
         foregroundColor: dark ? semantic.textPrimary : Colors.white,
-        minimumSize: const Size(48, 52),
+        minimumSize: const Size(AppSize.minTouchTarget, AppSize.primaryControl),
         textStyle: const TextStyle(
           fontFamily: 'KantumruyPro',
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+        ),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        minimumSize: const Size(48, 48),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        minimumSize: const Size.square(AppSize.minTouchTarget),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+        ),
       ),
     ),
     navigationBarTheme: NavigationBarThemeData(
@@ -224,6 +235,23 @@ ThemeData appTheme({bool dark = false}) {
           fontFamily: 'KantumruyPro',
           fontSize: 12,
           fontWeight: FontWeight.w500,
+        ),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      insetPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x4,
+        vertical: AppSpacing.x6,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.large),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppRadius.large),
         ),
       ),
     ),

@@ -72,7 +72,13 @@ class WorkspaceNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = workspaceTabs(profile);
+    final compactLabels =
+        MediaQuery.sizeOf(context).width < 360 ||
+        MediaQuery.textScalerOf(context).scale(12) > 16;
     return NavigationBar(
+      labelBehavior: compactLabels
+          ? NavigationDestinationLabelBehavior.onlyShowSelected
+          : NavigationDestinationLabelBehavior.alwaysShow,
       selectedIndex: _selectedIndex(tabs),
       onDestinationSelected: (index) => context.go(tabs[index].path),
       destinations: [

@@ -68,6 +68,7 @@ void main() {
           );
           await tester.pumpAndSettle();
           await container.read(sessionProvider.notifier).demo(scenario.$3);
+          await tester.pumpAndSettle();
           container.read(routerProvider).go(scenario.$2);
           await tester.pumpAndSettle();
           expect(tester.takeException(), isNull);

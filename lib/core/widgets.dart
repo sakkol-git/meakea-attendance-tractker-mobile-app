@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:hrflow_mobile/app/providers.dart';
+import 'package:hrflow_mobile/core/design_tokens.dart';
+import 'package:hrflow_mobile/core/presentation_format.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/theme.dart';
+
+export 'package:hrflow_mobile/core/presentation_format.dart';
 
 class AppPage extends ConsumerWidget {
   final String title;
@@ -26,14 +30,19 @@ class AppPage extends ConsumerWidget {
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
     final content = ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: pageInsets(
+        context,
+        bottom: keyboardVisible ? AppSpacing.x6 : AppSpacing.x8,
+      ),
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         if (ref.watch(staleResourcesProvider).asData?.value
             case final resources? when resources.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.only(bottom: AppSpacing.x4),
             child: Semantics(
               liveRegion: true,
               child: Surface(
@@ -47,12 +56,12 @@ class AppPage extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.x2),
                     for (final resource in resources)
                       Text(
                         '${resource.path.split('?').first}: Last updated ${companyTimestamp(resource.savedAt.toIso8601String())}',
                       ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.x2),
                     const Text(
                       'Changes to these resources require a connection so the latest version and permissions can be checked.',
                     ),
@@ -63,7 +72,7 @@ class AppPage extends ConsumerWidget {
           ),
         if (subtitle != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.only(bottom: AppSpacing.x6),
             child: Text(
               subtitle!,
               style: Theme.of(context).textTheme.bodyMedium
@@ -104,7 +113,7 @@ class AppPage extends ConsumerWidget {
         top: false,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 760),
+            constraints: const BoxConstraints(maxWidth: AppSize.contentMax),
             child: onRefresh == null
                 ? content
                 : RefreshIndicator(
@@ -128,7 +137,7 @@ class Surface extends StatelessWidget {
   const Surface({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(AppSpacing.x4),
   });
   @override
   Widget build(BuildContext context) => Card(
@@ -142,7 +151,7 @@ class SectionTitle extends StatelessWidget {
   const SectionTitle(this.text, {super.key, this.action});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 26, bottom: 12),
+    padding: const EdgeInsets.only(top: AppSpacing.x6, bottom: AppSpacing.x3),
     child: Row(
       children: [
         Expanded(
@@ -168,7 +177,7 @@ class AsyncPanel<T> extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => value.when(
     data: builder,
     loading: () => const Padding(
-      padding: EdgeInsets.all(32),
+      padding: EdgeInsets.all(AppSpacing.x8),
       child: Center(
         child: CircularProgressIndicator(semanticsLabel: 'Loading'),
       ),
@@ -178,11 +187,11 @@ class AsyncPanel<T> extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.cloud_off_outlined, color: context.semantic.textMuted),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.x3),
           Text(message(e)),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.x3),
           Wrap(
-            spacing: 8,
+            spacing: AppSpacing.x2,
             children: [
               OutlinedButton.icon(
                 onPressed: () async {
@@ -219,20 +228,23 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Surface(
     child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.x4),
       child: Column(
         children: [
           Icon(icon, size: 36, color: context.semantic.textMuted),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.x3),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.x2),
           Text(description, textAlign: TextAlign.center),
           if (action != null)
-            Padding(padding: const EdgeInsets.only(top: 16), child: action),
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.x4),
+              child: action,
+            ),
         ],
       ),
     ),
@@ -269,10 +281,13 @@ class StatusPill extends StatelessWidget {
         ? semantic.warningBackground
         : semantic.card;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.x3,
+        vertical: AppSpacing.x1,
+      ),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.small),
       ),
       child: Text(
         statusLabel(status),
@@ -286,23 +301,6 @@ class StatusPill extends StatelessWidget {
     );
   }
 }
-
-String statusLabel(String status) => switch (status) {
-  'REVIEW_NEEDED' => 'Review needed',
-  'CONFIRMED' => 'Confirmed',
-  'PENDING' => 'Pending approval',
-  'APPROVED' => 'Approved',
-  'REJECTED' => 'Rejected',
-  'CANCELLED' => 'Cancelled',
-  'DRAFT' => 'Draft',
-  'FULFILLED' => 'Fulfilled',
-  'COMPLETED' => 'Completed',
-  _ =>
-    status
-        .replaceAll('_', ' ')
-        .toLowerCase()
-        .replaceFirstMapped(RegExp(r'^.'), (m) => m[0]!.toUpperCase()),
-};
 
 class InfoRow extends StatelessWidget {
   final String label, value;
@@ -391,44 +389,3 @@ class _BusyButtonState extends State<BusyButton> {
 
 void toast(BuildContext context, String text) =>
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-String shortDate(String? value) {
-  final parsed = DateTime.tryParse(value ?? '');
-  if (parsed == null) return value ?? '—';
-  final date = value!.contains('T')
-      ? parsed.toUtc().add(const Duration(hours: 7))
-      : parsed;
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return '${date.day} ${months[date.month - 1]} ${date.year}';
-}
-
-String timeText(DateTime? value) {
-  if (value == null) return 'Not recorded';
-  final d = value.toUtc().add(const Duration(hours: 7));
-  return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-}
-
-String companyTimestamp(String? value) {
-  final instant = DateTime.tryParse(value ?? '');
-  if (instant == null) return 'Time unavailable';
-  final local = instant.toUtc().add(const Duration(hours: 7));
-  final date = shortDate(local.toIso8601String().substring(0, 10));
-  final clock =
-      '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}:${local.second.toString().padLeft(2, '0')}';
-  return '$date · $clock UTC+07';
-}
-
-String durationText(Duration value) =>
-    '${value.inHours}h ${value.inMinutes.remainder(60)}m';

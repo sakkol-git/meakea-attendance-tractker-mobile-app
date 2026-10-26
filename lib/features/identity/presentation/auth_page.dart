@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 
 import 'package:hrflow_mobile/app/providers.dart';
+import 'package:hrflow_mobile/core/design_tokens.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 
@@ -37,9 +38,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: ListView(
-              padding: const EdgeInsets.all(28),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.x4,
+                vertical: AppSpacing.x6,
+              ),
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: AppSpacing.x8),
                 Row(
                   children: [
                     Container(
@@ -47,14 +52,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: context.semantic.heroBackground,
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(AppRadius.medium),
                       ),
                       child: Icon(
                         Icons.layers_outlined,
                         color: context.semantic.onHero,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: AppSpacing.x3),
                     Expanded(
                       child: Text(
                         'hrflow',
@@ -63,22 +68,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 56),
+                const SizedBox(height: AppSpacing.x12),
                 Text(
                   local ? 'A better workday\nstarts here.' : 'Welcome back.',
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.x3),
                 Text(
                   local
                       ? 'Explore your workspace with fictional data. Choose a role to walk through the experience.'
                       : 'Sign in to your company workspace to manage your day.',
                   style: TextStyle(color: context.semantic.textMuted),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppSpacing.x8),
                 if (session.error != null)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.x4),
                     child: Text(
                       session.error!,
                       style: TextStyle(color: context.semantic.error),
@@ -89,7 +94,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   onPressed: () => context.push('/setup'),
                   child: Text('Set up a company workspace'),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: AppSpacing.x8),
                 Text(
                   'Your people. Your workspace.\nDesigned for a calmer workday.',
                   textAlign: TextAlign.center,
@@ -108,7 +113,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   List<Widget> demoChoices() => [
     const StatusPill('DEMO WORKSPACE'),
-    const SizedBox(height: 20),
+    const SizedBox(height: AppSpacing.x6),
     for (final entry in [
       (
         'EMPLOYEE',
@@ -136,13 +141,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ),
     ])
       Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: AppSpacing.x3),
         child: Surface(
           padding: EdgeInsets.zero,
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
+              horizontal: AppSpacing.x4,
+              vertical: AppSpacing.x2,
             ),
             leading: Icon(entry.$4, color: context.semantic.selectedNav),
             title: Text(
@@ -169,7 +174,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           validator: (v) =>
               v == null || v.trim().isEmpty ? 'Enter your workspace' : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.x4),
         TextFormField(
           controller: email,
           decoration: const InputDecoration(labelText: 'Work email'),
@@ -181,7 +186,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ? 'Enter a valid email'
               : null,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpacing.x4),
         TextFormField(
           controller: password,
           obscureText: obscure,
@@ -201,7 +206,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           validator: (v) =>
               v == null || v.isEmpty ? 'Enter your password' : null,
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.x6),
         BusyButton(
           label: 'Sign in',
           icon: Icons.login,

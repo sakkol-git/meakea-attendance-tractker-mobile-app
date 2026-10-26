@@ -72,4 +72,49 @@ void main() {
       expect(tester.takeException(), isNull, reason: path);
     }
   });
+
+  testWidgets('request form stays scrollable above a phone keyboard', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final source = LocalDataSource(
+      jsonDecode(File('assets/data/demo-seed.json').readAsStringSync())
+          as JsonMap,
+      populate: true,
+      now: () => DateTime.utc(2026, 10, 23, 3),
+    );
+    final client = ClientData.forTest(source);
+    final container = ProviderContainer(
+      overrides: [
+        clientProvider.overrideWithValue(client),
+        preferencesProvider.overrideWithValue(MemoryPreferences()),
+        clockProvider.overrideWithValue(() => DateTime(2026, 10, 23, 10)),
+        ...testRepositoryOverrides(HrRepository(client)),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(container: container, child: const HrFlowApp()),
+    );
+    await tester.pumpAndSettle();
+    await container.read(sessionProvider.notifier).demo('EMPLOYEE');
+    container.read(routerProvider).go('/new/request');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(TextFormField, 'What do you need?'));
+    tester.view.viewInsets = const FakeViewPadding(bottom: 260);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Reason'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Reason'), findsOneWidget);
+  });
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:hrflow_mobile/core/widgets.dart';
+import 'package:hrflow_mobile/core/design_tokens.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 import 'package:hrflow_mobile/shared/domain/workflow_policy.dart';
 import 'package:hrflow_mobile/features/identity/domain/models.dart';
@@ -28,7 +29,12 @@ class RecordActionBar extends StatelessWidget {
       child: Material(
         elevation: 8,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.x4,
+            AppSpacing.x2,
+            AppSpacing.x4,
+            AppSpacing.x2,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
