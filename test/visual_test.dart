@@ -75,7 +75,7 @@ void main() {
           await expectLater(
             find.byKey(key),
             matchesGoldenFile(
-              'goldens/${dark ? 'dark-' : ''}${scenario.$1}.png',
+              'goldens/${Platform.isLinux ? 'linux/' : ''}${dark ? 'dark-' : ''}${scenario.$1}.png',
             ),
           );
         },
