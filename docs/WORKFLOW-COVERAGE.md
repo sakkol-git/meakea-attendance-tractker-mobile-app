@@ -60,4 +60,4 @@ Open **Profile → All workflows** for feature screens. Home, Activity, Requests
 
 The parent repository has no accepted business OpenAPI or implemented Java HR controllers. Every feature keeps its candidate paths in `lib/features/<feature>/data/case_routes.dart`; these extensions must be reconciled with actual gateway contracts. Native SDKs, permissions, secure storage, Firebase/APNs, signing, actual file storage and accessibility need device acceptance. Changing a URL alone cannot make an incompatible server work.
 
-Machine-readable route coverage: `docs/validation/workflow-routes.json`. Tests compare its 40 IDs with the parent source and exercise all role-gated feature pages through the production composition.
+Machine-readable route coverage: `docs/validation/workflow-routes.json`. Standalone mobile tests verify the 40 unique handover IDs and exercise role-gated feature pages through the production composition. The parent full verifier compares those IDs with `business-flow.md` when both checkouts are present.
