@@ -117,7 +117,7 @@ extension IdentityDemo on LocalDataSource {
       }
     }
     if (r.path == '/auth/change-password' && r.method == 'POST') {
-      return _ok(null, status: 204);
+      return _ok({'message': 'Password changed.'});
     }
     if (r.path == '/profile' && r.method == 'PATCH') {
       final overrides = _rows.putIfAbsent('/profile-overrides', () => []);

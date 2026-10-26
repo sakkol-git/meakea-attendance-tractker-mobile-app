@@ -31,7 +31,13 @@ class AppPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final routePath = GoRouter.of(context)
+        .routeInformationProvider
+        .value
+        .uri
+        .path;
     final content = ListView(
+      key: PageStorageKey<String>('page-scroll:$routePath'),
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: pageInsets(
         context,
@@ -96,9 +102,7 @@ class AppPage extends ConsumerWidget {
                   '/profile',
                   '/approvals',
                   '/workflows',
-                ].contains(
-                  GoRouter.of(context).routeInformationProvider.value.uri.path,
-                )
+                ].contains(routePath)
             ? IconButton(
                 tooltip: 'Back to workspace',
                 icon: const Icon(Icons.arrow_back),

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/theme.dart';
+import '../core/design_tokens.dart';
 import '../core/widgets.dart';
 
 import 'package:hrflow_mobile/features/identity/domain/models.dart';
@@ -112,11 +113,14 @@ class WorkflowHub extends ConsumerWidget {
           const SectionTitle('Recently used'),
           for (final task in recent)
             if (canOpenRecent(task.path))
-              Card(
-                child: ListTile(
-                  title: Text(task.title),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => open(task.title, task.path),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.x2),
+                child: Card(
+                  child: ListTile(
+                    title: Text(task.title),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => open(task.title, task.path),
+                  ),
                 ),
               ),
         ],
@@ -131,11 +135,14 @@ class WorkflowHub extends ConsumerWidget {
           ('Inbox', '/notifications'),
         ])
           if (matches(item.$1))
-            Card(
-              child: ListTile(
-                title: Text(item.$1),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => open(item.$1, item.$2),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.x2),
+              child: Card(
+                child: ListTile(
+                  title: Text(item.$1),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => open(item.$1, item.$2),
+                ),
               ),
             ),
         if (actor.manages) ...[
@@ -147,11 +154,14 @@ class WorkflowHub extends ConsumerWidget {
             ('Reports & exports', '/reports'),
           ])
             if (matches(item.$1))
-              Card(
-                child: ListTile(
-                  title: Text(item.$1),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => open(item.$1, item.$2),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.x2),
+                child: Card(
+                  child: ListTile(
+                    title: Text(item.$1),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => open(item.$1, item.$2),
+                  ),
                 ),
               ),
         ],
@@ -168,11 +178,14 @@ class WorkflowHub extends ConsumerWidget {
             ('Audit activity', '/audit'),
           ])
             if (matches(item.$1))
-              Card(
-                child: ListTile(
-                  title: Text(item.$1),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => open(item.$1, item.$2),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.x2),
+                child: Card(
+                  child: ListTile(
+                    title: Text(item.$1),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => open(item.$1, item.$2),
+                  ),
                 ),
               ),
         ],
@@ -194,12 +207,15 @@ class WorkflowHub extends ConsumerWidget {
                     matches(p.description) ||
                     matches(group.value)),
           ))
-            Card(
-              child: ListTile(
-                title: Text(panel.title),
-                subtitle: Text(panel.description),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => open(panel.title, '/features/${panel.key}'),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.x2),
+              child: Card(
+                child: ListTile(
+                  title: Text(panel.title),
+                  subtitle: Text(panel.description),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => open(panel.title, '/features/${panel.key}'),
+                ),
               ),
             ),
         ],

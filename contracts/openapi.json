@@ -523,7 +523,7 @@
       "patch": {
         "operationId": "patchUserProfile",
         "summary": "Update user profile",
-        "x-hrflow-implementation": "pending",
+        "x-hrflow-implementation": "implemented",
         "responses": {
           "200": {
             "description": "Update user profile",
@@ -602,7 +602,7 @@
       "post": {
         "operationId": "changePassword",
         "summary": "Change user password",
-        "x-hrflow-implementation": "pending",
+        "x-hrflow-implementation": "implemented",
         "responses": {
           "200": {
             "description": "Change user password",

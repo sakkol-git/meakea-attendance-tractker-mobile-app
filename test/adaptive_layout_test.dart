@@ -66,11 +66,27 @@ void main() {
       '/team-attendance',
       '/notifications',
       '/profile',
+      '/workflows',
     ]) {
       container.read(routerProvider).go(path);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: path);
     }
+
+    final correctionCard = find.ancestor(
+      of: find.text('Request an attendance correction'),
+      matching: find.byType(Card),
+    );
+    final leaveCard = find.ancestor(
+      of: find.text('Leave requests and balances'),
+      matching: find.byType(Card),
+    );
+    expect(correctionCard, findsOneWidget);
+    expect(leaveCard, findsOneWidget);
+    expect(
+      tester.getTopLeft(leaveCard).dy - tester.getBottomLeft(correctionCard).dy,
+      greaterThanOrEqualTo(8),
+    );
   });
 
   testWidgets('request form stays scrollable above a phone keyboard', (
