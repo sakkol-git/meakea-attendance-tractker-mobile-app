@@ -1,36 +1,6 @@
 import '../../../shared/presentation/case_page.dart';
 import '../../../shared/presentation/case_fields.dart';
-
-const shiftEditorFields = <CaseField>[
-  name,
-  CaseField('startTime', 'Start time', kind: FieldKind.time),
-  CaseField('endTime', 'End time', kind: FieldKind.time),
-  CaseField(
-    'workingDays',
-    'Working days',
-    kind: FieldKind.weekdays,
-    minimum: 1,
-    maximum: 127,
-    initial: 31,
-  ),
-  CaseField(
-    'graceMinutes',
-    'Arrival grace in minutes',
-    kind: FieldKind.integer,
-    minimum: 0,
-    maximum: 120,
-    initial: 10,
-  ),
-  CaseField(
-    'earlyToleranceMinutes',
-    'Departure tolerance in minutes',
-    kind: FieldKind.integer,
-    minimum: 0,
-    maximum: 120,
-    initial: 0,
-  ),
-  reason,
-];
+import 'shift_fields.dart';
 
 const identityPanels = [
   CasePanel(
@@ -220,7 +190,7 @@ const identityPanels = [
     details: {
       'latitude': 'Latitude',
       'longitude': 'Longitude',
-      'radiusMeters': 'Site radius (m)',
+      'radiusM': 'Site radius (m)',
       'timezone': 'Timezone',
     },
     create: CaseAction(
@@ -243,7 +213,7 @@ const identityPanels = [
           maximum: 180,
         ),
         CaseField(
-          'radiusMeters',
+          'radiusM',
           'Site radius in meters',
           kind: FieldKind.integer,
           minimum: 10,
@@ -279,7 +249,7 @@ const identityPanels = [
             maximum: 180,
           ),
           CaseField(
-            'radiusMeters',
+            'radiusM',
             'Site radius in meters',
             kind: FieldKind.integer,
             minimum: 10,

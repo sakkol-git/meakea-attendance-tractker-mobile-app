@@ -87,6 +87,22 @@ void main() {
       tester.getTopLeft(leaveCard).dy - tester.getBottomLeft(correctionCard).dy,
       greaterThanOrEqualTo(8),
     );
+
+    container.read(routerProvider).go('/requests');
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byType(TextField).first,
+      'no-such-request-81725',
+    );
+    await tester.pumpAndSettle(const Duration(milliseconds: 350));
+    await tester.ensureVisible(find.text('Clear filters'));
+    await tester.tap(find.text('Clear filters'));
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<TextField>(find.byType(TextField).first).controller?.text,
+      '',
+    );
+    expect(find.text('No matching requests'), findsNothing);
   });
 
   testWidgets('request form stays scrollable above a phone keyboard', (
@@ -132,5 +148,22 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Reason'), findsOneWidget);
+    await tester.ensureVisible(find.text('Save request draft'));
+    final action = tester.getRect(find.text('Save request draft'));
+    expect(action.bottom, lessThanOrEqualTo(640 - 260));
+
+    tester.view.resetViewInsets();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save request draft'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Check the highlighted fields before continuing.'),
+      findsOneWidget,
+    );
+    final firstField = tester.getRect(
+      find.widgetWithText(TextFormField, 'What do you need?'),
+    );
+    expect(firstField.top, greaterThanOrEqualTo(0));
+    expect(firstField.bottom, lessThan(640));
   });
 }

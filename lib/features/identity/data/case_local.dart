@@ -54,78 +54,8 @@ extension IdentityCasesDemo on LocalDataSource {
       _auditAction('SHIFT_ASSIGNMENT_CLOSED', row['id']);
       return _ok(row, etag: '"${row['version']}"');
     }
-    if ((r.path == '/shifts' && r.method == 'POST') ||
-        (RegExp(r'^/shifts/[^/]+$').hasMatch(r.path) && r.method == 'PATCH')) {
-      _need(_admin, 'FORBIDDEN', 'HR access is required.', status: 403);
-      _need(
-        body.keys.every(
-          {
-            'name',
-            'startTime',
-            'endTime',
-            'workingDays',
-            'graceMinutes',
-            'earlyToleranceMinutes',
-            'reason',
-          }.contains,
-        ),
-        'VALIDATION_ERROR',
-        'The shift edit contains an unsupported field.',
-      );
-      final row = r.method == 'POST'
-          ? <String, dynamic>{'id': _id(), 'version': 0}
-          : _find('/shifts', r.path.split('/').last);
-      if (r.method == 'PATCH') _version(r, row);
-      final merged = <String, dynamic>{...row, ...body};
-      final time = RegExp(r'^([01]\d|2[0-3]):[0-5]\d$');
-      _need(
-        (merged['name'] as String? ?? '').trim().length >= 3 &&
-            time.hasMatch(merged['startTime'] as String? ?? '') &&
-            time.hasMatch(merged['endTime'] as String? ?? '') &&
-            merged['startTime'] != merged['endTime'],
-        'VALIDATION_ERROR',
-        'Enter a name and valid distinct shift times. Overnight shifts end on the following day.',
-      );
-      final days = merged['workingDays'] ?? 31,
-          grace = merged['graceMinutes'] ?? 10,
-          early = merged['earlyToleranceMinutes'] ?? 0;
-      _need(
-        days is int &&
-            days > 0 &&
-            days <= 127 &&
-            grace is num &&
-            grace >= 0 &&
-            grace <= 120 &&
-            early is num &&
-            early >= 0 &&
-            early <= 120,
-        'VALIDATION_ERROR',
-        'Choose workdays and valid grace periods.',
-      );
-      row.addAll({
-        'name': merged['name'],
-        'startTime': merged['startTime'],
-        'endTime': merged['endTime'],
-        'workingDays': days,
-        'graceMinutes': grace,
-        'earlyToleranceMinutes': early,
-        'timezone': 'Asia/Phnom_Penh',
-        if (body['reason'] != null) 'lastChangeReason': body['reason'],
-        'days': [
-          for (var i = 0; i < 7; i++)
-            if ((days & (1 << i)) != 0)
-              const ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
-        ].join(', '),
-        'version': (row['version'] as int) + 1,
-      });
-      if (r.method == 'POST') _table('/shifts').add(row);
-      _auditAction('SHIFT_POLICY_UPDATED', row['id']);
-      return _ok(
-        row,
-        etag: '"${row['version']}"',
-        status: r.method == 'POST' ? 201 : 200,
-      );
-    }
+    final shiftResult = _shiftCase(r);
+    if (shiftResult != null) return shiftResult;
 
     if (r.path == '/tenants' && r.method == 'POST') {
       _need(
@@ -442,7 +372,7 @@ extension IdentityCasesDemo on LocalDataSource {
       } else {
         final lat = body['latitude'],
             lng = body['longitude'],
-            radius = body['radiusMeters'];
+            radius = body['radiusM'];
         _need(
           lat is num &&
               lat.isFinite &&
@@ -460,7 +390,8 @@ extension IdentityCasesDemo on LocalDataSource {
         );
         row.addAll(body);
         row['status'] = 'ACTIVE';
-        row['timezone'] = 'Asia/Phnom_Penh';
+        row['timezone'] =
+            body['timezone'] ?? row['timezone'] ?? 'Asia/Phnom_Penh';
       }
       row['version']++;
       if (r.method == 'POST') _table('/work-sites').add(row);

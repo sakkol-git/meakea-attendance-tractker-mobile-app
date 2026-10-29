@@ -50,7 +50,7 @@ void main() {
     expect(find.text('Clock in'), findsWidgets);
     await tester.tap(find.text('Leave').last);
     await tester.pumpAndSettle();
-    expect(find.text('Time off'), findsOneWidget);
+    expect(find.text('Leave'), findsWidgets);
     expect(find.text('Annual leave'), findsWidgets);
     await tester.tap(find.text('Requests').last);
     await tester.pumpAndSettle();

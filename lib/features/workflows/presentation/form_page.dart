@@ -9,12 +9,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:hrflow_mobile/app/providers.dart';
-import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
+import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/features/attendance/domain/correction_time.dart';
-import 'package:hrflow_mobile/core/leave_quantity.dart';
-import 'package:hrflow_mobile/shared/presentation/case_page.dart';
+import 'package:hrflow_mobile/features/leave/presentation/preview_panel.dart';
+
+import 'form_actions.dart';
+import 'request_details_fields.dart';
+import 'material_request_fields.dart';
+import 'workflow_date_fields.dart';
+import 'form_review.dart';
 
 class RequestFormPage extends ConsumerStatefulWidget {
   final String kind;
@@ -43,6 +48,8 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   Future<void> draftWrite = Future.value();
   bool restoring = false;
   bool dirty = false, saving = false;
+  bool get supportsFormDrafts =>
+      ref.read(workflowRepositoryProvider(widget.kind)).supportsFormDrafts;
   String? error;
   @override
   void initState() {
@@ -82,7 +89,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       start = parseTime(initial.fields['fromTime'] as String?, start);
       end = parseTime(initial.fields['toTime'] as String?, end);
     }
-    if (initial == null) {
+    if (initial == null && supportsFormDrafts) {
       WidgetsBinding.instance.addPostFrameCallback((_) => restoreDraft());
     }
   }
@@ -119,7 +126,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   void markDirty() {
     if (restoring) return;
     dirty = true;
-    if (widget.initial != null) return;
+    if (widget.initial != null || !supportsFormDrafts) return;
     draftDebounce?.cancel();
     final repository = ref.read(workflowRepositoryProvider(widget.kind));
     draftDebounce = Timer(const Duration(milliseconds: 400), () {
@@ -187,11 +194,29 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   }
 
   Future<void> date(bool first) async {
+    final earliest = DateUtils.dateOnly(
+      ref.read(clockProvider)().subtract(const Duration(days: 365)),
+    );
+    final latest = DateUtils.dateOnly(
+      ref.read(clockProvider)().add(const Duration(days: 730)),
+    );
+    final minimum = first || from.isBefore(earliest)
+        ? earliest
+        : from.isAfter(latest)
+        ? latest
+        : DateUtils.dateOnly(from);
+    final selected = first ? from : to;
+    final initial = selected.isBefore(minimum)
+        ? minimum
+        : selected.isAfter(latest)
+        ? latest
+        : selected;
     final picked = await showDatePicker(
       context: context,
-      initialDate: first ? from : to,
-      firstDate: ref.read(clockProvider)().subtract(const Duration(days: 365)),
-      lastDate: ref.read(clockProvider)().add(const Duration(days: 730)),
+      helpText: first ? 'Choose the start date' : 'Choose the end date',
+      initialDate: initial,
+      firstDate: minimum,
+      lastDate: latest,
     );
     if (picked != null) {
       setState(() {
@@ -251,6 +276,7 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   }
 
   Future<bool> discard() async {
+    if (saving) return false;
     if (!dirty) return true;
     final confirmed =
         await showDialog<bool>(
@@ -271,7 +297,9 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
           ),
         ) ??
         false;
-    if (!confirmed || widget.initial != null) return confirmed;
+    if (!confirmed || widget.initial != null || !supportsFormDrafts) {
+      return confirmed;
+    }
     draftDebounce?.cancel();
     try {
       await draftWrite;
@@ -301,11 +329,20 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
         .firstOrNull;
     final halfDayAllowed =
         selectedPolicy != null && selectedPolicy['allowHalfDay'] != false;
+    final requestTypes = !leave && !correction
+        ? ref.watch(collectionProvider('/requests/types')).asData?.value
+        : null;
+    final requestName =
+        requestTypes
+            ?.where((row) => row['code'] == requestType)
+            .firstOrNull?['name']
+            ?.toString() ??
+        'Choose a request type';
     final leavePreview = leave && previewQuery != null
         ? ref.watch(leavePreviewProvider(previewQuery!))
         : null;
     return PopScope(
-      canPop: !dirty,
+      canPop: !dirty && !saving,
       onPopInvokedWithResult: (didPop, _) async {
         if (!didPop && await discard() && context.mounted) {
           setState(() => dirty = false);
@@ -315,451 +352,249 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       child: AppPage(
         canLeave: discard,
         title: leave
-            ? 'Request time off'
+            ? 'Request leave'
             : correction
-            ? 'Fix attendance'
+            ? 'Attendance correction'
             : 'New request',
         subtitle: leave
-            ? 'Plan a break. We’ll take care of the paperwork.'
+            ? 'Choose your dates and review the chargeable leave before sending.'
             : correction
             ? 'Help your manager understand what needs correcting.'
             : 'A clear request is easier to approve.',
+        bottom: FormActions(
+          saving: saving,
+          draft: !leave && !correction,
+          submit: submit,
+          error: error,
+        ),
         children: [
+          if (!supportsFormDrafts)
+            const Surface(
+              child: Text(
+                'Unsaved changes stay on this screen. Draft recovery is not available in this workspace.',
+              ),
+            ),
           Form(
             key: form,
             onChanged: markDirty,
-            child: Surface(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (leave)
-                    AsyncPanel(
-                      value: ref.watch(collectionProvider('/leave/types')),
-                      retry: () =>
-                          ref.invalidate(collectionProvider('/leave/types')),
-                      builder: (types) => DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        itemHeight: null,
-                        initialValue: type,
-                        decoration: const InputDecoration(
-                          labelText: 'Leave type',
-                        ),
-                        items: [
-                          for (final t in types)
-                            DropdownMenuItem(
-                              value: t['id'] as String,
-                              child: Text(t['name'] as String),
-                            ),
-                        ],
-                        onChanged: saving
-                            ? null
-                            : (v) => setState(() {
-                                type = v;
-                                if (types.firstWhere(
-                                      (row) => row['id'] == v,
-                                    )['allowHalfDay'] ==
-                                    false) {
-                                  portion = 'FULL_DAY';
-                                }
-                              }),
-                        validator: (v) =>
-                            v == null ? 'Choose a leave type' : null,
-                      ),
-                    ),
-                  if (!leave && !correction) ...[
-                    TextFormField(
-                      controller: title,
-                      decoration: const InputDecoration(
-                        labelText: 'Request title',
-                        hintText: 'What do you need?',
-                      ),
-                      maxLength: 100,
-                      validator: (v) => (v?.trim().length ?? 0) < 3
-                          ? 'Enter at least 3 characters'
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    AsyncPanel(
-                      value: ref.watch(collectionProvider('/requests/types')),
-                      retry: () =>
-                          ref.invalidate(collectionProvider('/requests/types')),
-                      builder: (types) => DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        itemHeight: null,
-                        initialValue: types.any((t) => t['code'] == requestType)
-                            ? requestType
-                            : null,
-                        decoration: const InputDecoration(
-                          labelText: 'Request type',
-                        ),
-                        items: [
-                          for (final t in types.where(
-                            (t) => t['active'] != false,
-                          ))
-                            DropdownMenuItem(
-                              value: t['code'] as String,
-                              child: Text(t['name'] as String),
-                            ),
-                        ],
-                        validator: (v) => v == null
-                            ? 'Choose an available request type'
-                            : null,
-                        onChanged: saving
-                            ? null
-                            : (v) => setState(() => requestType = v!),
-                      ),
-                    ),
-                    if (requestType == 'MATERIAL') ...[
-                      const SizedBox(height: 16),
-                      FormField<String>(
-                        key: ValueKey(
-                          'material-${additionalMaterials.length}-$material',
-                        ),
-                        initialValue: material,
-                        validator: (value) =>
-                            value == null && additionalMaterials.isEmpty
-                            ? 'Choose a material'
-                            : null,
-                        builder: (field) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const Text('Material · Required'),
-                            OutlinedButton.icon(
-                              icon: Icon(Icons.search),
-                              label: Text(
-                                materialName ?? material ?? 'Search materials',
-                              ),
-                              onPressed: saving
-                                  ? null
-                                  : () async {
-                                      final selected =
-                                          await showPagedCaseLookup(
-                                            context,
-                                            'requests.inventory',
-                                            'material',
-                                          );
-                                      if (selected == null || !mounted) return;
-                                      if (additionalMaterials.any(
-                                        (item) =>
-                                            item['materialId'] == selected.id,
-                                      )) {
-                                        setState(
-                                          () => error =
-                                              'This material is already added.',
-                                        );
-                                        return;
-                                      }
-                                      setState(() {
-                                        material = selected.id;
-                                        materialName = selected.title;
-                                        materialLabels[selected.id] =
-                                            selected.title;
-                                      });
-                                      field.didChange(selected.id);
-                                      markDirty();
-                                    },
-                            ),
-                            if (field.hasError)
-                              Text(
-                                field.errorText!,
-                                style: TextStyle(color: context.semantic.error),
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: quantity,
-                        decoration: const InputDecoration(
-                          labelText: 'Quantity',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (v) {
-                          if (material == null &&
-                              additionalMaterials.isNotEmpty) {
-                            return null;
-                          }
-                          final n = int.tryParse(v ?? '');
-                          return n == null || n < 1 || n > 100
-                              ? 'Enter a quantity from 1 to 100'
-                              : null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      for (final item in additionalMaterials)
-                        Card(
-                          child: ListTile(
-                            title: Text(
-                              materialLabels[item['materialId']] ??
-                                  item['materialId']?.toString() ??
-                                  'Material',
-                            ),
-                            subtitle: Text('Quantity: ${item['quantity']}'),
-                            trailing: IconButton(
-                              tooltip: 'Remove material',
-                              onPressed: saving
-                                  ? null
-                                  : () {
-                                      setState(
-                                        () => additionalMaterials.remove(item),
-                                      );
-                                      markDirty();
-                                    },
-                              icon: Icon(Icons.close),
-                            ),
-                          ),
-                        ),
-                      TextButton.icon(
-                        onPressed: saving || material == null
-                            ? null
-                            : () {
-                                final qty = int.tryParse(quantity.text);
-                                if (qty == null || qty < 1 || qty > 100) {
-                                  setState(
-                                    () => error =
-                                        'Enter a quantity from 1 to 100.',
-                                  );
-                                  return;
-                                }
-                                setState(() {
-                                  additionalMaterials.add({
-                                    'materialId': material,
-                                    'quantity': qty,
-                                  });
-                                  material = null;
-                                  materialName = null;
-                                  quantity.text = '1';
-                                  error = null;
-                                });
-                                markDirty();
-                              },
-                        icon: Icon(Icons.add),
-                        label: Text('Add another material'),
-                      ),
-                    ],
-                  ],
-                  if (leave ||
-                      correction ||
-                      requestType != 'GENERAL' &&
-                          requestType != 'MATERIAL') ...[
-                    const SizedBox(height: 20),
-                    _FieldButton(
-                      label: correction ? 'Correct clock-in date' : 'From',
-                      value: shortDate(iso(from)),
-                      icon: Icons.calendar_today_outlined,
-                      onTap: saving ? null : () => date(true),
-                    ),
-                    if (leave ||
-                        correction ||
-                        requestType == 'REMOTE_WORK') ...[
-                      const SizedBox(height: 12),
-                      _FieldButton(
-                        label: correction ? 'Correct clock-out date' : 'To',
-                        value: shortDate(iso(to)),
-                        icon: Icons.calendar_today_outlined,
-                        onTap: saving ? null : () => date(false),
-                      ),
-                    ],
-                    if (leave && halfDayAllowed) ...[
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        isExpanded: true,
-                        itemHeight: null,
-                        initialValue: portion,
-                        decoration: const InputDecoration(
-                          labelText: 'Day portion',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'FULL_DAY',
-                            child: Text('Full day'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'MORNING',
-                            child: Text('Morning only'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'AFTERNOON',
-                            child: Text('Afternoon only'),
-                          ),
-                        ],
-                        onChanged: saving
-                            ? null
-                            : (v) => setState(() => portion = v!),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Weekends and company holidays are excluded in the demo. Your company’s policy determines the final balance.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.semantic.textMuted,
-                        ),
-                      ),
-                    ],
-                    if (leave && previewQuery != null) ...[
-                      const SizedBox(height: 16),
-                      AsyncPanel(
-                        value: leavePreview!,
-                        retry: () =>
-                            ref.invalidate(leavePreviewProvider(previewQuery!)),
-                        builder: (preview) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Before you submit',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            InfoRow(
-                              'Chargeable',
-                              formatLeaveDays(preview.chargeableDays),
-                            ),
-                            InfoRow(
-                              'Available before',
-                              formatLeaveDays(preview.balanceBefore),
-                            ),
-                            InfoRow(
-                              'Balance after',
-                              formatLeaveDays(preview.balanceAfter),
-                            ),
-                            if (preview.minimumNoticeDays > 0)
-                              InfoRow(
-                                'Minimum notice',
-                                '${preview.minimumNoticeDays} days',
-                              ),
-                            for (final warning in preview.warnings)
-                              Text(
-                                warning,
-                                style: TextStyle(color: context.semantic.error),
-                              ),
-                            if (preview.evidenceRequired) ...[
-                              Text(
-                                'Supporting evidence is required before submission.',
-                              ),
-                              OutlinedButton.icon(
-                                onPressed: saving ? null : chooseEvidence,
-                                icon: Icon(Icons.attach_file),
-                                label: Text(
-                                  evidenceName ?? 'Choose PDF or image',
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (correction ||
-                        requestType == 'LATE_ARRIVAL' ||
-                        requestType == 'EARLY_LEAVE') ...[
-                      const SizedBox(height: 16),
-                      _FieldButton(
-                        label: correction
-                            ? 'Correct clock-in time'
-                            : 'From time',
-                        value: start.format(context),
-                        icon: Icons.schedule_outlined,
-                        onTap: saving ? null : () => time(true),
-                      ),
-                      const SizedBox(height: 12),
-                      _FieldButton(
-                        label: correction
-                            ? 'Correct clock-out time'
-                            : 'To time',
-                        value: end.format(context),
-                        icon: Icons.schedule_outlined,
-                        onTap: saving ? null : () => time(false),
-                      ),
-                      if (correction) ...[
-                        const SizedBox(height: 12),
-                        Text('Company time zone: Asia/Phnom_Penh (UTC+07)'),
-                        if (iso(to) != iso(from))
-                          Text(
-                            'Ends next day',
-                            key: Key('correction-next-day'),
-                          ),
-                        const SizedBox(height: 12),
-                        Text('Original recorded time'),
+            child: FocusScope(
+              canRequestFocus: !saving,
+              child: AbsorbPointer(
+                absorbing: saving,
+                child: Surface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (leave)
                         AsyncPanel(
-                          value: ref.watch(sessionsProvider),
-                          retry: () => ref.invalidate(sessionsProvider),
-                          builder: (sessions) {
-                            final originals = sessions.where((s) {
-                              final day = s.clockIn.toUtc().add(
-                                CorrectionTime.companyOffset,
-                              );
-                              return iso(day) == iso(from);
-                            }).toList();
-                            if (originals.isEmpty) {
-                              return Text('No recorded session on this date');
-                            }
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                for (final s in originals)
-                                  Text(
-                                    '${CorrectionTime.display(s.clockIn)} → ${CorrectionTime.display(s.clockOut)}',
-                                  ),
-                              ],
-                            );
+                          value: ref.watch(collectionProvider('/leave/types')),
+                          retry: () => ref.invalidate(
+                            collectionProvider('/leave/types'),
+                          ),
+                          builder: (types) => DropdownButtonFormField<String>(
+                            isExpanded: true,
+                            itemHeight: null,
+                            initialValue: type,
+                            decoration: const InputDecoration(
+                              labelText: 'Leave type',
+                            ),
+                            items: [
+                              for (final t in types)
+                                DropdownMenuItem(
+                                  value: t['id'] as String,
+                                  child: Text(t['name'] as String),
+                                ),
+                            ],
+                            onChanged: saving
+                                ? null
+                                : (v) => setState(() {
+                                    type = v;
+                                    if (types.firstWhere(
+                                          (row) => row['id'] == v,
+                                        )['allowHalfDay'] ==
+                                        false) {
+                                      portion = 'FULL_DAY';
+                                    }
+                                  }),
+                            validator: (v) =>
+                                v == null ? 'Choose a leave type' : null,
+                          ),
+                        ),
+                      if (!leave && !correction) ...[
+                        RequestDetailsFields(
+                          title: title,
+                          requestType: requestType,
+                          locked:
+                              widget.initial != null &&
+                              !ref.read(clientProvider).isLocal,
+                          saving: saving,
+                          onTypeChanged: (value) {
+                            setState(() => requestType = value);
+                            markDirty();
                           },
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Proposed: ${CorrectionTime.display(CorrectionTime.instant(from, start.hour, start.minute))} → ${CorrectionTime.display(CorrectionTime.instant(to, end.hour, end.minute))}',
+                        if (requestType == 'MATERIAL')
+                          MaterialRequestFields(
+                            material: material,
+                            materialName: materialName,
+                            quantity: quantity,
+                            additional: additionalMaterials,
+                            labels: materialLabels,
+                            saving: saving,
+                            select: (selected) {
+                              setState(() {
+                                material = selected.id;
+                                materialName = selected.title;
+                                materialLabels[selected.id] = selected.title;
+                              });
+                              markDirty();
+                            },
+                            remove: (item) {
+                              setState(() => additionalMaterials.remove(item));
+                              markDirty();
+                            },
+                            fail: (value) => setState(() => error = value),
+                            add: () {
+                              final count = int.tryParse(quantity.text);
+                              if (count == null || count < 1 || count > 100) {
+                                setState(
+                                  () =>
+                                      error = 'Enter a quantity from 1 to 100.',
+                                );
+                                return;
+                              }
+                              setState(() {
+                                additionalMaterials.add({
+                                  'materialId': material,
+                                  'quantity': count,
+                                });
+                                material = null;
+                                materialName = null;
+                                quantity.text = '1';
+                                error = null;
+                              });
+                              markDirty();
+                            },
+                          ),
+                      ],
+                      WorkflowDateFields(
+                        kind: widget.kind,
+                        requestType: requestType,
+                        portion: portion,
+                        from: from,
+                        to: to,
+                        start: start,
+                        end: end,
+                        halfDayAllowed: halfDayAllowed,
+                        saving: saving,
+                        pickDate: date,
+                        pickTime: time,
+                        changePortion: (value) {
+                          setState(() => portion = value);
+                          markDirty();
+                        },
+                      ),
+                      if (leave && previewQuery != null) ...[
+                        const SizedBox(height: 16),
+                        AsyncPanel(
+                          value: leavePreview!,
+                          retry: () => ref.invalidate(
+                            leavePreviewProvider(previewQuery!),
+                          ),
+                          builder: (preview) => LeavePreviewPanel(
+                            preview: preview,
+                            evidenceName: evidenceName,
+                            chooseEvidence: saving ? null : chooseEvidence,
+                          ),
                         ),
                       ],
-                    ],
-                  ],
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: reason,
-                    decoration: InputDecoration(
-                      labelText: correction ? 'What happened?' : 'Reason',
-                      hintText: 'Add enough detail for your reviewer.',
-                    ),
-                    maxLines: 5,
-                    maxLength: 1000,
-                    validator: (v) => (v?.trim().length ?? 0) < 5
-                        ? 'Give a reason with at least 5 characters'
-                        : null,
-                  ),
-                  if (error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        error!,
-                        style: TextStyle(color: context.semantic.error),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: reason,
+                        decoration: InputDecoration(
+                          labelText: correction ? 'What happened?' : 'Reason',
+                          hintText: 'Add enough detail for your reviewer.',
+                        ),
+                        maxLines: 5,
+                        maxLength: 1000,
+                        validator: (v) => (v?.trim().length ?? 0) < 5
+                            ? 'Give a reason with at least 5 characters'
+                            : null,
                       ),
-                    ),
-                  const SizedBox(height: 8),
-                  FilledButton.icon(
-                    onPressed: saving ? null : submit,
-                    icon: saving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(Icons.arrow_forward),
-                    label: Text(
-                      saving
-                          ? 'Saving…'
-                          : !leave && !correction
-                          ? 'Save request draft'
-                          : 'Send for approval',
-                    ),
-                  ),
-                  if (!leave && !correction)
-                    Padding(
-                      padding: EdgeInsets.only(top: 12),
-                      child: Text(
-                        'You can add attachments and review the draft before submitting.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: context.semantic.textMuted,
+                      const SizedBox(height: 8),
+                      if (!leave && !correction)
+                        Padding(
+                          padding: EdgeInsets.only(top: 12),
+                          child: Text(
+                            'You can add attachments and review the draft before submitting.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: context.semantic.textMuted,
+                            ),
+                          ),
+                        ),
+                      AnimatedBuilder(
+                        animation: Listenable.merge([title, quantity]),
+                        builder: (context, _) => FormReview(
+                          key: const ValueKey('form-review'),
+                          rows: [
+                            if (!leave && !correction)
+                              (
+                                'Request',
+                                title.text.trim().isEmpty
+                                    ? 'Enter a request title'
+                                    : title.text.trim(),
+                              ),
+                            (
+                              'Type',
+                              leave
+                                  ? (selectedPolicy?['name']?.toString() ??
+                                        'Choose a leave type')
+                                  : correction
+                                  ? 'Attendance correction'
+                                  : requestName,
+                            ),
+                            if (leave ||
+                                correction ||
+                                !['GENERAL', 'MATERIAL'].contains(requestType))
+                              (
+                                'Dates',
+                                '${shortDate(iso(from))} → ${shortDate(iso(to))}',
+                              ),
+                            if (leave)
+                              (
+                                'Day portion',
+                                switch (portion) {
+                                  'MORNING' => 'Morning only',
+                                  'AFTERNOON' => 'Afternoon only',
+                                  _ => 'Full day',
+                                },
+                              ),
+                            if (!leave &&
+                                !correction &&
+                                requestType == 'MATERIAL')
+                              (
+                                'Materials',
+                                '${additionalMaterials.length + (material == null ? 0 : 1)} selected',
+                              ),
+                            if (correction ||
+                                [
+                                  'LATE_ARRIVAL',
+                                  'EARLY_LEAVE',
+                                ].contains(requestType))
+                              (
+                                'Times',
+                                '${start.format(context)} → ${end.format(context)}',
+                              ),
+                          ],
+                          nextStep: !leave && !correction
+                              ? 'Save a draft, then submit it from the request details.'
+                              : 'Send these details for approval. The server checks your company rules.',
                         ),
                       ),
-                    ),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -769,37 +604,33 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
   }
 
   Future<void> submit() async {
-    if (!form.currentState!.validate()) return;
+    if (saving) return;
+    final invalid = form.currentState!.validateGranularly();
+    if (invalid.isNotEmpty) {
+      setState(() => error = 'Check the highlighted fields before continuing.');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && invalid.first.mounted) {
+          Scrollable.ensureVisible(invalid.first.context, alignment: .1);
+        }
+      });
+      return;
+    }
+    setState(() => error = null);
     final leave = widget.kind == 'leave',
         correction = widget.kind == 'correction';
     if (to.isBefore(from)) {
       setState(() => error = 'The end date must follow the start date.');
       return;
     }
+    if (leave && from.year != to.year) {
+      setState(
+        () => error = 'Create a separate leave request for each calendar year.',
+      );
+      return;
+    }
     if (leave && portion != 'FULL_DAY' && from != to) {
       setState(() => error = 'Half-day requests must be on a single date.');
       return;
-    }
-    if (leave && previewQuery != null) {
-      try {
-        final preview = await ref.read(
-          leavePreviewProvider(previewQuery!).future,
-        );
-        if (!mounted) return;
-        if (preview.warnings.isNotEmpty) {
-          setState(() => error = preview.warnings.first);
-          return;
-        }
-        if (preview.evidenceRequired && evidenceBytes == null) {
-          setState(
-            () => error = 'Supporting evidence is required before submission.',
-          );
-          return;
-        }
-      } catch (failure) {
-        if (mounted) setState(() => error = message(failure));
-        return;
-      }
     }
     if (correction) {
       final problem = CorrectionTime.validate(
@@ -895,7 +726,24 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
       saving = true;
       error = null;
     });
+    FocusScope.of(context).unfocus();
     try {
+      if (leave && previewQuery != null) {
+        final preview = await ref.read(
+          leavePreviewProvider(previewQuery!).future,
+        );
+        if (!mounted) return;
+        if (preview.warnings.isNotEmpty) {
+          setState(() => error = preview.warnings.first);
+          return;
+        }
+        if (preview.evidenceRequired && evidenceBytes == null) {
+          setState(
+            () => error = 'Supporting evidence is required before submission.',
+          );
+          return;
+        }
+      }
       draftDebounce?.cancel();
       await draftWrite;
       WorkflowRecord record;
@@ -922,9 +770,11 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
               .read(workflowRepositoryProvider('leave'))
               .attach(record, evidenceName!, evidenceBytes!);
         }
-        await ref
-            .read(workflowRepositoryProvider(widget.kind))
-            .clearFormDraft(widget.kind);
+        if (supportsFormDrafts) {
+          await ref
+              .read(workflowRepositoryProvider(widget.kind))
+              .clearFormDraft(widget.kind);
+        }
       }
       ref.invalidate(recordsProvider);
       ref.invalidate(balancesProvider);
@@ -942,78 +792,5 @@ class _RequestFormState extends ConsumerState<RequestFormPage> {
     } finally {
       if (mounted) setState(() => saving = false);
     }
-  }
-}
-
-class _FieldButton extends StatelessWidget {
-  final String label, value;
-  final IconData icon;
-  final VoidCallback? onTap;
-  const _FieldButton({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.onTap,
-  });
-  @override
-  Widget build(BuildContext c) => OutlinedButton(
-    onPressed: onTap,
-    style: OutlinedButton.styleFrom(
-      padding: const EdgeInsets.all(16),
-      alignment: Alignment.centerLeft,
-    ),
-    child: Row(
-      children: [
-        Icon(icon, size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(fontSize: 12, color: c.semantic.textMuted),
-              ),
-              Text(value, style: TextStyle(fontSize: 16)),
-            ],
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class EditRequestPage extends ConsumerWidget {
-  final String id;
-  const EditRequestPage(this.id, {super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final provider = detailProvider((kind: 'request', id: id));
-    return ref
-        .watch(provider)
-        .when(
-          loading: () =>
-              const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (e, st) => AppPage(
-            title: 'Edit draft',
-            children: [
-              Text(message(e)),
-              TextButton(
-                onPressed: () => ref.invalidate(provider),
-                child: Text('Try again'),
-              ),
-            ],
-          ),
-          data: (record) =>
-              record.status == 'DRAFT' &&
-                  record.employeeId == ref.watch(sessionProvider).profile?.id
-              ? RequestFormPage('request', initial: record)
-              : AppPage(
-                  title: 'Draft unavailable',
-                  children: const [
-                    Text('Only your draft request can be edited.'),
-                  ],
-                ),
-        );
   }
 }

@@ -6,5 +6,6 @@ abstract interface class NotificationsRepository
     implements CaseGateway, ResourceGateway {
   Future<List<InboxMessage>> inbox();
   Future<void> markRead(String? id);
-  Future<void> savePreferences(Map<String, dynamic> values);
+  Future<NotificationPreferences> preferences();
+  Future<void> savePreferences(NotificationPreferences preferences);
 }

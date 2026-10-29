@@ -67,7 +67,7 @@ class _EvidenceState extends ConsumerState<EvidenceCapturePage> {
       value,
       latitude: (site.values['latitude'] as num).toDouble(),
       longitude: (site.values['longitude'] as num).toDouble(),
-      radius: (site.values['radiusMeters'] as num).toDouble(),
+      radius: (site.values['radiusM'] as num).toDouble(),
       entering: transition == 'GEOFENCE_ENTER',
     );
     if (!supported) {

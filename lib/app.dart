@@ -1,5 +1,6 @@
 import 'features/notifications/application/push.dart';
 import 'features/identity/presentation/setup_page.dart';
+import 'features/identity/presentation/access_help.dart';
 import 'features/attendance/presentation/evidence_page.dart';
 import 'app/feature_panels.dart';
 import 'app/workspace_banner.dart';
@@ -24,6 +25,7 @@ import 'package:hrflow_mobile/features/dashboard/presentation/home_page.dart';
 import 'package:hrflow_mobile/features/dashboard/presentation/workspace_navigation.dart';
 import 'package:hrflow_mobile/features/attendance/presentation/activity_page.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/form_page.dart';
+import 'package:hrflow_mobile/features/workflows/presentation/edit_request_page.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/workflow_pages.dart';
 import 'package:hrflow_mobile/features/workflows/presentation/approval_position.dart';
 import 'package:hrflow_mobile/features/approvals/presentation/delegations_page.dart';
@@ -42,7 +44,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final location = state.uri.path;
       if (session.loading) return location == '/startup' ? null : '/startup';
       if (session.profile == null) {
-        return ['/login', '/setup'].contains(location) ? null : '/login';
+        return ['/login', '/setup', '/help'].contains(location)
+            ? null
+            : '/login';
       }
       if (session.locked) return location == '/lock' ? null : '/lock';
       if (['/login', '/startup', '/lock'].contains(location)) return '/home';
@@ -56,9 +60,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           !session.profile!.manages) {
         return '/home';
       }
+      if (location == '/audit' && session.profile!.role != 'OWNER') {
+        return '/home';
+      }
       if ((location.startsWith('/manage/') ||
-              location.startsWith('/people/') ||
-              location == '/audit') &&
+              location.startsWith('/people/')) &&
           !session.profile!.administers) {
         return '/home';
       }
@@ -84,6 +90,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(path: '/setup', builder: (_, _) => const WorkspaceSetupPage()),
+      GoRoute(path: '/help', builder: (_, _) => const GettingStartedPage()),
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/lock', builder: (_, _) => const LockPage()),
       ShellRoute(

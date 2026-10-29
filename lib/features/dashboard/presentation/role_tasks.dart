@@ -27,14 +27,12 @@ class RoleTasks extends ConsumerWidget {
         ? null
         : now.difference(created.first).inDays;
     final corrections = rows.where((row) => row.kind == 'correction').length;
-    final openSessions = profile.administers
-        ? ref
-              .watch(teamAttendanceProvider)
-              .asData
-              ?.value
-              .where((row) => row.clockOut == null)
-              .length
+    final attendance = profile.administers
+        ? ref.watch(teamAttendanceProvider)
         : null;
+    final openSessions = attendance?.asData?.value
+        .where((row) => row.clockOut == null)
+        .length;
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 8),
       child: Surface(
@@ -50,13 +48,19 @@ class RoleTasks extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              pending.isLoading
+              pending.hasError
+                  ? 'Approval counts are unavailable. Open the queue or pull to refresh.'
+                  : pending.isLoading
                   ? 'Loading current work…'
-                  : '${rows.length} pending approvals${oldestDays == null ? '' : ' · oldest $oldestDays days'}',
+                  : '${rows.length} pending ${rows.length == 1 ? 'approval' : 'approvals'}${oldestDays == null ? '' : ' · oldest ${oldestDays < 0 ? 0 : oldestDays} ${oldestDays == 1 ? 'day' : 'days'}'}',
             ),
-            if (profile.administers)
+            if (profile.administers && !pending.hasError && !pending.isLoading)
               Text(
-                '$corrections pending corrections · ${openSessions == null ? 'attendance loading' : '$openSessions open attendance sessions'}',
+                '$corrections pending ${corrections == 1 ? 'correction' : 'corrections'} · ${attendance?.hasError == true
+                    ? 'attendance unavailable'
+                    : openSessions == null
+                    ? 'attendance loading'
+                    : '$openSessions open attendance ${openSessions == 1 ? 'session' : 'sessions'}'}',
               ),
             Align(
               alignment: Alignment.centerRight,
@@ -65,6 +69,25 @@ class RoleTasks extends ConsumerWidget {
                 icon: const Icon(Icons.arrow_forward),
                 label: const Text('Open approval queue'),
               ),
+            ),
+            Wrap(
+              spacing: 12,
+              children: [
+                TextButton(
+                  onPressed: () => context.push('/team-attendance'),
+                  child: const Text('Team attendance'),
+                ),
+                if (profile.administers)
+                  TextButton(
+                    onPressed: () => context.push('/directory'),
+                    child: const Text('People directory'),
+                  ),
+                if (profile.role == 'OWNER')
+                  TextButton(
+                    onPressed: () => context.push('/audit'),
+                    child: const Text('Audit activity'),
+                  ),
+              ],
             ),
           ],
         ),

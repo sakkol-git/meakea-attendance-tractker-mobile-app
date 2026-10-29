@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
-import 'package:hrflow_mobile/features/identity/presentation/assignments_page.dart';
+import 'package:hrflow_mobile/features/identity/presentation/assignment_section.dart';
 
 class SchedulePage extends ConsumerWidget {
   const SchedulePage({super.key});

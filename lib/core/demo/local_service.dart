@@ -6,6 +6,8 @@ import 'package:hrflow_mobile/core/leave_quantity.dart';
 part '../../features/identity/data/local_handler.dart';
 part '../../features/operations/data/local_handler.dart';
 part '../../features/identity/data/case_local.dart';
+part '../../features/identity/data/shift_case_local.dart';
+part '../../features/identity/data/schedule_seed.dart';
 part '../../features/leave/data/local_handler.dart';
 part '../../features/leave/data/case_local.dart';
 part '../../features/notifications/data/local_handler.dart';
@@ -153,16 +155,7 @@ class LocalDataSource implements DataSource {
       {'id': 'designer', 'name': 'Product designer', 'version': 1},
       {'id': 'engineer', 'name': 'Software engineer', 'version': 1},
     ];
-    _rows['/shifts'] = [
-      {
-        'id': 'shift-standard',
-        'name': 'Standard workday',
-        'startTime': '08:30',
-        'endTime': '17:30',
-        'days': 'Monday–Friday',
-        'version': 1,
-      },
-    ];
+    _seedSchedules();
     _rows['/holidays'] = [
       {
         'id': 'holiday-1',
@@ -206,18 +199,6 @@ class LocalDataSource implements DataSource {
         'version': 1,
       },
       {'id': 'keyboard', 'name': 'Keyboard', 'unit': 'item', 'version': 1},
-    ];
-    _rows['/work-sites'] = [
-      {
-        'id': 'site-headquarters',
-        'name': 'Headquarters',
-        'latitude': 11.5564,
-        'longitude': 104.9282,
-        'radiusMeters': 200,
-        'timezone': 'Asia/Phnom_Penh',
-        'status': 'ACTIVE',
-        'version': 1,
-      },
     ];
     _rows['/exports'] = [];
     _rows['/approval-delegations'] = [];

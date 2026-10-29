@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:hrflow_mobile/features/identity/data/session_client.dart';
+import 'package:hrflow_mobile/features/identity/data/mappers.dart';
 import 'package:hrflow_mobile/core/demo/local_service.dart';
 import 'package:hrflow_mobile/core/data/remote_source.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
@@ -15,6 +16,24 @@ Matcher failure(int status, String code) => isA<DataFailure>()
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('assignment snapshot supplies shift, site and timezone labels', () {
+    final row = ShiftMapper.assignment({
+      'id': 'assignment-1',
+      'employeeId': 'employee-1',
+      'shiftId': 'shift-1',
+      'validFrom': '2026-11-01',
+      'validTo': null,
+      'version': 0,
+      'shiftSnapshot': {
+        'name': 'Morning',
+        'timezone': 'Asia/Phnom_Penh',
+        'site': {'name': 'Main office'},
+      },
+    });
+    expect(row.shiftName, 'Morning');
+    expect(row.siteName, 'Main office');
+    expect(row.timezone, 'Asia/Phnom_Penh');
+  });
   test('leave cancellation and correction rejection', () async {
     final seed = jsonDecode(
       File('assets/data/demo-seed.json').readAsStringSync(),
@@ -333,6 +352,50 @@ void main() {
     expect((await source.send(r)).etag, '"4"');
     token = 'rotated-test-token';
     expect((await source.send(r)).data, isNull);
+    source.close();
+  });
+
+  test('remote employee master uses the compatible v2 route', () async {
+    final source = RemoteDataSource(
+      'https://example.test/api/v1',
+      () => 'token',
+      client: MockClient((request) async {
+        expect(request.url.path, '/api/v2/employees');
+        return http.Response('{"items":[],"page":0,"size":20,"total":0}', 200);
+      }),
+    );
+    final result = await source.send(const DataRequest('GET', '/employees'));
+    expect((result.data as Map)['total'], 0);
+    source.close();
+  });
+
+  test('remote site and shift masters use v2 routes', () async {
+    final paths = <String>[];
+    final source = RemoteDataSource(
+      'https://example.test/api/v1',
+      () => 'token',
+      client: MockClient((request) async {
+        paths.add(request.url.path);
+        return http.Response('{"items":[],"page":0,"size":0,"total":0}', 200);
+      }),
+    );
+    await source.send(const DataRequest('GET', '/work-sites'));
+    await source.send(const DataRequest('GET', '/shifts'));
+    await source.send(const DataRequest('GET', '/holidays'));
+    await source.send(
+      const DataRequest(
+        'GET',
+        '/employees/00000000-0000-4000-8000-000000000001/shifts',
+      ),
+    );
+    await source.send(const DataRequest('GET', '/shift-assignments'));
+    expect(paths, [
+      '/api/v2/work-sites',
+      '/api/v2/shifts',
+      '/api/v2/holidays',
+      '/api/v2/employees/00000000-0000-4000-8000-000000000001/shifts',
+      '/api/v2/shift-assignments',
+    ]);
     source.close();
   });
 

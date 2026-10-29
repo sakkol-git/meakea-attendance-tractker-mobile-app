@@ -1087,7 +1087,7 @@ void main() {
   testWidgets('acceptance F08 audit rows retain time of day', (tester) async {
     final c = _client();
     addTearDown(c.close);
-    await c.demoLogin('HR_ADMIN');
+    await c.demoLogin('OWNER');
     final original = await c.request(
       DataRequest('GET', '/employees/demo-employee'),
     );
@@ -1111,7 +1111,7 @@ void main() {
     final actor =
         ((auditBefore.data as Map)['items'] as List).first['actor'] as String;
     final container = await _app(tester, c);
-    await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+    await container.read(sessionProvider.notifier).demo('OWNER');
     container.read(routerProvider).go('/audit');
     await tester.pumpAndSettle();
     expect(find.textContaining(actor), findsNWidgets(2));
@@ -1298,7 +1298,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(
         find.textContaining(
-          '/leave/requests: Last updated 23 Oct 2026 · 10:00:00 UTC+07',
+          'Leave: Last updated 23 Oct 2026 · 10:00:00 UTC+07',
         ),
         findsOneWidget,
       );

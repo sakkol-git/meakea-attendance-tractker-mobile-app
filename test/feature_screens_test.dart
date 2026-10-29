@@ -118,8 +118,20 @@ void main() {
       await container.read(sessionProvider.notifier).demo('EMPLOYEE');
       container.read(routerProvider).go('/features/leave.balances');
       await tester.pumpAndSettle();
-      expect(find.text('All workflows'), findsWidgets);
+      expect(find.text('Tasks'), findsWidgets);
       expect(find.text('Adjust entitlement'), findsNothing);
+      await container.read(sessionProvider.notifier).demo('OWNER');
+      container.read(routerProvider).go('/workflows');
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Search tasks'),
+        'Report recovery',
+      );
+      await tester.pumpAndSettle();
+      tester.testTextInput.hide();
+      await tester.drag(find.byType(ListView).first, const Offset(0, -3000));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(ListTile, 'Report recovery'), findsNothing);
     },
   );
 }

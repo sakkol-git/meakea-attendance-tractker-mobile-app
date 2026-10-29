@@ -14,14 +14,16 @@ class LeaveBalance {
 }
 
 class LeavePreview {
-  final double chargeableDays, balanceBefore, balanceAfter;
-  final bool allowHalfDay, evidenceRequired;
+  final double chargeableDays;
+  final double? balanceBefore, balanceAfter;
+  final bool balanceTracked, allowHalfDay, evidenceRequired;
   final int minimumNoticeDays;
   final List<String> warnings;
   const LeavePreview({
     required this.chargeableDays,
     required this.balanceBefore,
     required this.balanceAfter,
+    required this.balanceTracked,
     required this.allowHalfDay,
     required this.evidenceRequired,
     required this.minimumNoticeDays,

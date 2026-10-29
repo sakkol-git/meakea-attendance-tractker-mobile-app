@@ -20,7 +20,30 @@ abstract final class WorkflowRecordMapper {
         kind: kind,
         version: requiredInt(j, 'version'),
         revisionToken: etag ?? j['etag'] as String?,
-        fields: freeze(j) as JsonMap,
+        fields: freeze(_fields(j, kind)) as JsonMap,
         employeeName: j['employeeName'] as String? ?? 'Employee',
       );
+
+  static JsonMap _fields(JsonMap j, String kind) => {
+    ...j,
+    if (kind == 'request' && j['items'] == null && j['lines'] is List)
+      'items': [
+        for (final raw in j['lines'] as List)
+          {...object(raw), 'materialId': object(raw)['materialItemId']},
+      ],
+    if (kind == 'correction') ...{
+      'workDate': j['date'] ?? j['workDate'],
+      'newCheckIn': j['proposedClockIn'] ?? j['newCheckIn'],
+      'newCheckOut': j['proposedClockOut'] ?? j['newCheckOut'],
+    },
+    if (j['attachments'] is List)
+      'attachments': [
+        for (final raw in j['attachments'] as List)
+          {
+            ...object(raw),
+            'name': object(raw)['fileName'] ?? object(raw)['name'],
+            'size': object(raw)['fileSize'] ?? object(raw)['size'],
+          },
+      ],
+  };
 }

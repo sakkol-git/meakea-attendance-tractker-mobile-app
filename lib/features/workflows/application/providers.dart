@@ -56,7 +56,14 @@ class RecordListController extends AsyncNotifier<List<WorkflowRecord>> {
           ? ['leave', 'request', 'correction']
                 .where(
                   (type) =>
-                      query.requestType.isEmpty || type == query.requestType,
+                      (query.requestType.isEmpty ||
+                          type == query.requestType) &&
+                      (type != 'request' ||
+                          ref
+                                  .read(sessionProvider)
+                                  .profile
+                                  ?.canReviewRequests ==
+                              true),
                 )
                 .map(
                   (type) => ref

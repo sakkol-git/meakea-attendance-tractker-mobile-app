@@ -3,12 +3,16 @@ import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/features/identity/domain/models.dart';
 
 abstract final class ProfileMapper {
-  static Profile fromJson(JsonMap j) => Profile(
+  static Profile fromJson(JsonMap j, {bool demo = false}) => Profile(
     id: requiredText(j, 'employeeId'),
     tenantId: requiredText(j, 'tenantId'),
     name: text(j, 'name', text(j, 'fullName', 'Your account')),
     email: text(j, 'email'),
     role: _role(j),
+    grantedRoles: List<String>.unmodifiable(
+      (j['roles'] as List).cast<String>(),
+    ),
+    demo: demo,
     department: text(j, 'department'),
     position: text(j, 'position'),
     organization: text(j, 'organization', 'HRFlow'),
@@ -50,11 +54,19 @@ abstract final class ShiftMapper {
         'The API returned an invalid assignment interval.',
       );
     }
+    final snapshot = j['shiftSnapshot'] is Map
+        ? JsonMap.from(j['shiftSnapshot'] as Map)
+        : const <String, dynamic>{};
+    final site = snapshot['site'] is Map
+        ? JsonMap.from(snapshot['site'] as Map)
+        : const <String, dynamic>{};
     return ShiftAssignment(
       id: requiredText(j, 'id'),
       employeeId: requiredText(j, 'employeeId'),
       shiftId: requiredText(j, 'shiftId'),
-      shiftName: text(j, 'shiftName', 'Work shift'),
+      shiftName: text(j, 'shiftName', text(snapshot, 'name', 'Work shift')),
+      timezone: text(snapshot, 'timezone'),
+      siteName: text(site, 'name'),
       validFrom: from,
       validTo: to,
       version: requiredInt(j, 'version'),

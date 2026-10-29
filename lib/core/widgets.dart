@@ -65,7 +65,7 @@ class AppPage extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.x2),
                     for (final resource in resources)
                       Text(
-                        '${resource.path.split('?').first}: Last updated ${companyTimestamp(resource.savedAt.toIso8601String())}',
+                        '${cachedResourceLabel(resource.path)}: Last updated ${companyTimestamp(resource.savedAt.toIso8601String())}',
                       ),
                     const SizedBox(height: AppSpacing.x2),
                     const Text(
@@ -180,39 +180,58 @@ class AsyncPanel<T> extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => value.when(
     data: builder,
-    loading: () => const Padding(
+    loading: () => Padding(
       padding: EdgeInsets.all(AppSpacing.x8),
-      child: Center(
-        child: CircularProgressIndicator(semanticsLabel: 'Loading'),
+      child: Semantics(
+        liveRegion: true,
+        child: Column(
+          children: [
+            if (MediaQuery.disableAnimationsOf(context))
+              const Icon(Icons.hourglass_empty)
+            else
+              const CircularProgressIndicator(),
+            const SizedBox(height: AppSpacing.x3),
+            const Text('Loading content…'),
+          ],
+        ),
       ),
     ),
-    error: (e, _) => Surface(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.cloud_off_outlined, color: context.semantic.textMuted),
-          const SizedBox(height: AppSpacing.x3),
-          Text(message(e)),
-          const SizedBox(height: AppSpacing.x3),
-          Wrap(
-            spacing: AppSpacing.x2,
-            children: [
-              OutlinedButton.icon(
-                onPressed: () async {
-                  await ref.read(clientProvider).clearCache();
-                  retry();
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text('Try again'),
-              ),
-              if (e is DataFailure && e.status == 401)
-                TextButton(
-                  onPressed: () => ref.read(sessionProvider.notifier).signOut(),
-                  child: const Text('Sign in again'),
+    error: (e, _) => Semantics(
+      liveRegion: true,
+      child: Surface(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.cloud_off_outlined, color: context.semantic.textMuted),
+            const SizedBox(height: AppSpacing.x3),
+            Text(
+              'Could not load this information',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.x2),
+            Text(message(e)),
+            const SizedBox(height: AppSpacing.x3),
+            Wrap(
+              spacing: AppSpacing.x2,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await ref.read(clientProvider).clearCache();
+                    retry();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Try again'),
                 ),
-            ],
-          ),
-        ],
+                if (e is DataFailure && e.status == 401)
+                  TextButton(
+                    onPressed: () =>
+                        ref.read(sessionProvider.notifier).signOut(),
+                    child: const Text('Sign in again'),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -360,7 +379,13 @@ class _BusyButtonState extends State<BusyButton> {
       if (error != null)
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Text(error!, style: TextStyle(color: context.semantic.error)),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              error!,
+              style: TextStyle(color: context.semantic.error),
+            ),
+          ),
         ),
       FilledButton.icon(
         onPressed: busy || !widget.enabled
@@ -378,7 +403,7 @@ class _BusyButtonState extends State<BusyButton> {
                   if (mounted) setState(() => busy = false);
                 }
               },
-        icon: busy
+        icon: busy && !MediaQuery.disableAnimationsOf(context)
             ? const SizedBox(
                 width: 20,
                 height: 20,
@@ -391,5 +416,8 @@ class _BusyButtonState extends State<BusyButton> {
   );
 }
 
-void toast(BuildContext context, String text) =>
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+void toast(BuildContext context, String text) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(SnackBar(content: Text(text)));
+}

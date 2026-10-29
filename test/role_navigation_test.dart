@@ -15,27 +15,46 @@ void main() {
   test('each role has at most five tabs and the correct primary workspace', () {
     expect(workspaceTabs(_profile('EMPLOYEE')).map((tab) => tab.label), [
       'Home',
-      'Activity',
+      'Attendance',
       'Requests',
       'Leave',
-      'Work',
+      'Tasks',
     ]);
     expect(workspaceTabs(_profile('MANAGER')).map((tab) => tab.label), [
       'Home',
-      'Activity',
+      'Attendance',
       'Requests',
       'Approvals',
-      'Work',
+      'Tasks',
     ]);
     for (final role in ['HR_ADMIN', 'OWNER']) {
       expect(workspaceTabs(_profile(role)).map((tab) => tab.label), [
         'Home',
-        'Activity',
+        'Attendance',
         'Requests',
         'Approvals',
-        'Work',
+        'Tasks',
       ]);
     }
+  });
+
+  testWidgets('detail routes keep their parent navigation selected', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          bottomNavigationBar: WorkspaceNavigation(
+            profile: _profile('EMPLOYEE'),
+            location: '/record/leave/one',
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      3,
+    );
   });
 
   testWidgets('manager navigation remains operable at 360px and 200% text', (

@@ -46,11 +46,19 @@ class WorkflowHub extends ConsumerWidget {
     final query = ref.watch(taskSearchProvider).trim().toLowerCase();
     final account = '${actor.tenantId}:${actor.id}';
     final recent = ref.watch(recentTasksProvider(account));
+    final taskPanels = featurePanels
+        .where(
+          (panel) =>
+              !panel.key.startsWith('operations.') &&
+              panel.key != 'reporting.rebuilds' &&
+              canOpenPanel(panel, actor),
+        )
+        .toList();
     bool matches(String title) => title.toLowerCase().contains(query);
     bool canOpenRecent(String path) {
       if (!path.startsWith('/features/')) return true;
       final panel = panelFor(path.substring('/features/'.length));
-      return panel != null && canOpenPanel(panel, actor);
+      return panel != null && taskPanels.contains(panel);
     }
 
     void open(String title, String path) {
@@ -69,11 +77,11 @@ class WorkflowHub extends ConsumerWidget {
       'leave': 'Leave & accounting',
       'requests': 'Requests & materials',
       'notifications': 'Notifications',
-      'reporting': 'Reports & recovery',
+      'reporting': 'Reports',
     };
     return AppPage(
-      title: 'All workflows',
-      subtitle: 'Find an authorized task by name or feature.',
+      title: 'Tasks',
+      subtitle: 'Find a task for your workday or team.',
       children: [
         Surface(
           child: ListTile(
@@ -127,7 +135,7 @@ class WorkflowHub extends ConsumerWidget {
         if (query.isEmpty) const SectionTitle('Daily work'),
         for (final item in [
           ('Clock in or out', '/home'),
-          ('Attendance and inferred reviews', '/activity'),
+          ('Attendance history', '/activity'),
           ('Request an attendance correction', '/new/correction'),
           ('Leave requests and balances', '/leave'),
           ('General and material requests', '/requests'),
@@ -175,7 +183,7 @@ class WorkflowHub extends ConsumerWidget {
             ('Company holidays', '/manage/holidays'),
             ('Leave types', '/manage/leave-types'),
             ('Materials catalog', '/manage/materials'),
-            ('Audit activity', '/audit'),
+            if (actor.role == 'OWNER') ('Audit activity', '/audit'),
           ])
             if (matches(item.$1))
               Padding(
@@ -189,8 +197,10 @@ class WorkflowHub extends ConsumerWidget {
                 ),
               ),
         ],
-        for (final group in groups.entries) ...[
-          if (featurePanels.any(
+        for (final group in groups.entries.where(
+          (entry) => entry.key != 'operations',
+        )) ...[
+          if (taskPanels.any(
             (p) =>
                 p.key.startsWith('${group.key}.') &&
                 canOpenPanel(p, actor) &&
@@ -199,7 +209,7 @@ class WorkflowHub extends ConsumerWidget {
                     matches(group.value)),
           ))
             SectionTitle(group.value),
-          for (final panel in featurePanels.where(
+          for (final panel in taskPanels.where(
             (p) =>
                 p.key.startsWith('${group.key}.') &&
                 canOpenPanel(p, actor) &&

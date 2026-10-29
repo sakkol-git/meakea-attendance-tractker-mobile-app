@@ -1,3 +1,4 @@
+export '../domain/notice_route.dart';
 import '../../identity/application/session.dart';
 
 import 'dart:async';
@@ -67,15 +68,6 @@ class PushRegistrationController extends AsyncNotifier<void> {
       });
     });
   }
-}
-
-String? notificationRecordPath(Map<String, dynamic> data) {
-  final kind = data['kind'], id = data['recordId'];
-  return ['leave', 'request', 'correction'].contains(kind) &&
-          id is String &&
-          RegExp(r'^[a-z0-9-]+$').hasMatch(id)
-      ? '/record/$kind/$id'
-      : null;
 }
 
 final pushOpenedProvider = StreamProvider.autoDispose<Map<String, dynamic>>((

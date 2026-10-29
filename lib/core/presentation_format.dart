@@ -56,3 +56,15 @@ String companyTimestamp(String? value) {
 
 String durationText(Duration value) =>
     '${value.inHours}h ${value.inMinutes.remainder(60)}m';
+
+String cachedResourceLabel(String path) =>
+    switch (Uri.tryParse(path)?.pathSegments.firstOrNull) {
+      'attendance' => 'Attendance',
+      'leave' => 'Leave',
+      'requests' => 'Requests',
+      'notifications' => 'Notifications',
+      'employees' || 'departments' || 'positions' => 'People',
+      'reports' => 'Reports',
+      'shifts' || 'holidays' || 'work-sites' => 'Company schedule',
+      _ => 'Workspace information',
+    };

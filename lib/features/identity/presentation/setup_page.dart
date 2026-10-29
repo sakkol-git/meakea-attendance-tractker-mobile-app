@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../core/widgets.dart';
 import '../../../core/protocol.dart';
+import 'access_help.dart';
 
 class WorkspaceSetupPage extends ConsumerStatefulWidget {
   const WorkspaceSetupPage({super.key});
@@ -31,6 +32,7 @@ class _SetupState extends ConsumerState<WorkspaceSetupPage> {
   }
 
   Future<void> submit() async {
+    if (!ref.read(clientProvider).isLocal || busy) return;
     if (!form.currentState!.validate()) return;
     final body = <String, dynamic>{
       'name': name.text.trim(),
@@ -71,15 +73,17 @@ class _SetupState extends ConsumerState<WorkspaceSetupPage> {
   Widget build(BuildContext context) {
     final local = ref.watch(clientProvider).isLocal;
     return AppPage(
-      title: 'Set up a workspace',
+      title: local ? 'Set up a workspace' : 'Get access to your workspace',
       subtitle: local
           ? 'Configure the fictional demo company. No real account or invitation is created.'
-          : 'An authorized company setup code is required. Your service controls onboarding and owner invitation.',
+          : 'Your HR administrator can help you get started.',
       children: [
-        if (done) ...[
+        if (!local)
+          const AccessHelp()
+        else if (done) ...[
           const Surface(
             child: Text(
-              'Workspace created. Follow the owner invitation supplied by your administrator, then sign in with your company workspace.',
+              'Demo setup complete. Your fictional company details were saved in this demo. No real account or invitation was created. Return to sign in and choose a demo role.',
             ),
           ),
           FilledButton(

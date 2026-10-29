@@ -102,7 +102,15 @@ extension IdentityDemo on LocalDataSource {
           'id': _id(),
           'employeeId': target,
           'shiftId': shift!['id'],
-          'shiftSnapshot': copyJson(shift),
+          'shiftSnapshot': {
+            ...copyJson(shift),
+            'site': copyJson(
+              _table('/work-sites').firstWhere(
+                (row) => row['id'] == shift['siteId'],
+                orElse: () => <String, dynamic>{},
+              ),
+            ),
+          },
           'validFrom': from,
           'validTo': to,
           'version': 1,
@@ -130,7 +138,12 @@ extension IdentityDemo on LocalDataSource {
       return _ok(profile);
     }
     if (r.path == '/audit-logs' && r.method == 'GET') {
-      _need(_admin, 'FORBIDDEN', 'HR access is required.', status: 403);
+      _need(
+        _actor == 'OWNER',
+        'FORBIDDEN',
+        'Owner access is required.',
+        status: 403,
+      );
       return _page(
         _audit
             .where(

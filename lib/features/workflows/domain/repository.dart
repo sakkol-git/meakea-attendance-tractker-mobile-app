@@ -4,6 +4,7 @@ import 'package:hrflow_mobile/shared/domain/resource_gateway.dart';
 
 abstract interface class WorkflowRepository
     implements ResourceGateway, AttachmentsRepository {
+  bool get supportsFormDrafts;
   Future<Map<String, dynamic>?> readFormDraft(String kind);
   Future<void> saveFormDraft(String kind, Map<String, dynamic> payload);
   Future<void> clearFormDraft(String kind);

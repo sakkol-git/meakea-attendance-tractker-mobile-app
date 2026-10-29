@@ -11,3 +11,16 @@ class InboxMessage {
     this.kind,
   );
 }
+
+class NotificationPreferences {
+  final Map<String, bool> values;
+  final String? revisionToken;
+  NotificationPreferences(Map<String, bool> values, {this.revisionToken})
+    : values = Map.unmodifiable(values);
+
+  NotificationPreferences withValue(String key, bool value) =>
+      NotificationPreferences({
+        ...values,
+        key: value,
+      }, revisionToken: revisionToken);
+}

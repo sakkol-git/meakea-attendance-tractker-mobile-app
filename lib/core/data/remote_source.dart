@@ -45,19 +45,35 @@ class RemoteDataSource implements DataSource {
   @override
   Future<DataResponse> send(DataRequest request) async {
     validateRequest(request);
+    final v2Master = RegExp(
+      r'^/(?:employees(?:/[^/]+(?:/shifts)?)?|(?:work-sites|shifts|holidays)(?:/[^/]+)?|shift-assignments(?:/[^/]+/close)?)$',
+    ).hasMatch(request.path);
+    final root = _base.path.replaceFirst(RegExp(r'/$'), '');
     final uri = _base.replace(
-      path: _base.path.replaceFirst(RegExp(r'/$'), '') + request.path,
+      path:
+          (v2Master
+              ? root.replaceFirst(RegExp(r'/api/v1$'), '/api/v2')
+              : root) +
+          request.path,
       queryParameters: request.query.isEmpty ? null : request.query,
     );
     final token = _token();
     final wire = http.Request(request.method, uri)..followRedirects = false;
-    wire.headers['Accept'] = 'application/json, application/problem+json';
+    wire.headers['Accept'] = request.responseType == 'csv'
+        ? 'text/csv, application/problem+json'
+        : request.responseType == 'bytes'
+        ? 'application/pdf, image/png, image/jpeg, application/problem+json'
+        : 'application/json, application/problem+json';
     if (token != null && token.isNotEmpty) {
       wire.headers['Authorization'] = 'Bearer $token';
     }
     if (request.body != null) {
       wire.headers['Content-Type'] = 'application/json';
       wire.body = jsonEncode(request.body);
+    }
+    if (request.bytes != null) {
+      wire.headers['Content-Type'] = request.contentType!;
+      wire.bodyBytes = request.bytes!;
     }
     if (request.idempotencyKey != null) {
       wire.headers['Idempotency-Key'] = request.idempotencyKey!;
@@ -67,6 +83,40 @@ class RemoteDataSource implements DataSource {
       final response = await (() async => http.Response.fromStream(
         await _client.send(wire),
       ))().timeout(timeout);
+      if (request.responseType == 'bytes' && response.statusCode == 200) {
+        final type = response.headers['content-type']
+            ?.split(';')
+            .first
+            .trim()
+            .toLowerCase();
+        if (!['application/pdf', 'image/png', 'image/jpeg'].contains(type) ||
+            response.bodyBytes.isEmpty ||
+            response.bodyBytes.length > 10 * 1024 * 1024) {
+          throw const DataFailure(
+            0,
+            'INVALID_RESPONSE',
+            'The API did not return a supported private file.',
+          );
+        }
+        return DataResponse(200, response.bodyBytes, cacheAllowed: false);
+      }
+      if (request.responseType == 'csv' && response.statusCode == 200) {
+        if (!RegExp(
+          r'^text/csv(?:;|$)',
+          caseSensitive: false,
+        ).hasMatch(response.headers['content-type'] ?? '')) {
+          throw const DataFailure(
+            0,
+            'INVALID_RESPONSE',
+            'The API did not return a CSV file.',
+          );
+        }
+        return DataResponse(
+          200,
+          utf8.decode(response.bodyBytes),
+          cacheAllowed: false,
+        );
+      }
       dynamic data;
       try {
         data = response.statusCode == 204 || response.body.isEmpty

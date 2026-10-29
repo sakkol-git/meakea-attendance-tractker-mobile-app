@@ -3,6 +3,7 @@ import '../../../shared/presentation/case_page.dart';
 import 'decision_dialog.dart';
 import 'record_action_bar.dart';
 import 'decision_context.dart';
+import '../../attendance/presentation/correction_original_times.dart';
 import 'approval_position.dart';
 import '../../../shared/domain/cases.dart';
 
@@ -108,22 +109,9 @@ class _RecordDetailState extends ConsumerState<RecordDetailPage> {
                           'Original recorded time',
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        if ((r.fields['previousSessions'] as List? ?? [])
-                            .isEmpty)
-                          const InfoRow('Original', 'No recorded session'),
-                        for (final raw
-                            in r.fields['previousSessions'] as List? ?? [])
-                          Builder(
-                            builder: (context) {
-                              final session = Map<String, dynamic>.from(
-                                raw as Map,
-                              );
-                              return InfoRow(
-                                'Original',
-                                '${CorrectionTime.display(DateTime.tryParse((session['checkInAt'] ?? session['clockIn'] ?? '').toString()))} → ${CorrectionTime.display(DateTime.tryParse((session['checkOutAt'] ?? session['clockOut'] ?? '').toString()))}',
-                              );
-                            },
-                          ),
+                        CorrectionOriginalTimes(
+                          sessions: r.fields['previousSessions'] as List?,
+                        ),
                         const SizedBox(height: 8),
                         Text(
                           'Proposed correction',

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 typedef JsonMap = Map<String, dynamic>;
 
@@ -10,6 +11,9 @@ class DataRequest {
   final JsonMap? body;
   final String? idempotencyKey;
   final String? ifMatch;
+  final String? responseType;
+  final Uint8List? bytes;
+  final String? contentType;
   const DataRequest(
     this.method,
     this.path, {
@@ -17,6 +21,9 @@ class DataRequest {
     this.body,
     this.idempotencyKey,
     this.ifMatch,
+    this.responseType,
+    this.bytes,
+    this.contentType,
   });
 }
 
@@ -54,6 +61,42 @@ class DataFailure implements Exception {
 }
 
 void validateRequest(DataRequest request) {
+  final privateFile = RegExp(
+    r'^/requests/[a-z0-9-]+/attachments/[a-z0-9-]+/(file|upload)$',
+  );
+  if (request.bytes != null || request.contentType != null) {
+    if (request.method != 'PUT' ||
+        !privateFile.hasMatch(request.path) ||
+        !request.path.endsWith('/upload') ||
+        (request.bytes?.isEmpty ?? true) ||
+        request.bytes!.length > 10 * 1024 * 1024 ||
+        request.body != null ||
+        ![
+          'application/pdf',
+          'image/png',
+          'image/jpeg',
+        ].contains(request.contentType)) {
+      throw const DataFailure(
+        0,
+        'INVALID_PATH',
+        'Use a bounded private attachment upload.',
+      );
+    }
+  }
+  if (request.responseType != null &&
+      (request.method != 'GET' ||
+          (request.responseType == 'bytes'
+              ? !privateFile.hasMatch(request.path) ||
+                    !request.path.endsWith('/file')
+              : request.responseType != 'csv' ||
+                    !RegExp(r'^/reports/exports/[a-z0-9-]+/download$')
+                        .hasMatch(request.path)))) {
+    throw const DataFailure(
+      0,
+      'INVALID_PATH',
+      'CSV downloads require a private export path.',
+    );
+  }
   if (!['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].contains(request.method) ||
       !RegExp(r'^/[a-z0-9/-]+$').hasMatch(request.path) ||
       request.path.contains('//')) {

@@ -232,7 +232,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             );
           },
         ),
-        const SectionTitle('A little less admin'),
+        const SectionTitle('Quick actions'),
         LayoutBuilder(
           builder: (context, constraints) {
             final width = (constraints.maxWidth - 12) / 2;
@@ -243,7 +243,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 _QuickAction(
                   width: width,
                   title: 'Request leave',
-                  subtitle: 'Make room for life',
+                  subtitle: 'Choose dates and review your balance',
                   icon: Icons.beach_access_outlined,
                   onTap: () => context.push('/new/leave'),
                 ),
@@ -256,7 +256,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 _QuickAction(
                   width: width,
-                  title: 'Fix attendance',
+                  title: 'Attendance correction',
                   subtitle: 'Keep time accurate',
                   icon: Icons.edit_calendar_outlined,
                   onTap: () => context.push('/new/correction'),
@@ -277,7 +277,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             );
           },
         ),
-        const SectionTitle('Time off, at a glance'),
+        const SectionTitle('Leave balances'),
         AsyncPanel(
           value: ref.watch(balancesProvider),
           retry: () => ref.invalidate(balancesProvider),

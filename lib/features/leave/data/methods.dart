@@ -1,4 +1,5 @@
 import 'mappers.dart';
+import 'command_body.dart';
 
 import 'package:hrflow_mobile/features/leave/domain/models.dart';
 import 'package:hrflow_mobile/core/data/resource_repository.dart';
@@ -22,24 +23,16 @@ mixin LeaveMethods on ResourceRepository {
         DataRequest(
           'POST',
           '/leave/requests/preview',
-          body: {
+          body: await leaveCommandBody(this, {
             'leaveTypeId': typeId,
             'startDate': startDate,
             'endDate': endDate,
             'portion': portion,
-          },
+          }),
           idempotencyKey: commandKey(),
         ),
       )).data,
     );
-    return LeavePreview(
-      chargeableDays: number(row, 'chargeableDays'),
-      balanceBefore: number(row, 'balanceBefore'),
-      balanceAfter: number(row, 'balanceAfter'),
-      allowHalfDay: row['allowHalfDay'] == true,
-      evidenceRequired: row['evidenceRequired'] == true,
-      minimumNoticeDays: requiredInt(row, 'minimumNoticeDays'),
-      warnings: (row['warnings'] as List? ?? []).cast<String>(),
-    );
+    return LeavePreviewMapper.fromJson(row);
   }
 }

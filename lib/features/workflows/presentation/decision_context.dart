@@ -38,7 +38,12 @@ class DecisionContext extends StatelessWidget {
                       ? formatLeaveDays(review['balanceAfter'] as num)
                       : 'Not supplied',
                 ),
-                InfoRow('Team members off', '${teamOff.length}'),
+                InfoRow(
+                  'Team members off',
+                  review['teamMembersOff'] is List
+                      ? '${teamOff.length}'
+                      : 'Not supplied',
+                ),
                 if (teamOff.isNotEmpty) Text(teamOff.join(', ')),
               ],
               if (record.kind == 'correction')
@@ -56,7 +61,10 @@ class DecisionContext extends StatelessWidget {
                   'Review impact has not been supplied by the server.',
                 ),
               const Divider(height: 24),
-              InfoRow('Completed stages', '${steps.length}'),
+              InfoRow(
+                'Completed stages',
+                review['steps'] is List ? '${steps.length}' : 'Not supplied',
+              ),
               for (final step in steps)
                 if (step is Map)
                   Text(

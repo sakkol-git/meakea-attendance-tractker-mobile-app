@@ -6,6 +6,8 @@ import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'live_attendance_summary.dart';
+
 class ReportsPage extends ConsumerStatefulWidget {
   const ReportsPage({super.key});
   @override
@@ -26,40 +28,46 @@ class _ReportsState extends ConsumerState<ReportsPage> {
       AsyncPanel(
         value: ref.watch(reportProvider),
         retry: () => ref.invalidate(reportProvider),
-        builder: (r) => Column(
-          children: [
-            for (final e in [
-              ('People', r['employees'], Icons.people_outline),
-              (
-                'Recorded sessions',
-                r['attendanceSessions'],
-                Icons.schedule_outlined,
-              ),
-              ('Pending leave', r['pendingLeave'], Icons.beach_access_outlined),
-              (
-                'Pending requests',
-                r['pendingRequests'],
-                Icons.assignment_outlined,
-              ),
-            ])
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Surface(
-                  child: Row(
-                    children: [
-                      Icon(e.$3, color: context.semantic.selectedNav),
-                      const SizedBox(width: 16),
-                      Expanded(child: Text(e.$1)),
-                      Text(
-                        '${e.$2 ?? 0}',
-                        style: Theme.of(context).textTheme.headlineMedium,
+        builder: (r) => !ref.read(clientProvider).isLocal
+            ? LiveAttendanceSummary(report: r)
+            : Column(
+                children: [
+                  for (final e in [
+                    ('People', r['employees'], Icons.people_outline),
+                    (
+                      'Recorded sessions',
+                      r['attendanceSessions'],
+                      Icons.schedule_outlined,
+                    ),
+                    (
+                      'Pending leave',
+                      r['pendingLeave'],
+                      Icons.beach_access_outlined,
+                    ),
+                    (
+                      'Pending requests',
+                      r['pendingRequests'],
+                      Icons.assignment_outlined,
+                    ),
+                  ])
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Surface(
+                        child: Row(
+                          children: [
+                            Icon(e.$3, color: context.semantic.selectedNav),
+                            const SizedBox(width: 16),
+                            Expanded(child: Text(e.$1)),
+                            Text(
+                              '${e.$2 ?? 0}',
+                              style: Theme.of(context).textTheme.headlineMedium,
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                ],
               ),
-          ],
-        ),
       ),
       const SectionTitle('Export attendance'),
       Text(

@@ -84,7 +84,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Private detail is limited to its requester, HR_ADMIN, or a currently active direct manager from the server\u2019s owner employee projection. Other employees receive 404; unknown manager references fail closed with 503 REFERENCE_NOT_READY."
       }
     },
     "/leave/requests/{id}/approve": {
@@ -214,7 +215,7 @@
             }
           }
         },
-        "description": "Server must enforce tenant and approver relationship, atomic balance settlement and durable idempotency. Web CSRF/session policy remains a separate unresolved integration contract.",
+        "description": "Only independent HR_ADMIN or a known current direct manager may decide. Both verified account subject and employee identity are checked against the requester; missing relationship references fail closed. Uses opaque If-Match and atomic request/balance/ledger/event changes. Retryable commands require a UUID-v4 Idempotency-Key (428 when missing/invalid). Receipts are scoped to tenant, verified account subject, POST and the canonical resource path, with a body hash. A retry returns its original response/ETag even after the live revision advances. Unknown-provenance legacy receipts require reconciliation (409), never a guessed actor or repeated mutation.",
         "requestBody": {
           "required": false,
           "content": {
@@ -2869,6 +2870,7 @@
         "operationId": "listAuditLogs",
         "summary": "Search and view audit logs",
         "x-hrflow-implementation": "pending",
+        "description": "Identity-owned audit only (API-034), restricted to tenant OWNER. Paginated with page=0,size=20 (maximum 100); optional actorId UUID, entity, from/to UTC dates. Existing clients may use actor (account UUID substring), action and target (entity UUID substring). Response items contain id, actorId, actor (account UUID), action, entity, entityId, diff, changes (diff alias), at. Organization master mutations write audit atomically: department/position create, employee create/update, work-site create/update/delete, shift create/update, assignment create/close, and holiday create/update/delete. Other owners, auth/profile audit coverage and historical backfill remain outside this verified slice.",
         "responses": {
           "200": {
             "description": "Search and view audit logs",
@@ -2918,6 +2920,7 @@
       "post": {
         "operationId": "clockIn",
         "summary": "Clock in session",
+        "description": "Requires a locally projected active employee and exactly one effective assigned shift. Missing or ambiguous references return 503 REFERENCE_NOT_READY before evidence/session/outbox writes. The resolved work date, zone and shift window are captured with new sessions; no default tenant shift is invented.",
         "x-hrflow-implementation": "pending",
         "responses": {
           "201": {
@@ -3203,7 +3206,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Returns only the token-linked employee\u2019s effective sessions for the current date in the verified assigned shift timezone. Earlier/future sessions stay available from /attendance/me. Missing calendar references return 503 rather than assuming the server timezone."
       }
     },
     "/attendance/me": {
@@ -3303,6 +3307,10 @@
               }
             }
           }
+        },
+        "description": "Uses the token-linked employee, verified assigned shift, tenant holidays and latest owner leave working dates. Approved leave (including NEEDS_REVIEW) remains overlaid when work is recorded; reviewRequired flags the overlap without cancelling leave or refunding debit. All sessions contribute first in, last completed out and raw summed duration; an open session leaves completed minutes unknown. Day-off/holiday/leave overlays remain separate from review flags. Absence and early-departure finalization wait until original shift end + 30 minutes; early departure allows 10 minutes. MORNING/AFTERNOON remove the equal first/second half of the assigned shift. Unknown legacy schedule basis fails explicitly.",
+        "x-hrflow-provider-response-schema": {
+          "$ref": "#/components/schemas/DailyAttendanceOverview"
         }
       }
     },
@@ -3695,7 +3703,8 @@
           {
             "$ref": "#/components/parameters/MinAgeDays"
           }
-        ]
+        ],
+        "description": "Employee sees own requests; MANAGER sees locally verified current direct reports only; HR_ADMIN sees this tenant. Owner/TENANT_ADMIN have no implied HR permission. The provider returns bounded zero-based {items,page,size,total} pages with size1\u2013100 (default25), including empty responses. Count/limit apply after current employee/manager/HR tenant scope, literal case-insensitive search and exact status; oldest/newest and nonnegative minAgeDays are supported. Stable createdAt/id ordering is retained."
       },
       "post": {
         "operationId": "createAttendanceCorrection",
@@ -3854,7 +3863,8 @@
               "pattern": "^[a-zA-Z0-9_-]+$"
             }
           }
-        ]
+        ],
+        "description": "HR_ADMIN or MANAGER with a known current direct-report relationship; never the requesting employee, including when account and employee IDs differ. Missing relationship snapshot returns 503 REFERENCE_NOT_READY. Existing-session approval preserves raw evidence and original schedule and publishes an effective MANUAL revision. Approval of a correction without a session creates one MANUAL session and returns its sessionId; a clock-in and matching assigned-zone work date are required. Invalid times/date return 422; a conflicting interval returns 409 without partial approval or fabricated tap evidence."
       }
     },
     "/attendance/corrections/{id}/reject": {
@@ -3935,7 +3945,8 @@
               "pattern": "^[a-zA-Z0-9_-]+$"
             }
           }
-        ]
+        ],
+        "description": "HR_ADMIN or MANAGER with a known current direct-report relationship; never the requesting employee, including when account and employee IDs differ. Missing relationship snapshot returns 503 REFERENCE_NOT_READY. Approved existing-session corrections retain raw evidence and original schedule while publishing the effective manual session revision. Approval without an existing session requires explicit proposed times, a verified assigned schedule and no overlapping session; it creates one MANUAL session without fabricated tap evidence."
       }
     },
     "/attendance/manual": {
@@ -4150,7 +4161,8 @@
               }
             }
           }
-        }
+        },
+        "description": " With page and size, return an object containing items, page, size and total. The leave owner retains its historical bare-array response only when page is omitted; clients should request explicit pages. Type catalog entries expose id and code; preview/submission use code. Balance entries expose type (code), not leaveTypeId."
       }
     },
     "/leave/balances/me": {
@@ -4200,7 +4212,8 @@
               }
             }
           }
-        }
+        },
+        "description": " With page and size, return an object containing items, page, size and total. The leave owner retains its historical bare-array response only when page is omitted; clients should request explicit pages. Type catalog entries expose id and code; preview/submission use code. Balance entries expose type (code), not leaveTypeId."
       }
     },
     "/leave/requests": {
@@ -4279,7 +4292,8 @@
               }
             }
           }
-        }
+        },
+        "description": " UAT requires a separate request for each calendar year. A cross-year date range returns 422 before any reservation, ledger or event is created. Chargeable dates use the employee\u2019s effective assigned shift weekday mask and tenant holidays, not an assumed Monday\u2013Friday calendar. Missing employee/shift references return 503 REFERENCE_NOT_READY. Half-days use the approved equal-half shift rule; stored duration comes from the actual assigned window. Per user-approved UAT policy, complementary MORNING and AFTERNOON requests may share an employee/date. The same half or a FULL_DAY overlap returns 409 without a second debit, including concurrent requests across different leave types. Unpaid leave retains dates/decisions/history without entitlement changes; its preview has balanceTracked=false and null balanceBefore/balanceAfter. The request captures its paid/unpaid accounting mode at submission, so later type edits cannot change settlement. Retryable commands require a UUID-v4 Idempotency-Key (428 when missing/invalid). Receipts are scoped to tenant, verified account subject, POST and the canonical resource path, with a body hash. A retry returns its original response/ETag even after the live revision advances. Unknown-provenance legacy receipts require reconciliation (409), never a guessed actor or repeated mutation."
       }
     },
     "/leave/requests/me": {
@@ -4329,7 +4343,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Explicit page requests use tenant/employee/current-team scoped database pagination and filtering before count/limit. Historical callers omitting page retain the owner array. Search is a literal case-insensitive substring; sort is oldest or newest, default newest for own requests and oldest for pending. minAgeDays uses the server clock."
       }
     },
     "/leave/requests/pending": {
@@ -4398,7 +4413,8 @@
           {
             "$ref": "#/components/parameters/MinAgeDays"
           }
-        ]
+        ],
+        "description": "HR_ADMIN sees tenant requests; MANAGER sees only active current direct reports, excluding their own employee. The server requires a known active manager reference; unknown relationships return 503 REFERENCE_NOT_READY. Explicit page requests use tenant/employee/current-team scoped database pagination and filtering before count/limit. Historical callers omitting page retain the owner array. Search is a literal case-insensitive substring; sort is oldest or newest, default newest for own requests and oldest for pending. minAgeDays uses the server clock."
       }
     },
     "/leave/requests/{id}/cancel": {
@@ -4479,7 +4495,8 @@
               "pattern": "^[a-zA-Z0-9_-]+$"
             }
           }
-        ]
+        ],
+        "description": " Whole-request cancellation of APPROVED leave is limited to original reserved working dates strictly after the employee-local current date; elapsed or mixed past/future requests return 422 without a refund. Unknown calendar/date basis returns 503. Pending cancellation retains its existing release behavior; partial cancellation is not inferred. Retryable commands require a UUID-v4 Idempotency-Key (428 when missing/invalid). Receipts are scoped to tenant, verified account subject, POST and the canonical resource path, with a body hash. A retry returns its original response/ETag even after the live revision advances. Unknown-provenance legacy receipts require reconciliation (409), never a guessed actor or repeated mutation."
       }
     },
     "/leave/requests/{id}/reject": {
@@ -4570,7 +4587,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Only independent HR_ADMIN or a known current direct manager may decide. Both verified account subject and employee identity are checked against the requester; missing relationship references fail closed. Uses opaque If-Match and atomic reservation release/ledger/terminal event with original dates. Retryable commands require a UUID-v4 Idempotency-Key (428 when missing/invalid). Receipts are scoped to tenant, verified account subject, POST and the canonical resource path, with a body hash. A retry returns its original response/ETag even after the live revision advances. Unknown-provenance legacy receipts require reconciliation (409), never a guessed actor or repeated mutation."
       }
     },
     "/leave/requests/{id}/resolve-conflict": {
@@ -5392,7 +5410,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Supplying explicit zero-based page and size (1\u2013100) selects the additive {items,page,size,total} owner envelope. Omitting page preserves the legacy array response. Tenant scope and active catalog/relationship authorization are applied before both count and limit. Request lists accept literal case-insensitive search, exact status, oldest/newest sort and nonnegative minAgeDays; stable IDs break timestamp ties. The inbox contains only the current pending step, excludes self and revoked manager relationships, and does not grant one manager another manager\u2019s requests."
       }
     },
     "/materials": {
@@ -5442,7 +5461,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Supplying explicit zero-based page and size (1\u2013100) selects the additive {items,page,size,total} owner envelope. Omitting page preserves the legacy array response. Tenant scope and active catalog/relationship authorization are applied before both count and limit. Request lists accept literal case-insensitive search, exact status, oldest/newest sort and nonnegative minAgeDays; stable IDs break timestamp ties. The inbox contains only the current pending step, excludes self and revoked manager relationships, and does not grant one manager another manager\u2019s requests."
       }
     },
     "/materials/admin": {
@@ -5744,6 +5764,10 @@
               }
             }
           }
+        },
+        "description": " A UUID-v4 Idempotency-Key is required (428 if absent/invalid). The original outcome is bound to tenant, verified account subject, POST and canonical resource path, plus body hash; another account or path cannot replay it. Historical receipts with unknown actor/path require reconciliation (409) rather than a guessed replay or repeated mutation. User-approved UAT policy: every request type uses the server-owned MANAGER then HR_ADMIN chain. Client approver suggestions are retained only as compatible input and cannot create participant access or change the resolved chain. Submission resolves the current active manager from the owner\u2019s replayed org.employee.v1 projection. A known null manager creates a recorded SKIPPED step with NO_MANAGER_ASSIGNED; unknown/unready references return 503, and a self-manager relationship returns 422 without losing the draft. Submitted manager/revision basis is retained; reassignment revokes the old manager without silently rewriting the snapshot. Additive form inputs items[{materialId,quantity}] are accepted alongside legacy lines[{materialItemId,quantity}]. Each selected material must be active in this tenant and appear once, with quantity 1\u2013100000. Optional explicit startDate/endDate and fromTime/toTime are stored in the existing form_data JSON and returned as top-level fields; both ends of each supplied range are required and ordered. Legacy formData JSON objects (at most 32768 characters) remain supported. Existing custom form keys are retained. Creation does not authorize attendance/calendar or leave effects. Detail retains legacy lines and exposes the same selections as items; client-supplied approvers cannot override the server-owned chain.",
+        "x-hrflow-provider-form-fields": {
+          "$ref": "#/components/schemas/GeneralRequestFormFields"
         }
       }
     },
@@ -5794,7 +5818,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Authorization uses the verified employeeId claim; the account subject remains separate. Missing employee linkage is forbidden rather than guessed from sub. Supplying explicit zero-based page and size (1\u2013100) selects the additive {items,page,size,total} owner envelope. Omitting page preserves the legacy array response. Tenant scope and active catalog/relationship authorization are applied before both count and limit. Request lists accept literal case-insensitive search, exact status, oldest/newest sort and nonnegative minAgeDays; stable IDs break timestamp ties. The inbox contains only the current pending step, excludes self and revoked manager relationships, and does not grant one manager another manager\u2019s requests."
       }
     },
     "/requests/inbox": {
@@ -5863,7 +5888,8 @@
           {
             "$ref": "#/components/parameters/MinAgeDays"
           }
-        ]
+        ],
+        "description": " Request access requires the requester, an authorized HR/admin reader, or an individually assigned participant. A MANAGER role alone grants no access to other managers\u2019 requests. Decisions require the active step\u2019s assigned approver with its role, except the documented shared HR_ADMIN stage. The inbox includes only the current actionable step and excludes self decisions. Authorization uses the verified employeeId claim; the account subject remains separate. Missing employee linkage is forbidden rather than guessed from sub. Supplying explicit zero-based page and size (1\u2013100) selects the additive {items,page,size,total} owner envelope. Omitting page preserves the legacy array response. Tenant scope and active catalog/relationship authorization are applied before both count and limit. Request lists accept literal case-insensitive search, exact status, oldest/newest sort and nonnegative minAgeDays; stable IDs break timestamp ties. The inbox contains only the current pending step, excludes self and revoked manager relationships, and does not grant one manager another manager\u2019s requests."
       }
     },
     "/requests/{id}": {
@@ -5923,7 +5949,8 @@
               "pattern": "^[a-zA-Z0-9_-]+$"
             }
           }
-        ]
+        ],
+        "description": " Request access requires the requester, an authorized HR/admin reader, or an individually assigned participant. A MANAGER role alone grants no access to other managers\u2019 requests. Decisions require the active step\u2019s assigned approver with its role, except the documented shared HR_ADMIN stage. The inbox includes only the current actionable step and excludes self decisions. Authorization uses the verified employeeId claim; the account subject remains separate. Missing employee linkage is forbidden rather than guessed from sub."
       },
       "patch": {
         "operationId": "patchRequest",
@@ -6011,6 +6038,10 @@
               }
             }
           }
+        },
+        "description": " User-approved UAT policy: every request type uses the server-owned MANAGER then HR_ADMIN chain. Client approver suggestions are retained only as compatible input and cannot create participant access or change the resolved chain. Submission resolves the current active manager from the owner\u2019s replayed org.employee.v1 projection. A known null manager creates a recorded SKIPPED step with NO_MANAGER_ASSIGNED; unknown/unready references return 503, and a self-manager relationship returns 422 without losing the draft. Submitted manager/revision basis is retained; reassignment revokes the old manager without silently rewriting the snapshot. Additive form inputs items[{materialId,quantity}] are accepted alongside legacy lines[{materialItemId,quantity}]. Each selected material must be active in this tenant and appear once, with quantity 1\u2013100000. Optional explicit startDate/endDate and fromTime/toTime are stored in the existing form_data JSON and returned as top-level fields; both ends of each supplied range are required and ordered. Legacy formData JSON objects (at most 32768 characters) remain supported. Existing custom form keys are retained. Creation does not authorize attendance/calendar or leave effects. Detail retains legacy lines and exposes the same selections as items; client-supplied approvers cannot override the server-owned chain.",
+        "x-hrflow-provider-form-fields": {
+          "$ref": "#/components/schemas/GeneralRequestFormFields"
         }
       }
     },
@@ -6092,7 +6123,8 @@
               "pattern": "^[a-zA-Z0-9_-]+$"
             }
           }
-        ]
+        ],
+        "description": " A UUID-v4 Idempotency-Key is required (428 if absent/invalid). The original outcome is bound to tenant, verified account subject, POST and canonical resource path, plus body hash; another account or path cannot replay it. Historical receipts with unknown actor/path require reconciliation (409) rather than a guessed replay or repeated mutation. User-approved UAT policy: every request type uses the server-owned MANAGER then HR_ADMIN chain. Client approver suggestions are retained only as compatible input and cannot create participant access or change the resolved chain. Submission resolves the current active manager from the owner\u2019s replayed org.employee.v1 projection. A known null manager creates a recorded SKIPPED step with NO_MANAGER_ASSIGNED; unknown/unready references return 503, and a self-manager relationship returns 422 without losing the draft. Submitted manager/revision basis is retained; reassignment revokes the old manager without silently rewriting the snapshot. Submission requires the reviewed draft ETag in If-Match: 428 if missing and 412 if stale or malformed, before chain capture or reference lookup. Rejected preconditions preserve the draft and leave no approval, history, outbox or receipt effect. The same already-committed command key still returns its original outcome. The provider compatibly accepts an absent body, a legacy approver array or a command object (for example note/reason). These inputs cannot override the server approval chain or introduce private text into the minimal workflow event; the exact input is bound to the command receipt."
       }
     },
     "/requests/{id}/cancel": {
@@ -6173,7 +6205,8 @@
               "pattern": "^[a-zA-Z0-9_-]+$"
             }
           }
-        ]
+        ],
+        "description": " A UUID-v4 Idempotency-Key is required (428 if absent/invalid). The original outcome is bound to tenant, verified account subject, POST and canonical resource path, plus body hash; another account or path cannot replay it. Historical receipts with unknown actor/path require reconciliation (409) rather than a guessed replay or repeated mutation. Employee relationship/self checks use employeeId while receipt scope and decision actor history retain the verified account subject. Approval/rejection exposes additive decidedByAccount on the decided step; historical unknown actors remain null."
       }
     },
     "/requests/{id}/comments": {
@@ -6267,7 +6300,8 @@
               }
             }
           }
-        }
+        },
+        "description": "A UUID-v4 Idempotency-Key is required (428 if absent or invalid), following the shared POST command protocol. Original outcomes are bound to tenant, verified account subject, POST and canonical resource path plus body hash. An exact retry returns the original comment, private upload reservation or completion result; changed content returns 409. Failed mutations roll back the receipt. Relationship authorization remains server-owned. Historical receipts with unknown actor/path require reconciliation (409)."
       }
     },
     "/requests/{id}/approve": {
@@ -6358,7 +6392,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Request access requires the requester, an authorized HR/admin reader, or an individually assigned participant. A MANAGER role alone grants no access to other managers\u2019 requests. Decisions require the active step\u2019s assigned approver with its role, except the documented shared HR_ADMIN stage. The inbox includes only the current actionable step and excludes self decisions. A UUID-v4 Idempotency-Key is required (428 if absent/invalid). The original outcome is bound to tenant, verified account subject, POST and canonical resource path, plus body hash; another account or path cannot replay it. Historical receipts with unknown actor/path require reconciliation (409) rather than a guessed replay or repeated mutation. Employee relationship/self checks use employeeId while receipt scope and decision actor history retain the verified account subject. Approval/rejection exposes additive decidedByAccount on the decided step; historical unknown actors remain null."
       }
     },
     "/requests/{id}/reject": {
@@ -6452,7 +6487,8 @@
               }
             }
           }
-        }
+        },
+        "description": " Request access requires the requester, an authorized HR/admin reader, or an individually assigned participant. A MANAGER role alone grants no access to other managers\u2019 requests. Decisions require the active step\u2019s assigned approver with its role, except the documented shared HR_ADMIN stage. The inbox includes only the current actionable step and excludes self decisions. A UUID-v4 Idempotency-Key is required (428 if absent/invalid). The original outcome is bound to tenant, verified account subject, POST and canonical resource path, plus body hash; another account or path cannot replay it. Historical receipts with unknown actor/path require reconciliation (409) rather than a guessed replay or repeated mutation. Employee relationship/self checks use employeeId while receipt scope and decision actor history retain the verified account subject. Approval/rejection exposes additive decidedByAccount on the decided step; historical unknown actors remain null."
       }
     },
     "/requests/{id}/fulfill": {
@@ -6543,7 +6579,8 @@
               }
             }
           }
-        }
+        },
+        "description": " A UUID-v4 Idempotency-Key is required (428 if absent/invalid). The original outcome is bound to tenant, verified account subject, POST and canonical resource path, plus body hash; another account or path cannot replay it. Historical receipts with unknown actor/path require reconciliation (409) rather than a guessed replay or repeated mutation. Employee relationship/self checks use employeeId while receipt scope and decision actor history retain the verified account subject. Approval/rejection exposes additive decidedByAccount on the decided step; historical unknown actors remain null."
       }
     },
     "/requests/{id}/attachments/presign": {
@@ -6633,7 +6670,8 @@
               }
             }
           }
-        }
+        },
+        "description": "A UUID-v4 Idempotency-Key is required (428 if absent or invalid), following the shared POST command protocol. Original outcomes are bound to tenant, verified account subject, POST and canonical resource path plus body hash. An exact retry returns the original comment, private upload reservation or completion result; changed content returns 409. Failed mutations roll back the receipt. Relationship authorization remains server-owned. Historical receipts with unknown actor/path require reconciliation (409). Canonical size and sha256 are accepted alongside the legacy fileSize and checksumSha256 aliases. Returned private relative upload paths require the authenticated transfer operation; supported external signed HTTPS URLs retain their existing protocol."
       }
     },
     "/requests/{id}/attachments/{attachmentId}/complete": {
@@ -6721,7 +6759,8 @@
               "type": "string"
             }
           }
-        ]
+        ],
+        "description": "A UUID-v4 Idempotency-Key is required (428 if absent or invalid), following the shared POST command protocol. Original outcomes are bound to tenant, verified account subject, POST and canonical resource path plus body hash. An exact retry returns the original comment, private upload reservation or completion result; changed content returns 409. Failed mutations roll back the receipt. Relationship authorization remains server-owned. Historical receipts with unknown actor/path require reconciliation (409). The completed attachment also satisfies WorkflowRecord: title is the original filename, version is the persisted attachment revision, details contain actual file metadata, and history is empty because no per-attachment decision history is recorded. Legacy attachment metadata fields remain additive. Optional size/sha256 or legacy fileSize/checksumSha256 confirmation values must match the reservation. A repeated finalization cannot change its original completion time or version."
       }
     },
     "/requests/{id}/attachments/{attachmentId}/download": {
@@ -7743,6 +7782,7 @@
       "get": {
         "operationId": "getReportingDashboard",
         "summary": "Get organizational reporting dashboard KPIs",
+        "description": "HR_ADMIN sees its tenant; MANAGER sees only currently active direct reports after employee replay. Attendance counts consume newest owner daily snapshots, one employee/date, rather than counting sessions. Only finalized ABSENT counts as absent. Review/provisional counts remain explicit in summary; each attendance day is selected using its owner timezone. Session summary remains the separate effective-session view.",
         "x-hrflow-implementation": "pending",
         "responses": {
           "200": {
@@ -7793,6 +7833,7 @@
       "get": {
         "operationId": "getAttendanceReportSummary",
         "summary": "Get attendance summary report",
+        "description": "HR_ADMIN may read this tenant. MANAGER is restricted before aggregation/query to active current direct reports in the local organization projection; missing manager reference returns 503 REFERENCE_NOT_READY. Reassignment/termination removes team access when the newer organization snapshot is applied. Attendance summary rows expose effective session state and actual timestamps, not finalized daily absence or leave decisions.",
         "x-hrflow-implementation": "pending",
         "responses": {
           "200": {
@@ -8104,6 +8145,7 @@
       "post": {
         "operationId": "createReportExport",
         "summary": "Trigger async report CSV/Excel export job",
+        "description": "HR_ADMIN may queue a bounded immutable CSV snapshot of effective attendance sessions or owner-verified leave requests. Leave date filtering selects requests overlapping the interval and preserves the actual working dates and charged days, including NEEDS_REVIEW with debit retained. One worker runs per tenant; row cap defaults to 10000. REQUESTS captures owner-verified request snapshots after typed request startup replay; filters use original createdAt UTC calendar dates and the CSV retains the exact timestamp. Missing replay or unknown historical creation time returns 503 without a misleading job. Private files are delivered through the authenticated download endpoint.",
         "x-hrflow-implementation": "pending",
         "responses": {
           "202": {
@@ -8181,6 +8223,7 @@
       "get": {
         "operationId": "getReportsExports",
         "summary": "Get /reports/exports",
+        "description": "HR_ADMIN sees only jobs requested by that actor in the authenticated tenant.",
         "x-hrflow-implementation": "pending",
         "responses": {
           "200": {
@@ -8261,6 +8304,7 @@
       "get": {
         "operationId": "getExportJobStatus",
         "summary": "Get export job status and download URL",
+        "description": "Original requester still authorized as HR_ADMIN only. Foreign tenant or requester returns 404. Optional fileName/downloadUrl are omitted while unavailable; wire version is one-based.",
         "x-hrflow-implementation": "pending",
         "responses": {
           "200": {
@@ -11904,6 +11948,10 @@
               }
             }
           }
+        },
+        "description": " UAT requires a separate request for each calendar year. A cross-year date range returns 422 before any reservation, ledger or event is created. Chargeable dates use the employee\u2019s effective assigned shift weekday mask and tenant holidays, not an assumed Monday\u2013Friday calendar. Missing employee/shift references return 503 REFERENCE_NOT_READY. Half-days use the approved equal-half shift rule; stored duration comes from the actual assigned window. Per user-approved UAT policy, complementary MORNING and AFTERNOON requests may share an employee/date. The same half or a FULL_DAY overlap returns 409 without a second debit, including concurrent requests across different leave types. Unpaid leave retains dates/decisions/history without entitlement changes; its preview has balanceTracked=false and null balanceBefore/balanceAfter. The request captures its paid/unpaid accounting mode at submission, so later type edits cannot change settlement. The owner accepts the tenant leave-type code in type, matching CreateLeaveRequest; leaveTypeId is a local-demo field. The detailed additive response shape is LeavePreview; the original open object response is retained for compatibility.",
+        "x-hrflow-provider-response-schema": {
+          "$ref": "#/components/schemas/LeavePreview"
         }
       }
     },
@@ -11939,6 +11987,2603 @@
         },
         "security": []
       }
+    },
+    "/v2/employees": {
+      "get": {
+        "operationId": "listEmployeesV2",
+        "summary": "List employees",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "List employees",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedEmployeesV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Page"
+          },
+          {
+            "$ref": "#/components/parameters/Size"
+          },
+          {
+            "$ref": "#/components/parameters/Search"
+          }
+        ]
+      },
+      "post": {
+        "operationId": "createEmployeeV2",
+        "summary": "Create an employee",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "201": {
+            "description": "Create an employee",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email",
+                  "employeeNo",
+                  "departmentId",
+                  "positionId"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "employeeNo": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "positionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "managerId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "hireDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/employees/{id}": {
+      "get": {
+        "operationId": "getEmployeeV2",
+        "summary": "Get employee detail",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "Get employee detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            }
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "patchEmployeeV2",
+        "summary": "Update employee detail",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "Update employee detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"[^\"\r\n]+\"$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "employeeNo": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "positionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "managerId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  },
+                  "hireDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/work-sites": {
+      "get": {
+        "operationId": "listWorkSitesV2",
+        "summary": "List work sites",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "List work sites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedWorkSitesV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createWorkSiteV2",
+        "summary": "Create work site",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "201": {
+            "description": "Create work site",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkSiteRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "latitude",
+                  "longitude",
+                  "radiusM",
+                  "timezone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "radiusM": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/work-sites/{id}": {
+      "patch": {
+        "operationId": "patchWorkSiteV2",
+        "summary": "Update work site",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "Update work site",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkSiteRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "radiusM": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10000
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "deleteWorkSiteV2",
+        "summary": "Delete work site",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "204": {
+            "description": "Delete work site"
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/shifts": {
+      "get": {
+        "operationId": "listShiftsV2",
+        "summary": "List shifts",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "List shifts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedShiftsV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createShiftV2",
+        "summary": "Create shift",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "201": {
+            "description": "Create shift",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "startTime",
+                  "endTime",
+                  "workingDays",
+                  "siteId",
+                  "timezone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "startTime": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "graceMinutes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 120
+                  },
+                  "workingDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 127
+                  },
+                  "siteId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/shifts/{id}": {
+      "patch": {
+        "operationId": "patchShiftV2",
+        "summary": "Update shift",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "Update shift",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "startTime": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+                  },
+                  "graceMinutes": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 120
+                  },
+                  "workingDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 127
+                  },
+                  "siteId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "timezone": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/employees/{id}/shifts": {
+      "get": {
+        "operationId": "listEmployeeShiftsV2",
+        "summary": "List employee shift assignments",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "List employee shift assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedShiftAssignmentsV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "post": {
+        "operationId": "assignEmployeeShiftV2",
+        "summary": "Assign an employee shift",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "201": {
+            "description": "Assign an employee shift",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftAssignmentV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "shiftId",
+                  "validFrom"
+                ],
+                "properties": {
+                  "shiftId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "validFrom": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "validTo": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/shift-assignments": {
+      "get": {
+        "operationId": "listShiftAssignmentsV2",
+        "summary": "List shift assignments",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "List shift assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedShiftAssignmentsV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/shift-assignments/{id}/close": {
+      "post": {
+        "operationId": "closeShiftAssignmentV2",
+        "summary": "Close a shift assignment",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "Close a shift assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShiftAssignmentV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "validTo"
+                ],
+                "properties": {
+                  "validTo": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/holidays": {
+      "get": {
+        "operationId": "listHolidaysV2",
+        "summary": "List holidays",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "200": {
+            "description": "List holidays",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedHolidaysV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createHolidayV2",
+        "summary": "Create a holiday",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "201": {
+            "description": "Create a holiday",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "date",
+                  "kind"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "PUBLIC",
+                      "COMPANY"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ]
+    },
+    "/v2/holidays/{id}": {
+      "delete": {
+        "operationId": "deleteHolidayV2",
+        "summary": "Delete a holiday",
+        "x-hrflow-implementation": "pending",
+        "responses": {
+          "204": {
+            "description": "Delete a holiday"
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "servers": [
+        {
+          "url": "/api"
+        }
+      ],
+      "patch": {
+        "operationId": "patchHolidayV2",
+        "summary": "Update a holiday",
+        "x-hrflow-implementation": "pending",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "PUBLIC",
+                      "COMPANY"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update a holiday",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HolidayRecordV2"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict or state mismatch",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Stale revision",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "428": {
+            "description": "Precondition required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reports/exports/{id}/download": {
+      "get": {
+        "operationId": "downloadReportExport",
+        "summary": "Download a completed private CSV export",
+        "description": "Approved additive MVP endpoint. Requires the original requester, authenticated with HR_ADMIN in the same tenant on every request. Unknown or foreign jobs return 404; unfinished jobs return 409. Files remain private and no server path is returned.",
+        "x-hrflow-implementation": "pending",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Private CSV bytes; no public file path.",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Attachment with a generated CSV file name."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "no-store"
+              }
+            },
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Export is not completed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Completed file is temporarily unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{id}/attachments/{attachmentId}/upload": {
+      "put": {
+        "operationId": "uploadPrivateRequestAttachment",
+        "summary": "Upload reserved private request attachment bytes",
+        "tags": [
+          "Requests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Authenticated private transfer on the configured API origin. Validate the returned relative URL against this exact request and attachment; retain the original bearer session and tenant/participant checks. Never treat this relative URL as an anonymous external signed URL. No redirects or public storage path. PDF, PNG and JPEG are allowed; bytes are bounded to the reserved length and 10 MiB with SHA-256 verification. Upload PUT retries retain the original reservation; completion is a separate scoped POST. Existing external signed-transfer consumers are unchanged.",
+        "responses": {
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current participant access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing, foreign or unfinished attachment",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid bytes, size or checksum",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Private bounded upload accepted; complete separately"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/pdf": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/png": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "image/jpeg": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            },
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/requests/{id}/attachments/{attachmentId}/file": {
+      "get": {
+        "operationId": "downloadPrivateRequestAttachmentFile",
+        "summary": "Download finalized private request attachment bytes",
+        "tags": [
+          "Requests"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            }
+          },
+          {
+            "name": "attachmentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "description": "Authenticated private transfer on the configured API origin. Validate the returned relative URL against this exact request and attachment; retain the original bearer session and tenant/participant checks. Never treat this relative URL as an anonymous external signed URL. No redirects or public storage path. PDF, PNG and JPEG are allowed; bytes are bounded to the reserved length and 10 MiB with SHA-256 verification. Upload PUT retries retain the original reservation; completion is a separate scoped POST. Existing external signed-transfer consumers are unchanged.",
+        "responses": {
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current participant access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing, foreign or unfinished attachment",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid bytes, size or checksum",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Private finalized attachment bytes",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-store"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              }
+            },
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/attendance/corrections/{id}": {
+      "get": {
+        "operationId": "getAttendanceCorrection",
+        "summary": "Review one current authorized attendance correction",
+        "tags": [
+          "Attendance"
+        ],
+        "description": "Read-only detail returns the original evidence proposal and opaque ETag. Same-tenant employee self, HR_ADMIN or current authorized direct manager can read. A historical manager grant does not survive reassignment. Foreign tenant objects are hidden. Fetch and retain this ETag before a decision; server preconditions and no-self-approval still apply to decisions. New submissions include immutable previousSessions captured under the employee command lock. Null remains unknown legacy/unclassifiable basis, not no sessions; [] means verified no matching sessions. Later checkouts or corrections cannot change this captured evidence.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current authorized correction and opaque reviewed ETag",
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendanceCorrectionRecord"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current employee or reviewer access denied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or foreign correction",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Current manager relationship unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "x-hrflow-original-session-schema": {
+          "$ref": "#/components/schemas/CorrectionOriginalSessions"
+        }
+      }
     }
   },
   "components": {
@@ -11950,6 +14595,99 @@
       }
     },
     "schemas": {
+      "EmployeeRecordV2": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "department",
+          "position",
+          "status",
+          "employeeNo",
+          "departmentId",
+          "positionId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "employeeNo": {
+            "type": "string"
+          },
+          "departmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "positionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "managerId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "hireDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "department": {
+            "type": "string"
+          },
+          "position": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "PagedEmployeesV2": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmployeeRecordV2"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
       "LeaveRecord": {
         "type": "object",
         "required": [
@@ -12017,7 +14755,8 @@
         "properties": {
           "code": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Identity-org security failures use IDENTITY-UNAUTHENTICATED (401) or IDENTITY-FORBIDDEN (403); other owners may use their own codes."
           },
           "detail": {
             "type": "string"
@@ -13031,6 +15770,630 @@
                   "minLength": 1
                 }
               }
+            }
+          }
+        }
+      },
+      "WorkSiteRecordV2": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "latitude",
+          "longitude",
+          "radiusM",
+          "timezone",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "radiusM": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PagedWorkSitesV2": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkSiteRecordV2"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "ShiftRecordV2": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "startTime",
+          "endTime",
+          "graceMinutes",
+          "workingDays",
+          "siteId",
+          "timezone",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120
+          },
+          "startTime": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "endTime": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "graceMinutes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120
+          },
+          "workingDays": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 127
+          },
+          "siteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "timezone": {
+            "type": "string",
+            "minLength": 1
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "lastChangeReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "PagedShiftsV2": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShiftRecordV2"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "ShiftAssignmentV2": {
+        "type": "object",
+        "required": [
+          "id",
+          "employeeId",
+          "shiftId",
+          "validFrom",
+          "validTo",
+          "shiftSnapshot",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shiftId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "validFrom": {
+            "type": "string",
+            "format": "date"
+          },
+          "validTo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "shiftSnapshot": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "HolidayRecordV2": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "date",
+          "kind",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PUBLIC",
+              "COMPANY"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "PagedShiftAssignmentsV2": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShiftAssignmentV2"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "PagedHolidaysV2": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "size",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HolidayRecordV2"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "DailyAttendanceOverview": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "shiftStart": {
+            "type": "string"
+          },
+          "shiftEnd": {
+            "type": "string"
+          },
+          "graceMinutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "clockIn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "clockOut": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "late": {
+            "type": "boolean"
+          },
+          "earlyDeparture": {
+            "type": "boolean"
+          },
+          "reviewRequired": {
+            "type": "boolean"
+          },
+          "reviewReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "minutesWorked": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "finalized": {
+            "type": "boolean"
+          },
+          "dayType": {
+            "type": "string"
+          },
+          "openSession": {
+            "type": "boolean"
+          },
+          "expectedStart": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expectedEnd": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "LeavePreview": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "chargeableDays": {
+            "type": "number"
+          },
+          "balanceBefore": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "balanceAfter": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "balanceTracked": {
+            "type": "boolean"
+          },
+          "allowHalfDay": {
+            "type": "boolean"
+          },
+          "evidenceRequired": {
+            "type": "boolean"
+          },
+          "minimumNoticeDays": {
+            "type": "integer"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "GeneralRequestFormFields": {
+        "type": "object",
+        "description": "Additive provider form fields alongside the preserved provisional create/update definitions. Fields are recorded as request data, not automatic attendance or leave commands.",
+        "properties": {
+          "startDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "endDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "fromTime": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Local time; must precede toTime when supplied"
+          },
+          "toTime": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "materialId",
+                "quantity"
+              ],
+              "properties": {
+                "materialId": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100000
+                }
+              }
+            }
+          }
+        }
+      },
+      "AttendanceCorrectionRecord": {
+        "type": "object",
+        "required": [
+          "id",
+          "employeeId",
+          "date",
+          "reason",
+          "status",
+          "version",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sessionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "proposedClockIn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "proposedClockOut": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reviewedBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "reviewedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CorrectionOriginalSessions": {
+        "type": [
+          "array",
+          "null"
+        ],
+        "description": "Immutable effective session facts at submission. Null is unknown legacy basis; empty array is verified no matching employee-day/target sessions. Never reconstructed from mutable current sessions.",
+        "items": {
+          "type": "object",
+          "required": [
+            "id",
+            "clockIn",
+            "status",
+            "version"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "clockIn": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "clockOut": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time"
+            },
+            "status": {
+              "type": "string"
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "workDate": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date"
+            },
+            "timezone": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "shiftId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uuid"
+            },
+            "shiftRevision": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           }
         }

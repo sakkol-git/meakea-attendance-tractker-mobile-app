@@ -16,6 +16,7 @@ abstract final class WorkflowPolicy {
         'cancel',
       if (!mine &&
           actor.manages &&
+          (record.kind != 'request' || actor.canReviewRequests) &&
           record.status == 'PENDING' &&
           (record.fields['currentApproverId'] == null ||
               record.fields['currentApproverId'] == actor.id ||
@@ -25,7 +26,7 @@ abstract final class WorkflowPolicy {
         'reject',
       },
       if (!mine &&
-          actor.administers &&
+          actor.canFulfillRequests &&
           record.status == 'APPROVED' &&
           record.fields['type'] == 'MATERIAL')
         'fulfill',

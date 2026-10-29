@@ -50,6 +50,7 @@ class ProfilePage extends ConsumerWidget {
         _Link(Icons.shield_outlined, 'Security & device lock', '/security'),
         _Link(Icons.tune_outlined, 'Preferences', '/preferences'),
         const SectionTitle('About HRFlow'),
+        _Link(Icons.help_outline, 'Help and getting started', '/help'),
         _Link(Icons.info_outline, 'About this workspace', '/about'),
         if (local) ...[
           const SectionTitle('Demo workspace'),

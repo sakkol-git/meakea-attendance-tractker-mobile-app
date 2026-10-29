@@ -11,6 +11,7 @@ import 'package:hrflow_mobile/core/leave_quantity.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 
 import 'approval_position.dart';
+import 'approval_filters.dart';
 
 class WorkflowTile extends StatelessWidget {
   final WorkflowRecord record;
@@ -109,10 +110,12 @@ class WorkflowListPage extends ConsumerStatefulWidget {
 
 class _WorkflowListState extends ConsumerState<WorkflowListPage> {
   String filter = 'All', search = '';
+  final searchController = TextEditingController();
   Timer? searchDebounce;
   @override
   void dispose() {
     searchDebounce?.cancel();
+    searchController.dispose();
     super.dispose();
   }
 
@@ -127,10 +130,10 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
       ),
     );
     return AppPage(
-      title: leave ? 'Time off' : 'Requests',
+      title: leave ? 'Leave' : 'Requests',
       subtitle: leave
-          ? 'A little time for what matters.'
-          : 'Keep every request moving forward.',
+          ? 'Check balances, request leave and track decisions.'
+          : 'Create a draft, send it for approval and track the result.',
       actions: [
         IconButton(
           tooltip: 'New ${leave ? 'leave request' : 'request'}',
@@ -202,6 +205,7 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
           const SectionTitle('Your leave requests'),
         ],
         TextField(
+          controller: searchController,
           decoration: const InputDecoration(
             hintText: 'Search requests',
             prefixIcon: Icon(Icons.search),
@@ -247,7 +251,9 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                 );
               }
               return EmptyState(
-                title: 'Nothing here yet',
+                title: search.isNotEmpty || filter != 'All'
+                    ? 'No matching requests'
+                    : 'No requests yet',
                 description: search.isNotEmpty || filter != 'All'
                     ? 'Try a different search or filter.'
                     : leave
@@ -257,8 +263,23 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
                     ? Icons.beach_access_outlined
                     : Icons.assignment_outlined,
                 action: TextButton(
-                  onPressed: () => context.push('/new/${widget.kind}'),
-                  child: Text('Create a request'),
+                  onPressed: search.isNotEmpty || filter != 'All'
+                      ? () {
+                          searchDebounce?.cancel();
+                          searchController.clear();
+                          setState(() {
+                            search = '';
+                            filter = 'All';
+                          });
+                        }
+                      : () => context.push('/new/${widget.kind}'),
+                  child: Text(
+                    search.isNotEmpty || filter != 'All'
+                        ? 'Clear filters'
+                        : leave
+                        ? 'Request leave'
+                        : 'Create a request',
+                  ),
                 ),
               );
             }
@@ -282,7 +303,7 @@ class _WorkflowListState extends ConsumerState<WorkflowListPage> {
         FilledButton.icon(
           onPressed: () => context.push('/new/${widget.kind}'),
           icon: Icon(Icons.add),
-          label: Text(leave ? 'Request time off' : 'Create request'),
+          label: Text(leave ? 'Request leave' : 'Create request'),
         ),
       ],
     );
@@ -345,54 +366,17 @@ class _ApprovalPageState extends ConsumerState<ApprovalPage> {
             });
           },
         ),
-        ExpansionTile(
-          title: const Text('Filter and sort'),
-          children: [
-            DropdownButtonFormField<String>(
-              initialValue: requestType,
-              decoration: const InputDecoration(labelText: 'Request type'),
-              items: const [
-                DropdownMenuItem(value: '', child: Text('All types')),
-                DropdownMenuItem(value: 'leave', child: Text('Leave')),
-                DropdownMenuItem(value: 'request', child: Text('Requests')),
-                DropdownMenuItem(
-                  value: 'correction',
-                  child: Text('Corrections'),
-                ),
-              ],
-              onChanged: (value) => setState(() => requestType = value ?? ''),
-            ),
-            DropdownButtonFormField<int>(
-              initialValue: minAgeDays,
-              decoration: const InputDecoration(labelText: 'Waiting age'),
-              items: const [
-                DropdownMenuItem(value: 0, child: Text('Any age')),
-                DropdownMenuItem(value: 1, child: Text('At least 1 day')),
-                DropdownMenuItem(value: 3, child: Text('At least 3 days')),
-                DropdownMenuItem(value: 7, child: Text('At least 7 days')),
-              ],
-              onChanged: (value) => setState(() => minAgeDays = value ?? 0),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: status,
-              decoration: const InputDecoration(labelText: 'Status'),
-              items: const [
-                DropdownMenuItem(value: 'PENDING', child: Text('Pending')),
-                DropdownMenuItem(value: 'APPROVED', child: Text('Approved')),
-                DropdownMenuItem(value: 'REJECTED', child: Text('Rejected')),
-              ],
-              onChanged: (value) => setState(() => status = value ?? 'PENDING'),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: sort,
-              decoration: const InputDecoration(labelText: 'Sort'),
-              items: const [
-                DropdownMenuItem(value: 'oldest', child: Text('Oldest first')),
-                DropdownMenuItem(value: 'newest', child: Text('Newest first')),
-              ],
-              onChanged: (value) => setState(() => sort = value ?? 'oldest'),
-            ),
-          ],
+        ApprovalFilters(
+          requestType: requestType,
+          status: status,
+          sort: sort,
+          minAgeDays: minAgeDays,
+          canReviewRequests:
+              ref.watch(sessionProvider).profile?.canReviewRequests == true,
+          onRequestType: (value) => setState(() => requestType = value),
+          onStatus: (value) => setState(() => status = value),
+          onSort: (value) => setState(() => sort = value),
+          onMinAgeDays: (value) => setState(() => minAgeDays = value),
         ),
         const SizedBox(height: 16),
         AsyncPanel(

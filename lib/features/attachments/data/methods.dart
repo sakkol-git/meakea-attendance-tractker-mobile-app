@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:http/http.dart' as http;
+import 'signed_transfer.dart';
+
 import 'package:crypto/crypto.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/data/json.dart';
+import 'package:hrflow_mobile/core/data/pending_commands.dart';
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 import 'package:hrflow_mobile/core/data/resource_repository.dart';
 
@@ -15,7 +17,7 @@ mixin AttachmentsMethods on ResourceRepository {
     Uint8List bytes,
   ) async {
     final workspace = client.workspaceRevision;
-    if (bytes.length > 10 * 1024 * 1024) {
+    if (bytes.isEmpty || bytes.length > 10 * 1024 * 1024) {
       throw const DataFailure(
         422,
         'FILE_TOO_LARGE',
@@ -44,51 +46,68 @@ mixin AttachmentsMethods on ResourceRepository {
       );
       return;
     }
+    final digest = sha256.convert(bytes).toString();
+    final signature = 'attachment:${record.kind}:${record.id}:$name:$digest';
+    final keys = PendingCommandKeys(client.secrets, client.namespace);
+    final metadata = <String, dynamic>{
+      'fileName': name,
+      'contentType': type,
+      'size': bytes.length,
+      'sha256': digest,
+    };
+    final presignKey = await keys.acquire('$signature:presign', metadata);
     final presign = object(
       (await command(
         '${record.kind == 'leave' ? '/leave/requests' : '/requests'}/${record.id}/attachments/presign',
-        body: {
-          'fileName': name,
-          'contentType': type,
-          'size': bytes.length,
-          'sha256': sha256.convert(bytes).toString(),
-        },
+        body: metadata,
+        key: presignKey,
       )).data,
     );
-    final url = fileUrl(requiredText(presign, 'uploadUrl'));
-    final headers = <String, String>{'Content-Type': type};
-    final requiredHeaders = presign['requiredHeaders'];
-    if (requiredHeaders != null) {
-      for (final header in object(requiredHeaders).entries) {
-        if (header.value is! String ||
-            [
-              'authorization',
-              'cookie',
-              'host',
-            ].contains(header.key.toLowerCase())) {
-          throw const DataFailure(
-            0,
-            'CONTRACT_MISMATCH',
-            'Invalid signed upload headers.',
-          );
-        }
-        headers[header.key] = header.value as String;
+    final attachmentId = requiredText(presign, 'attachmentId');
+    final base =
+        '${record.kind == 'leave' ? '/leave/requests' : '/requests'}/${record.id}/attachments/$attachmentId';
+    final uploadUrl = requiredText(presign, 'uploadUrl');
+    if (uploadUrl.startsWith('/')) {
+      if (record.kind != 'request' || uploadUrl != '/api/v1$base/upload') {
+        throw const DataFailure(
+          0,
+          'INVALID_FILE_URL',
+          'The upload link does not match this private attachment.',
+        );
       }
-    }
-    final response = await http
-        .put(url, headers: headers, body: bytes)
-        .timeout(const Duration(seconds: 60));
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw const DataFailure(
-        0,
-        'UPLOAD_FAILED',
-        'Upload failed. Retry the attachment.',
+      await client.request(
+        DataRequest('PUT', '$base/upload', bytes: bytes, contentType: type),
       );
+    } else {
+      final url = fileUrl(uploadUrl);
+      final headers = <String, String>{'Content-Type': type};
+      final requiredHeaders = presign['requiredHeaders'];
+      if (requiredHeaders != null) {
+        for (final header in object(requiredHeaders).entries) {
+          if (header.value is! String ||
+              [
+                'authorization',
+                'cookie',
+                'host',
+              ].contains(header.key.toLowerCase())) {
+            throw const DataFailure(
+              0,
+              'CONTRACT_MISMATCH',
+              'Invalid signed upload headers.',
+            );
+          }
+          headers[header.key] = header.value as String;
+        }
+      }
+      await signedTransfer('PUT', url, headers: headers, bytes: bytes);
     }
     requireWorkspace(workspace);
-    await command(
-      '${record.kind == 'leave' ? '/leave/requests' : '/requests'}/${record.id}/attachments/${requiredText(presign, 'attachmentId')}/complete',
-    );
+    final completeKey = await keys.acquire('$signature:complete', {
+      'attachmentId': attachmentId,
+    });
+    await command('$base/complete', key: completeKey);
+    await keys.clear('$signature:presign');
+    await keys.clear('$signature:complete');
   }
 
   Future<Uint8List> download(WorkflowRecord record, JsonMap attachment) async {
@@ -106,18 +125,25 @@ mixin AttachmentsMethods on ResourceRepository {
         '${record.kind == 'leave' ? '/leave/requests' : '/requests'}/${record.id}/attachments/${attachment['id']}/download',
       ),
     );
-    final response = await http
-        .get(fileUrl(requiredText(file, 'downloadUrl')))
-        .timeout(const Duration(seconds: 60));
-    if (response.statusCode != 200) {
-      throw const DataFailure(
-        0,
-        'DOWNLOAD_FAILED',
-        'Could not download this attachment.',
+    final downloadUrl = requiredText(file, 'downloadUrl');
+    final path = '/requests/${record.id}/attachments/${attachment['id']}/file';
+    if (downloadUrl.startsWith('/')) {
+      if (record.kind != 'request' || downloadUrl != '/api/v1$path') {
+        throw const DataFailure(
+          0,
+          'INVALID_FILE_URL',
+          'The download link does not match this private attachment.',
+        );
+      }
+      final result = await client.request(
+        DataRequest('GET', path, responseType: 'bytes'),
       );
+      requireWorkspace(workspace);
+      return result.data as Uint8List;
     }
+    final bytes = await signedTransfer('GET', fileUrl(downloadUrl));
     requireWorkspace(workspace);
-    return response.bodyBytes;
+    return bytes;
   }
 
   Uri fileUrl(String value) {
@@ -135,7 +161,7 @@ mixin AttachmentsMethods on ResourceRepository {
         u.scheme != 'https' ||
         u.host.isEmpty ||
         u.userInfo.isNotEmpty ||
-        (trustedOrigins.isNotEmpty && !trustedOrigins.contains(u.origin))) {
+        !trustedOrigins.contains(u.origin)) {
       throw const DataFailure(
         0,
         'INVALID_FILE_URL',

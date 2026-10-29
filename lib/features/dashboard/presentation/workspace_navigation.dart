@@ -19,7 +19,7 @@ const _home = WorkspaceTab(
 );
 const _activity = WorkspaceTab(
   '/activity',
-  'Activity',
+  'Attendance',
   Icons.schedule_outlined,
   Icons.schedule,
 );
@@ -38,7 +38,7 @@ const _approvals = WorkspaceTab(
 );
 const _work = WorkspaceTab(
   '/workflows',
-  'Work',
+  'Tasks',
   Icons.work_outline,
   Icons.work,
 );
@@ -62,6 +62,19 @@ class WorkspaceNavigation extends StatelessWidget {
   int _selectedIndex(List<WorkspaceTab> tabs) {
     final direct = tabs.indexWhere((tab) => tab.path == location);
     if (direct >= 0) return direct;
+    final parent =
+        location.startsWith('/record/leave/') || location == '/new/leave'
+        ? '/leave'
+        : location.startsWith('/record/request/') ||
+              location.startsWith('/edit/request/') ||
+              location == '/new/request'
+        ? '/requests'
+        : location.startsWith('/record/correction/') ||
+              location == '/new/correction'
+        ? '/activity'
+        : '/workflows';
+    final parentIndex = tabs.indexWhere((tab) => tab.path == parent);
+    if (parentIndex >= 0) return parentIndex;
     if (location.startsWith('/profile')) {
       final workIndex = tabs.indexWhere((tab) => tab.path == '/workflows');
       if (workIndex >= 0) return workIndex;

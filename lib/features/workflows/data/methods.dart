@@ -5,9 +5,23 @@ import 'mappers.dart';
 
 import 'package:hrflow_mobile/shared/domain/workflow.dart';
 import 'package:hrflow_mobile/core/data/resource_repository.dart';
+import 'package:hrflow_mobile/features/leave/data/command_body.dart';
 
 mixin WorkflowsMethods on ResourceRepository {
+  // The current backend has no account-scoped form-draft API.
+  bool get supportsFormDrafts => client.isLocal;
+  void _requireFormDrafts() {
+    if (!supportsFormDrafts) {
+      throw const DataFailure(
+        501,
+        'DRAFT_RECOVERY_UNAVAILABLE',
+        'Unsaved form recovery is unavailable for this workspace.',
+      );
+    }
+  }
+
   Future<JsonMap?> readFormDraft(String kind) async {
+    _requireFormDrafts();
     final response = object(
       (await client.request(DataRequest('GET', '/form-drafts/$kind'))).data,
     );
@@ -15,12 +29,14 @@ mixin WorkflowsMethods on ResourceRepository {
   }
 
   Future<void> saveFormDraft(String kind, JsonMap payload) async {
+    _requireFormDrafts();
     await client.request(
       DataRequest('PUT', '/form-drafts/$kind', body: {'payload': payload}),
     );
   }
 
   Future<void> clearFormDraft(String kind) async {
+    _requireFormDrafts();
     await client.request(DataRequest('DELETE', '/form-drafts/$kind'));
   }
 
@@ -133,8 +149,48 @@ mixin WorkflowsMethods on ResourceRepository {
     );
   }
 
-  Future<WorkflowRecord> create(String kind, JsonMap body, String key) =>
-      _record(command(pathFor(kind), body: body, key: key), kind);
+  Future<WorkflowRecord> create(String kind, JsonMap body, String key) async =>
+      _record(
+        command(pathFor(kind), body: await _commandBody(kind, body), key: key),
+        kind,
+      );
+
+  Future<JsonMap> _commandBody(String kind, JsonMap body) async {
+    if (client.isLocal) return body;
+    switch (kind) {
+      case 'leave':
+        return leaveCommandBody(this, body);
+      case 'correction':
+        return {
+          'date': body['date'] ?? body['workDate'],
+          'proposedClockIn': body['proposedClockIn'] ?? body['newCheckIn'],
+          'proposedClockOut': body['proposedClockOut'] ?? body['newCheckOut'],
+          'reason': body['reason'],
+          if (body['sessionId'] != null) 'sessionId': body['sessionId'],
+        };
+      default:
+        return kind == 'request' ? _requestBody(body) : body;
+    }
+  }
+
+  JsonMap _requestBody(JsonMap body) =>
+      !client.isLocal && body['type'] != 'MATERIAL'
+      ? {...body, 'quantity': body['quantity'] ?? 1}
+      : body;
+
+  @override
+  Future<void> saveEntity(
+    String path,
+    JsonMap values, {
+    JsonMap? existing,
+    String? key,
+  }) => super.saveEntity(
+    path,
+    path == '/requests' ? _requestBody(values) : values,
+    existing: existing,
+    key: key,
+  );
+
   Future<WorkflowRecord> decide(
     WorkflowRecord record,
     String action,

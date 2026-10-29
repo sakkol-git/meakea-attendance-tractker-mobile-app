@@ -8,6 +8,8 @@ import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/features/identity/domain/models.dart';
 
+import 'assignment_section.dart';
+
 class ShiftAssignmentsPage extends ConsumerWidget {
   final String employeeId;
   final String? employeeName;
@@ -50,68 +52,6 @@ class ShiftAssignmentsPage extends ConsumerWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class ShiftAssignmentsSection extends ConsumerWidget {
-  final String employeeId;
-  const ShiftAssignmentsSection(this.employeeId, {super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final date = ref
-        .watch(clockProvider)()
-        .toUtc()
-        .add(const Duration(hours: 7))
-        .toIso8601String()
-        .substring(0, 10);
-    return AsyncPanel(
-      value: ref.watch(shiftAssignmentsProvider(employeeId)),
-      retry: () => ref.invalidate(shiftAssignmentsProvider(employeeId)),
-      builder: (rows) => rows.isEmpty
-          ? const EmptyState(
-              title: 'No assigned shifts',
-              description: 'HR can assign a work schedule. Company shift rules are reference information; they do not establish a personal assignment.',
-              icon: Icons.event_note_outlined,
-            )
-          : Column(
-              children: [
-                for (final assignment in rows)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Surface(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            assignment.shiftName,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            assignment.includes(date)
-                                ? 'Current assignment'
-                                : assignment.validFrom.compareTo(date) > 0
-                                ? 'Upcoming assignment'
-                                : 'Previous assignment',
-                            style: TextStyle(
-                              color: context.semantic.selectedNav,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          InfoRow('First day', shortDate(assignment.validFrom)),
-                          InfoRow(
-                            'Last day',
-                            assignment.validTo == null
-                                ? 'No end date'
-                                : shortDate(assignment.validTo),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
     );
   }
 }

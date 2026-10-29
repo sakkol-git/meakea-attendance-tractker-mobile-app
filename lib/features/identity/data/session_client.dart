@@ -224,6 +224,7 @@ class ClientData implements SessionGateway, ApiClient {
     (source as LocalDataSource).setDemoRole(role);
     final profile = ProfileMapper.fromJson(
       object((await source.send(const DataRequest('GET', '/auth/me'))).data),
+      demo: true,
     );
     await _bindCommandAccount(profile);
     return profile;
@@ -346,10 +347,8 @@ class ClientData implements SessionGateway, ApiClient {
     _workspaceGeneration++;
     final generation = ++_generation;
     try {
-      try {
+      if (isLocal) {
         await source.send(const DataRequest('DELETE', '/form-drafts'));
-      } catch (_) {
-        // Session erasure still proceeds when the server is unavailable.
       }
       if (!isLocal) {
         String? saved;

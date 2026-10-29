@@ -84,15 +84,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 if (session.error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.x4),
-                    child: Text(
-                      session.error!,
-                      style: TextStyle(color: context.semantic.error),
+                    child: Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        session.error!,
+                        style: TextStyle(color: context.semantic.error),
+                      ),
                     ),
                   ),
                 if (local) ...demoChoices() else remoteForm(),
                 TextButton(
-                  onPressed: () => context.push('/setup'),
-                  child: Text('Set up a company workspace'),
+                  onPressed: () => context.push(local ? '/setup' : '/help'),
+                  child: Text(
+                    local
+                        ? 'Set up a company workspace'
+                        : 'Sign-in and getting started help',
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.x8),
                 Text(
@@ -190,6 +197,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         TextFormField(
           controller: password,
           obscureText: obscure,
+          autocorrect: false,
+          enableSuggestions: false,
           autofillHints: const [AutofillHints.password],
           decoration: InputDecoration(
             labelText: 'Password',

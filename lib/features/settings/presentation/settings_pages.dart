@@ -8,6 +8,8 @@ import 'package:hrflow_mobile/app/providers.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 import 'package:hrflow_mobile/core/widgets.dart';
 
+import '../../notifications/presentation/preferences_panel.dart';
+
 class PreferencesPage extends ConsumerWidget {
   const PreferencesPage({super.key});
   @override
@@ -30,51 +32,13 @@ class PreferencesPage extends ConsumerWidget {
               const ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text('Language'),
-                subtitle: Text('English · Khmer typography supported'),
+                subtitle: Text('English'),
               ),
             ],
           ),
         ),
         const SectionTitle('Notifications'),
-        AsyncPanel(
-          value: ref.watch(notificationPreferencesProvider),
-          retry: () => ref.invalidate(notificationPreferencesProvider),
-          builder: (values) => Surface(
-            child: Column(
-              children: [
-                const ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text('Approval updates'),
-                  subtitle: Text('Required updates about your requests'),
-                  trailing: Icon(Icons.lock_outline, size: 20),
-                ),
-                for (final entry in [
-                  ('attendance', 'Attendance reminders'),
-                  ('announcements', 'Company announcements'),
-                ])
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(entry.$2),
-                    value: values[entry.$1] as bool? ?? true,
-                    onChanged: (v) async {
-                      try {
-                        await ref
-                            .read(notificationsRepositoryProvider)
-                            .savePreferences({
-                              ...values,
-                              entry.$1: v,
-                              'approvals': true,
-                            });
-                        ref.invalidate(notificationPreferencesProvider);
-                      } catch (e) {
-                        if (context.mounted) toast(context, message(e));
-                      }
-                    },
-                  ),
-              ],
-            ),
-          ),
-        ),
+        const NotificationPreferencesPanel(),
       ],
     );
   }

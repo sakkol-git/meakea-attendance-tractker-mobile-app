@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:http/http.dart' as http;
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/data/json.dart';
 import 'package:hrflow_mobile/core/data/resource_repository.dart';
@@ -76,20 +75,22 @@ mixin ReportingMethods on ResourceRepository, AttachmentsMethods {
         ),
       );
     }
-    final response = await http
-        .get(fileUrl(requiredText(current, 'downloadUrl')))
-        .timeout(const Duration(seconds: 60));
-    if (response.statusCode != 200) {
+    final id = requiredText(current, 'id');
+    final path = '/reports/exports/$id/download';
+    if (requiredText(current, 'downloadUrl') != '/api/v1$path') {
       throw const DataFailure(
         0,
-        'DOWNLOAD_FAILED',
-        'Could not download the export.',
+        'INVALID_FILE_URL',
+        'The export link does not match this private job.',
       );
     }
+    final response = await client.request(
+      DataRequest('GET', path, responseType: 'csv'),
+    );
     requireWorkspace(workspace);
     return (
       name: current['fileName'] as String? ?? 'attendance.csv',
-      bytes: response.bodyBytes,
+      bytes: Uint8List.fromList(utf8.encode(response.data as String)),
     );
   }
 }
