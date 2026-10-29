@@ -1,0 +1,8 @@
+# Reviewed immutable findings only: SHA-256 source/bundle receipts.
+# Backend also includes the deliberate nonfunctional JWT negative fixture.
+# No path/rule/commit wildcards: future changes remain scanned.
+c97cf30d3d2b65fb78a4068164d70df5f3dc7674:contracts/bundle.json:generic-api-key:5
+c97cf30d3d2b65fb78a4068164d70df5f3dc7674:docs/validation/client-integration-source.json:generic-api-key:18
+c97cf30d3d2b65fb78a4068164d70df5f3dc7674:docs/validation/client-integration-source.json:generic-api-key:225
+c97cf30d3d2b65fb78a4068164d70df5f3dc7674:docs/validation/client-integration-source.json:generic-api-key:29
+c97cf30d3d2b65fb78a4068164d70df5f3dc7674:docs/validation/client-integration-source.json:generic-api-key:84
