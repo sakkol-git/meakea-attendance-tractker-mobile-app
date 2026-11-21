@@ -79,10 +79,15 @@ class AppPage extends ConsumerWidget {
         if (subtitle != null)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.x6),
-            child: Text(
-              subtitle!,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: context.semantic.textMuted),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                subtitle!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: context.semantic.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ...children,
@@ -170,32 +175,36 @@ class SectionTitle extends StatelessWidget {
 class AsyncPanel<T> extends ConsumerWidget {
   final AsyncValue<T> value;
   final Widget Function(T) builder;
+  final WidgetBuilder? loadingBuilder;
   final VoidCallback retry;
   const AsyncPanel({
     super.key,
     required this.value,
+    this.loadingBuilder,
     required this.builder,
     required this.retry,
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) => value.when(
     data: builder,
-    loading: () => Padding(
-      padding: EdgeInsets.all(AppSpacing.x8),
-      child: Semantics(
-        liveRegion: true,
-        child: Column(
-          children: [
-            if (MediaQuery.disableAnimationsOf(context))
-              const Icon(Icons.hourglass_empty)
-            else
-              const CircularProgressIndicator(),
-            const SizedBox(height: AppSpacing.x3),
-            const Text('Loading content…'),
-          ],
+    loading: () =>
+        loadingBuilder?.call(context) ??
+        Padding(
+          padding: EdgeInsets.all(AppSpacing.x8),
+          child: Semantics(
+            liveRegion: true,
+            child: Column(
+              children: [
+                if (MediaQuery.disableAnimationsOf(context))
+                  const Icon(Icons.hourglass_empty)
+                else
+                  const CircularProgressIndicator(),
+                const SizedBox(height: AppSpacing.x3),
+                const Text('Loading content…'),
+              ],
+            ),
+          ),
         ),
-      ),
-    ),
     error: (e, _) => Semantics(
       liveRegion: true,
       child: Surface(

@@ -15,6 +15,11 @@ Use this runbook for a repeatable client review before connecting a live backend
 1. Repeat core journeys in portrait and landscape, light and dark appearance, and 200% text scaling.
 1. Record device, operating-system version, role, scenario, result and a screenshot or recording for any failure.
 
+## Home attendance
+
+- On a narrow phone, inspect Home before recording attendance. The workday card should present today’s status and one clock action above the times. Turn on large text and confirm the times can stack without clipping.
+- Delay or interrupt the attendance read. During initial loading, the clock action should be unavailable. A failed read should offer recovery. Once the day loads, record attendance and check the updated action and confirmation.
+
 ## Role journeys
 
 | Role | Scenario | Expected result |

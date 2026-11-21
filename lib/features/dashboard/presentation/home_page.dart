@@ -9,6 +9,9 @@ import 'package:hrflow_mobile/core/widgets.dart';
 import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/leave_quantity.dart';
 
+import 'package:hrflow_mobile/core/design_tokens.dart';
+
+import 'attendance_clock_card.dart';
 import 'role_tasks.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -47,18 +50,18 @@ class _HomePageState extends ConsumerState<HomePage> {
           onPressed: () => context.push('/profile'),
           icon: const Icon(Icons.person_outline),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.x2),
       ],
       children: [
         InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.large),
           onTap: () => context.push('/profile'),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.x1),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 25,
+                  radius: AppSpacing.x6,
                   backgroundColor: context.semantic.successBackground,
                   child: Text(
                     p.name
@@ -73,7 +76,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: AppSpacing.x4),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,150 +98,37 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ),
         RoleTasks(p),
-        const SizedBox(height: 12),
+        const SizedBox(height: AppSpacing.x3),
         AsyncPanel(
           value: today,
           retry: () => ref.invalidate(todayProvider),
-          builder: (data) {
-            final sessions = data.sessions;
-            final open = sessions.where((s) => s.clockOut == null).firstOrNull;
-            final recent = sessions.lastOrNull;
-            return Container(
-              padding: EdgeInsets.all(p.manages ? 16 : 24),
-              decoration: BoxDecoration(
-                color: context.semantic.heroBackground,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.schedule_outlined,
-                        color: context.semantic.onHeroMuted,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          open == null
-                              ? 'Make today count'
-                              : 'You’re clocked in',
-                          style: TextStyle(
-                            color: context.semantic.onHero,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: open == null
-                              ? context.semantic.heroSubtle
-                              : context.semantic.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: p.manages ? 10 : 20),
-                  Text(
-                    p.manages
-                        ? 'Your attendance'
-                        : open == null
-                        ? (recent == null
-                              ? 'Ready for a\nproductive day?'
-                              : 'Your workday,\nwell recorded.')
-                        : 'One task at\na time.',
-                    style: TextStyle(
-                      color: context.semantic.onHero,
-                      fontSize: p.manages ? 20 : 30,
-                      height: 1.3,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: p.manages ? 12 : 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ClockMetric(
-                          'Clock in',
-                          timeText((open ?? recent)?.clockIn),
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 38,
-                        color: context.semantic.heroSubtle,
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        child: _ClockMetric(
-                          'Clock out',
-                          timeText(recent?.clockOut),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: p.manages ? 12 : 24),
-                  Theme(
-                    data: Theme.of(context).copyWith(
-                      filledButtonTheme: FilledButtonThemeData(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: context.semantic.onHero,
-                          foregroundColor: context.semantic.heroBackground,
-                          minimumSize: const Size(48, 52),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                    child: BusyButton(
-                      label: open == null ? 'Clock in' : 'Clock out',
-                      icon: open == null ? Icons.login : Icons.logout,
-                      action: () async {
-                        clockKey ??= commandKey();
-                        await ref
-                            .read(attendanceRepositoryProvider)
-                            .clock(open: open, key: clockKey!);
-                        clockKey = null;
-                        ref.invalidate(todayProvider);
-                        ref.invalidate(sessionsProvider);
-                        if (context.mounted) {
-                          toast(
-                            context,
-                            open == null
-                                ? 'Clock-in recorded'
-                                : 'Clock-out recorded',
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Recorded in your company timezone · GMT+07',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: context.semantic.onHeroMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
+          loadingBuilder: (_) => const AttendanceClockCard.loading(),
+          builder: (day) => AttendanceClockCard(
+            day: day,
+            record: (open) async {
+              clockKey ??= commandKey();
+              await ref
+                  .read(attendanceRepositoryProvider)
+                  .clock(open: open, key: clockKey!);
+              clockKey = null;
+              ref.invalidate(todayProvider);
+              ref.invalidate(sessionsProvider);
+              if (context.mounted) {
+                toast(
+                  context,
+                  open == null ? 'Clock-in recorded' : 'Clock-out recorded',
+                );
+              }
+            },
+          ),
         ),
         const SectionTitle('Quick actions'),
         LayoutBuilder(
           builder: (context, constraints) {
-            final width = (constraints.maxWidth - 12) / 2;
+            final width = (constraints.maxWidth - AppSpacing.x3) / 2;
             return Wrap(
-              spacing: 12,
-              runSpacing: 12,
+              spacing: AppSpacing.x3,
+              runSpacing: AppSpacing.x3,
               children: [
                 _QuickAction(
                   width: width,
@@ -281,40 +171,58 @@ class _HomePageState extends ConsumerState<HomePage> {
         AsyncPanel(
           value: ref.watch(balancesProvider),
           retry: () => ref.invalidate(balancesProvider),
-          builder: (balances) => Surface(
-            child: Column(
-              children: [
-                for (var i = 0; i < balances.length; i++) ...[
-                  if (i > 0) const Divider(height: 24),
-                  Row(
+          builder: (balances) => balances.isEmpty
+              ? Surface(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(balances[i].name),
-                            Text(
-                              leaveBalancePeriod(balances[i].year),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
                       Text(
-                        formatLeaveDays(balances[i].available),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: context.semantic.selectedNav,
-                        ),
+                        'No leave balances available',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      TextButton(
+                        onPressed: () => context.push('/leave'),
+                        child: const Text('View leave'),
                       ),
                     ],
                   ),
-                ],
-              ],
-            ),
-          ),
+                )
+              : Surface(
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < balances.length; i++) ...[
+                        if (i > 0) const Divider(height: AppSpacing.x6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(balances[i].name),
+                                  Text(
+                                    leaveBalancePeriod(balances[i].year),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              formatLeaveDays(balances[i].available),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: context.semantic.selectedNav,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.x4),
         Surface(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -323,7 +231,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Icons.tips_and_updates_outlined,
                 color: context.semantic.selectedNav,
               ),
-              SizedBox(width: 12),
+              SizedBox(width: AppSpacing.x3),
               Expanded(
                 child: Text(
                   'Small habits, better workdays. Remember to clock out when you finish.',
@@ -335,30 +243,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       ],
     );
   }
-}
-
-class _ClockMetric extends StatelessWidget {
-  final String label, value;
-  const _ClockMetric(this.label, this.value);
-  @override
-  Widget build(BuildContext c) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        label,
-        style: TextStyle(color: c.semantic.onHeroMuted, fontSize: 12),
-      ),
-      const SizedBox(height: 6),
-      Text(
-        value,
-        style: TextStyle(
-          color: c.semantic.onHero,
-          fontSize: value == 'Not recorded' ? 16 : 24,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    ],
-  );
 }
 
 class _QuickAction extends StatelessWidget {
@@ -378,20 +262,21 @@ class _QuickAction extends StatelessWidget {
     width: width,
     child: Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.card),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.x4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(icon, color: c.semantic.selectedNav),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.x4),
               Text(title, style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.x1),
               Text(
                 subtitle,
-                style: TextStyle(fontSize: 12, color: c.semantic.textMuted),
+                style: Theme.of(c).textTheme.bodySmall
+                    ?.copyWith(color: c.semantic.textMuted),
               ),
             ],
           ),
