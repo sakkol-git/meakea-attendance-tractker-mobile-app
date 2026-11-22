@@ -1712,6 +1712,38 @@ void main() {
     },
   );
 
+  testWidgets(
+    'lookup clear resets the query and page without selecting a record',
+    (tester) async {
+      final c = _client();
+      final repo = _PagedPeople(c);
+      final container = await _app(
+        tester,
+        c,
+        additional: [identityRepositoryProvider.overrideWithValue(repo)],
+      );
+      await container.read(sessionProvider.notifier).demo('HR_ADMIN');
+      await tester.pumpAndSettle();
+      final result = showPagedCaseLookup(
+        tester.element(find.byType(Scaffold).first),
+        'identity.people',
+        'Employee',
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, 'Special Person');
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      expect(repo.lastSearch, 'Special Person');
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pumpAndSettle();
+      expect(repo.lastSearch, '');
+      expect(find.text('Page 1'), findsOneWidget);
+      await tester.tap(find.text('Cancel').last);
+      await tester.pumpAndSettle();
+      expect(await result, isNull);
+    },
+  );
+
   testWidgets('acceptance F10 form restores server draft after navigation', (
     tester,
   ) async {

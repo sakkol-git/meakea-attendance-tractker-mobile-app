@@ -9,6 +9,7 @@ import 'package:hrflow_mobile/core/protocol.dart';
 import 'package:hrflow_mobile/core/theme.dart';
 
 export 'package:hrflow_mobile/core/presentation_format.dart';
+export 'package:hrflow_mobile/core/widgets/info_row.dart';
 
 class AppPage extends ConsumerWidget {
   final String title;
@@ -341,36 +342,6 @@ class StatusPill extends StatelessWidget {
       ),
     );
   }
-}
-
-class InfoRow extends StatelessWidget {
-  final String label, value;
-  const InfoRow(this.label, this.value, {super.key});
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: MergeSemantics(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(color: context.semantic.textMuted),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
 }
 
 class BusyButton extends StatefulWidget {

@@ -104,8 +104,16 @@ Future<void> editEntity(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: TextFormField(
                           controller: controllers[entry.key],
-                          autocorrect: ['name', 'description', 'title'].contains(entry.key),
-                          enableSuggestions: ['name', 'description', 'title'].contains(entry.key),
+                          autocorrect: [
+                            'name',
+                            'description',
+                            'title',
+                          ].contains(entry.key),
+                          enableSuggestions: [
+                            'name',
+                            'description',
+                            'title',
+                          ].contains(entry.key),
                           decoration: InputDecoration(labelText: entry.value),
                           keyboardType: entry.key == 'entitled'
                               ? TextInputType.number

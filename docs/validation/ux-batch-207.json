@@ -1,0 +1,935 @@
+{
+  "date": "2026-11-22",
+  "range": {
+    "first": 108,
+    "last": 207,
+    "cycles": 100
+  },
+  "completedImplementationCycles": [
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    161,
+    162,
+    163,
+    164,
+    165,
+    166,
+    167,
+    168,
+    169,
+    170,
+    171,
+    172,
+    173,
+    174,
+    175,
+    176,
+    177,
+    178,
+    179,
+    180,
+    181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206
+  ],
+  "cycles": [
+    {
+      "cycle": 108,
+      "repo": "web",
+      "commit": "8a6217ab6c13a6300614b5ed4f719da2e5bb59ed",
+      "subject": "ux(forms): clear stale submission errors when drafts change [cycle 108]"
+    },
+    {
+      "cycle": 109,
+      "repo": "web",
+      "commit": "cc13e13fb6303f5b28aef5f2c689e437aea919f9",
+      "subject": "ux(forms): keep lookup retries separate from submissions [cycle 109]"
+    },
+    {
+      "cycle": 110,
+      "repo": "mobile",
+      "commit": "8b1ffce07661242cb44361af082baf809aaf0c19",
+      "subject": "ux(notifications): announce saving preferences [cycle 110]"
+    },
+    {
+      "cycle": 111,
+      "repo": "web",
+      "commit": "651b623ecf85c5465df94119de8d97ad86317e20",
+      "subject": "ux(profile): keep password editor stable during save [cycle 111]"
+    },
+    {
+      "cycle": 112,
+      "repo": "web",
+      "commit": "5b3f28831fbca9cf63f8552b1f7ef099a35a2950",
+      "subject": "ux(attachments): retry failed file listings in place [cycle 112]"
+    },
+    {
+      "cycle": 113,
+      "repo": "web",
+      "commit": "deb542f0fc1692e5ae1f726e26c6094fee988812",
+      "subject": "ux(attachments): show pending downloads and guard repeated clicks [cycle 113]"
+    },
+    {
+      "cycle": 114,
+      "repo": "web",
+      "commit": "5b04bae0a011c9f353106bec0d01a52db7b5474d",
+      "subject": "ux(attachments): report upload activity without simulated percentages [cycle 114]"
+    },
+    {
+      "cycle": 115,
+      "repo": "web",
+      "commit": "c958b79caed36ffe727a3bb701a4de283825c5df",
+      "subject": "fix(attendance): submit reviewed proposal versions [cycle 115]"
+    },
+    {
+      "cycle": 116,
+      "repo": "web",
+      "commit": "ae8fedcf1c2fcba24f9178905963382f86159e91",
+      "subject": "ux(approvals): explain filtered empty queues accurately [cycle 116]"
+    },
+    {
+      "cycle": 117,
+      "repo": "web",
+      "commit": "d108c250a782be8070a09e7408cca066a40dc891",
+      "subject": "ux(audit): explain inverted date filters [cycle 117]"
+    },
+    {
+      "cycle": 118,
+      "repo": "web",
+      "commit": "317a7658b00e3578a6f375ba1a2ee2c45fd86488",
+      "subject": "ux(audit): avoid stale counts after failed reads [cycle 118]"
+    },
+    {
+      "cycle": 119,
+      "repo": "web",
+      "commit": "1187a25115cbfa39a8ef361e0cd1064421c59dce",
+      "subject": "ux(audit): identify when filters can be cleared [cycle 119]"
+    },
+    {
+      "cycle": 120,
+      "repo": "web",
+      "commit": "6b0ae1c818a6fcce0e35ef76e5a073a1a263e4a9",
+      "subject": "ux(audit): identify the displayed time zone [cycle 120]"
+    },
+    {
+      "cycle": 121,
+      "repo": "web",
+      "commit": "58bd2490af4f9e7e2bf85e58177e10d3b03d74c6",
+      "subject": "ux(audit): preserve exact identifiers during entry [cycle 121]"
+    },
+    {
+      "cycle": 122,
+      "repo": "web",
+      "commit": "c0583a0de30ac83ac5aa7bc893624d1b2470db67",
+      "subject": "ux(audit): fit filters to tablet and phone widths [cycle 122]"
+    },
+    {
+      "cycle": 123,
+      "repo": "web",
+      "commit": "8ed46d247bee385da672e437f628982102b629c7",
+      "subject": "ux(audit): preserve multiline reasons [cycle 123]"
+    },
+    {
+      "cycle": 124,
+      "repo": "web",
+      "commit": "d5e1ab4d0d2f6d2bb8f6315c449949cf143da781",
+      "subject": "ux(delegation): prevent reviewer retries submitting forms [cycle 124]"
+    },
+    {
+      "cycle": 125,
+      "repo": "web",
+      "commit": "a951ae8cd6ec991779b6f4cf00161e3458d310a2",
+      "subject": "ux(delegation): explain empty reviewer choices [cycle 125]"
+    },
+    {
+      "cycle": 126,
+      "repo": "web",
+      "commit": "05c0ea43caa33d882bb08a659aeb84ad2bb2a545",
+      "subject": "ux(delegation): allow Escape through the discard guard [cycle 126]"
+    },
+    {
+      "cycle": 127,
+      "repo": "web",
+      "commit": "db500cb39a434b38f6a15c7598c64c62cb2fcf42",
+      "subject": "ux(delegation): lock cancellation controls during commands [cycle 127]"
+    },
+    {
+      "cycle": 128,
+      "repo": "web",
+      "commit": "b57d621ed2443b88300583df65c0235544698b4f",
+      "subject": "ux(delegation): make coverage dates readable with years [cycle 128]"
+    },
+    {
+      "cycle": 129,
+      "repo": "web",
+      "commit": "499db2d60b2c2969ed7d82a22682008b51e3691b",
+      "subject": "ux(notifications): distinguish updates across calendar years [cycle 129]"
+    },
+    {
+      "cycle": 130,
+      "repo": "web",
+      "commit": "e3b33963884a79ffa19e37abd2f7e37e686c48ab",
+      "subject": "ux(notifications): retain readable long and multiline updates [cycle 130]"
+    },
+    {
+      "cycle": 131,
+      "repo": "web",
+      "commit": "bd19a980de9680604e4d598c76476919dee3a748",
+      "subject": "ux(delegation): explain reason limits before submission [cycle 131]"
+    },
+    {
+      "cycle": 132,
+      "repo": "web",
+      "commit": "8443ba0bb99d5e9bf61204f9b412705a1f60aab9",
+      "subject": "ux(delegation): open new forms without stale command feedback [cycle 132]"
+    },
+    {
+      "cycle": 133,
+      "repo": "web",
+      "commit": "c4375b33160df6feba3356f3721a875ea3bf164b",
+      "subject": "ux(delegation): name and focus the scrollable record region [cycle 133]"
+    },
+    {
+      "cycle": 134,
+      "repo": "web",
+      "commit": "e795a64ab98cb6d3379ea8310fe35fe6344fd31c",
+      "subject": "ux(people): expose directory search as a search field [cycle 134]"
+    },
+    {
+      "cycle": 135,
+      "repo": "web",
+      "commit": "de315044dde3f9c0ff2fc5da279a8c18e38a30cc",
+      "subject": "ux(organization): recover from empty filtered records [cycle 135]"
+    },
+    {
+      "cycle": 136,
+      "repo": "web",
+      "commit": "0f49aff3a9fcd50e90e36db588808c0c0b0d2cd3",
+      "subject": "ux(organization): announce the filtered record count [cycle 136]"
+    },
+    {
+      "cycle": 137,
+      "repo": "mobile",
+      "commit": "74876cc704be1e9ad4a04ca4ba1a1a03def23f35",
+      "subject": "fix(profile): tolerate whitespace in avatar initials [cycle 137]"
+    },
+    {
+      "cycle": 138,
+      "repo": "mobile",
+      "commit": "f31bf2bf589fefdbd290a0b1d016bd462901b3bf",
+      "subject": "ux(profile): improve name-entry keyboard flow [cycle 138]"
+    },
+    {
+      "cycle": 139,
+      "repo": "mobile",
+      "commit": "d85452d5bc1d76eee5788ace7b645e2d7d72b5c7",
+      "subject": "ux(profile): preserve typed time-zone identifiers [cycle 139]"
+    },
+    {
+      "cycle": 140,
+      "repo": "mobile",
+      "commit": "2c075f9e7e1d215bf851e9ddacd2263e4fe2cb27",
+      "subject": "ux(login): avoid correcting work-email addresses [cycle 140]"
+    },
+    {
+      "cycle": 141,
+      "repo": "mobile",
+      "commit": "e41cd5b8cf64b8e8573484045c6e47c5021cfe44",
+      "subject": "ux(login): keep workspace identifiers unchanged during entry [cycle 141]"
+    },
+    {
+      "cycle": 142,
+      "repo": "mobile",
+      "commit": "8e052aa37f349bb0ce794e370c8ee5e22e506fd4",
+      "subject": "ux(audit): preserve exact native filter identifiers [cycle 142]"
+    },
+    {
+      "cycle": 143,
+      "repo": "mobile",
+      "commit": "1ca6d3ffe6c3f479a2ef402a56d0e1882077735b",
+      "subject": "ux(people): retain a label while native search has text [cycle 143]"
+    },
+    {
+      "cycle": 144,
+      "repo": "web",
+      "commit": "55ae941fa1cf79cbda5cb3e4e8b24d86d7692bf5",
+      "subject": "ux(reports): identify fixed demo data instead of inert period filters [cycle 144]"
+    },
+    {
+      "cycle": 145,
+      "repo": "web",
+      "commit": "68cd7c9b1a9928698981921a1f05b0285ea3ab38",
+      "subject": "fix(reports): avoid claiming attendance when expected data is empty [cycle 145]"
+    },
+    {
+      "cycle": 146,
+      "repo": "web",
+      "commit": "cab9172e1331b60eca5fb96d2eb09d1f02caf0f5",
+      "subject": "ux(reports): describe the aggregate attendance metric accurately [cycle 146]"
+    },
+    {
+      "cycle": 147,
+      "repo": "web",
+      "commit": "4004e98c2df8578b0807676db74e9a727fe55c00",
+      "subject": "ux(reports): align private attendance table columns [cycle 147]"
+    },
+    {
+      "cycle": 148,
+      "repo": "web",
+      "commit": "a87a20fc11c2e515760dce6b01b03dd817725f2f",
+      "subject": "ux(reports): announce empty recorded-session results [cycle 148]"
+    },
+    {
+      "cycle": 149,
+      "repo": "web",
+      "commit": "e0c3dd5bdd9c2f7ce01fcc0d72148e70535b4fd0",
+      "subject": "ux(reports): disable repeated export actions while pending [cycle 149]"
+    },
+    {
+      "cycle": 150,
+      "repo": "web",
+      "commit": "74a87d00e48e12baaf4cdff814c1a8df4a31f0be",
+      "subject": "ux(notifications): disable pending mark-all-read actions [cycle 150]"
+    },
+    {
+      "cycle": 151,
+      "repo": "web",
+      "commit": "195c9356f2d2022ff594e2bbd8b63c8d71108ccc",
+      "subject": "ux(shifts): choose weekdays by name instead of a numeric mask [cycle 151]"
+    },
+    {
+      "cycle": 152,
+      "repo": "web",
+      "commit": "09718ef515762f9ae8d4cf1250647f6e77ee9d1d",
+      "subject": "ux(work-sites): explain coordinate format and limits [cycle 152]"
+    },
+    {
+      "cycle": 153,
+      "repo": "web",
+      "commit": "6b3662f182e9045deff515863c32b2275ab9f901",
+      "subject": "ux(work-sites): explain the approved radius measurement [cycle 153]"
+    },
+    {
+      "cycle": 154,
+      "repo": "web",
+      "commit": "2f6efa8d2c83ab3e0789a79b0023e8ab1b49470e",
+      "subject": "ux(schedules): explain time-zone entry independently of placeholders [cycle 154]"
+    },
+    {
+      "cycle": 155,
+      "repo": "web",
+      "commit": "faba2634187350ffe3a3ed6acf25ef071b7bde0e",
+      "subject": "ux(shifts): show the supported grace range before validation [cycle 155]"
+    },
+    {
+      "cycle": 156,
+      "repo": "web",
+      "commit": "7a9dafe312a447d2eba43ee3a1a5e670eb37ff5a",
+      "subject": "ux(people): preserve exact employee references during entry [cycle 156]"
+    },
+    {
+      "cycle": 157,
+      "repo": "mobile",
+      "commit": "102614699451fe5024e5e0f195f3ae0131f2b8d6",
+      "subject": "ux(requests): freeze material quantity while saving [cycle 157]"
+    },
+    {
+      "cycle": 158,
+      "repo": "mobile",
+      "commit": "020383629d999d2c3b8d08c21aadf96f4211b03f",
+      "subject": "ux(requests): freeze the reviewed title during save [cycle 158]"
+    },
+    {
+      "cycle": 159,
+      "repo": "mobile",
+      "commit": "2fcdeb2b45e07209f555cb7edaa5e2534c893a1e",
+      "subject": "ux(delegation): keep the submitted reason stable while saving [cycle 159]"
+    },
+    {
+      "cycle": 160,
+      "repo": "mobile",
+      "commit": "5e6b0d0bc2ed5b8e61136dcf492916e193011542",
+      "subject": "ux(approvals): lock decision notes while the command runs [cycle 160]"
+    },
+    {
+      "cycle": 161,
+      "repo": "mobile",
+      "commit": "52f5e00f918dd6d37649652e1ef9fb4f7ed564f3",
+      "subject": "ux(delegation): announce failed saves to assistive technology [cycle 161]"
+    },
+    {
+      "cycle": 162,
+      "repo": "mobile",
+      "commit": "2900cff6b1677e63a2d8e767a8cb871481e2251f",
+      "subject": "ux(lookups): wrap pagination controls at large text sizes [cycle 162]"
+    },
+    {
+      "cycle": 163,
+      "repo": "mobile",
+      "commit": "291fcd478bb60df7609b4dda6fcf194b21c34b9e",
+      "subject": "ux(delegation): fit reviewer pagination at large text sizes [cycle 163]"
+    },
+    {
+      "cycle": 164,
+      "repo": "mobile",
+      "commit": "02d1d9e73f7394b2f5f8f03726d3d1621bc89e3d",
+      "subject": "ux(lookups): identify search actions on native keyboards [cycle 164]"
+    },
+    {
+      "cycle": 165,
+      "repo": "mobile",
+      "commit": "772799e9311bfccc5635bedb3e872b545215fae0",
+      "subject": "ux(lookups): clear native search and reset paging together [cycle 165]"
+    },
+    {
+      "cycle": 166,
+      "repo": "mobile",
+      "commit": "f6db7acb681f22e4461a450155fe24180575b4e8",
+      "subject": "ux(lookups): dismiss keyboards while browsing records [cycle 166]"
+    },
+    {
+      "cycle": 167,
+      "repo": "mobile",
+      "commit": "d1448a3bcabaf03118eeb46da21c62686a451914",
+      "subject": "ux(delegation): dismiss keyboards while browsing reviewers [cycle 167]"
+    },
+    {
+      "cycle": 168,
+      "repo": "mobile",
+      "commit": "36540d1d0e4e87844b6c172d8d6fa1da74b11afc",
+      "subject": "ux(delegation): distinguish empty eligibility from filtered results [cycle 168]"
+    },
+    {
+      "cycle": 169,
+      "repo": "mobile",
+      "commit": "f9486bd2e25974a97b40ce7e58b63258b97f2cad",
+      "subject": "ux(delegation): retry unavailable reviewer searches in place [cycle 169]"
+    },
+    {
+      "cycle": 170,
+      "repo": "mobile",
+      "commit": "e70d243d4ecf5a138b18ff9e2a13152662cb1c39",
+      "subject": "ux(lookups): announce empty search results [cycle 170]"
+    },
+    {
+      "cycle": 171,
+      "repo": "mobile",
+      "commit": "e5bd8ff137b790890e418ef71d20539b991d4b5f",
+      "subject": "ux(delegation): name reviewer loading progress [cycle 171]"
+    },
+    {
+      "cycle": 172,
+      "repo": "mobile",
+      "commit": "17d32a2f5fd2d04539749d37adca2b583412c2ab",
+      "subject": "ux(audit): wrap native paging controls for large text [cycle 172]"
+    },
+    {
+      "cycle": 173,
+      "repo": "mobile",
+      "commit": "5bb23f3c00cccfdac015df3dda5d6d17dbdcfda4",
+      "subject": "ux(audit): announce native page changes [cycle 173]"
+    },
+    {
+      "cycle": 174,
+      "repo": "mobile",
+      "commit": "f399727d3426d570e3e5dde430a7214db652e62a",
+      "subject": "ux(lookups): announce page navigation results [cycle 174]"
+    },
+    {
+      "cycle": 175,
+      "repo": "mobile",
+      "commit": "b5a28ff59712cf22091e233cf36a88fd10551885",
+      "subject": "ux(delegation): announce reviewer result pages [cycle 175]"
+    },
+    {
+      "cycle": 176,
+      "repo": "mobile",
+      "commit": "495c48493830d3a42bbc31362356ccc521daf4d5",
+      "subject": "ux(profile): align wrapped names within the profile header [cycle 176]"
+    },
+    {
+      "cycle": 177,
+      "repo": "mobile",
+      "commit": "00688d509506fad1f3b6e3873639b5cef7cf4229",
+      "subject": "ux(organization): avoid rewriting native record identifiers [cycle 177]"
+    },
+    {
+      "cycle": 178,
+      "repo": "mobile",
+      "commit": "ca4548d377752d84660357f91cb6f2c66f1fc928",
+      "subject": "ux(setup): improve company-name keyboard entry [cycle 178]"
+    },
+    {
+      "cycle": 179,
+      "repo": "mobile",
+      "commit": "6dce9b9c1e4b8877b5722874ab604fb82abdebdd",
+      "subject": "ux(setup): preserve workspace slugs during entry [cycle 179]"
+    },
+    {
+      "cycle": 180,
+      "repo": "mobile",
+      "commit": "5946fe106b9b8984cbb6b8bed39313a1e9a6ced9",
+      "subject": "ux(setup): support owner-name autofill and keyboard flow [cycle 180]"
+    },
+    {
+      "cycle": 181,
+      "repo": "mobile",
+      "commit": "2177c49c1a3599f7a84489920d20325e67c1c89e",
+      "subject": "ux(setup): support exact owner work-email entry [cycle 181]"
+    },
+    {
+      "cycle": 182,
+      "repo": "mobile",
+      "commit": "4530d7b9c73e8f534e7dc4f19e3a6ab3c911aa24",
+      "subject": "ux(people): identify native directory search keyboard actions [cycle 182]"
+    },
+    {
+      "cycle": 183,
+      "repo": "mobile",
+      "commit": "7d86322585a1e7f6226d8325517f0af87c883f0b",
+      "subject": "ux(people): announce the native directory result count [cycle 183]"
+    },
+    {
+      "cycle": 184,
+      "repo": "mobile",
+      "commit": "dd31b032404fd616e9f6df3f9cc0d28b3f7a57bd",
+      "subject": "ux(people): distinguish empty directories from unmatched searches [cycle 184]"
+    },
+    {
+      "cycle": 185,
+      "repo": "mobile",
+      "commit": "877c6c41786b7e7493696b2785f691a29fd24b35",
+      "subject": "ux(approvals): fit native filter labels at large text sizes [cycle 185]"
+    },
+    {
+      "cycle": 186,
+      "repo": "mobile",
+      "commit": "bd1e62d9cb608674130cff0fceba8c037d285d11",
+      "subject": "ux(approvals): separate native filter controls consistently [cycle 186]"
+    },
+    {
+      "cycle": 187,
+      "repo": "mobile",
+      "commit": "635dc20f895ae11204afb070487e96b7e9f71a3f",
+      "subject": "ux(approvals): explain native rejection reason requirements [cycle 187]"
+    },
+    {
+      "cycle": 188,
+      "repo": "mobile",
+      "commit": "6420ac548a5e4cbfdab7aca3f30e07de2cd29cbf",
+      "subject": "ux(approvals): announce native command failure feedback [cycle 188]"
+    },
+    {
+      "cycle": 189,
+      "repo": "mobile",
+      "commit": "d780f547e8c10d190ec4b2755ed619fdf16ee768",
+      "subject": "ux(exports): identify the download action visually [cycle 189]"
+    },
+    {
+      "cycle": 190,
+      "repo": "mobile",
+      "commit": "9f87e80f50887b07467dc9bc5769408557cd747a",
+      "subject": "ux(attendance): name the date-filter removal action [cycle 190]"
+    },
+    {
+      "cycle": 191,
+      "repo": "mobile",
+      "commit": "fe02ec4171ce7a7832b73b59bf587591f302d3e4",
+      "subject": "fix(attendance): ignore date-picker results after page disposal [cycle 191]"
+    },
+    {
+      "cycle": 192,
+      "repo": "mobile",
+      "commit": "6b01ec77aeb1cbf5890fbb71b8a07b1d75e8be0d",
+      "subject": "ux(leave): expose preview summaries as accessibility headings [cycle 192]"
+    },
+    {
+      "cycle": 193,
+      "repo": "mobile",
+      "commit": "8033bddb809dba9de7b88f5b94e4206fc5d0f6aa",
+      "subject": "ux(leave): announce changed preview warnings [cycle 193]"
+    },
+    {
+      "cycle": 194,
+      "repo": "mobile",
+      "commit": "a7d0237e75fef9c8047cc7c8907e486be1de9356",
+      "subject": "ux(accessibility): expose native section headings [cycle 194]"
+    },
+    {
+      "cycle": 195,
+      "repo": "mobile",
+      "commit": "e035cde447eb9736e80afbd942a1c60c0c700c85",
+      "subject": "ux(accessibility): identify empty-state headings for screen readers [cycle 195]"
+    },
+    {
+      "cycle": 196,
+      "repo": "mobile",
+      "commit": "a8e3181ed2b4e8ed06b6c67898b61093ba7062af",
+      "subject": "ux(accessibility): read detail labels together with their values [cycle 196]"
+    },
+    {
+      "cycle": 197,
+      "repo": "mobile",
+      "commit": "b4746e49994a2c8aea0a787a9e508b9fa8c1d08b",
+      "subject": "ux(accessibility): identify native load-failure headings [cycle 197]"
+    },
+    {
+      "cycle": 198,
+      "repo": "mobile",
+      "commit": "f53e317334aa5a667e865fc1ee686affcfac40c0",
+      "subject": "ux(requests): support readable sentence entry for request titles [cycle 198]"
+    },
+    {
+      "cycle": 199,
+      "repo": "web",
+      "commit": "47124eef440172e847d884dbb5568f00578b764a",
+      "subject": "ux(shifts): highlight selected weekday choices [cycle 199]"
+    },
+    {
+      "cycle": 200,
+      "repo": "web",
+      "commit": "c28e84694b59226d784b4de0228aa7b22b8142e9",
+      "subject": "ux(shifts): announce invalid weekday selections [cycle 200]"
+    },
+    {
+      "cycle": 201,
+      "repo": "web",
+      "commit": "1765e8bec686553f09d7d6aee45e5971934926c8",
+      "subject": "ux(audit): preserve exact action-filter terms [cycle 201]"
+    },
+    {
+      "cycle": 202,
+      "repo": "web",
+      "commit": "078c4792f26aba03e81506db9c2346084d3572d2",
+      "subject": "ux(delegation): keep long coverage reasons readable [cycle 202]"
+    },
+    {
+      "cycle": 203,
+      "repo": "web",
+      "commit": "1bf7bf40175bb36704b23c3341fb8ca2ebfdfb64",
+      "subject": "ux(reports): scroll wide records instead of crushing columns [cycle 203]"
+    },
+    {
+      "cycle": 204,
+      "repo": "web",
+      "commit": "2978b5134dffdf405342142a9c4da57826e6a872",
+      "subject": "ux(people): avoid stale counts when the directory is unavailable [cycle 204]"
+    },
+    {
+      "cycle": 205,
+      "repo": "web",
+      "commit": "824be0181e9fe92fd1250b54c7bc58b6c0e5192a",
+      "subject": "test(shifts): prevent saving schedules without weekdays [cycle 205]"
+    },
+    {
+      "cycle": 206,
+      "repo": "mobile",
+      "commit": "8efb32a812dcfea5808dd99c46c0f5a04fd8798f",
+      "subject": "docs(uat): record native accessibility and recovery acceptance [cycle 206]"
+    },
+    {
+      "cycle": 206,
+      "repo": "web",
+      "commit": "14947704693d2cfe32fc6e53ef8f425bfc432b51",
+      "subject": "docs(uat): cover the completed UX refinements [cycle 206]"
+    }
+  ],
+  "finalCycle": {
+    "number": 207,
+    "purpose": "Combined verification, layout fixes, cohesion correction and publication evidence"
+  },
+  "checks": {
+    "web": {
+      "format": "passed",
+      "structure": "passed",
+      "typecheck": "passed",
+      "dataTests": 10,
+      "configTests": 2,
+      "unitTests": 141,
+      "build": "passed",
+      "bundleBudgets": "passed",
+      "browserScenarios": 39,
+      "finalShiftVisualScenario": "passed at 390/1280px, light/dark, WCAG A/AA",
+      "note": "Full browser run followed by a focused rerun for final shift layout adjustments."
+    },
+    "mobile": {
+      "analyze": "passed",
+      "tests": 203,
+      "skipped": 3,
+      "failures": 0,
+      "lookupClearRegression": "passed",
+      "scope": "Flutter unit/widget/golden checks; physical devices not executed"
+    },
+    "foundation": {
+      "contractValidation": "passed; 181 operations",
+      "checkerTests": 12,
+      "compatibility": "passed against origin/main",
+      "documentationLint": "failed; 27 existing errors in separately reorganized docs/client-design files"
+    },
+    "omitted": [
+      "Backend reactor not rerun: client presentation changes only.",
+      "Installed-device UAT, human screen-reader review and deployed gateway acceptance not executed."
+    ]
+  },
+  "boundaries": "No HTTP/Avro changes, migrations, HR policy, authorization changes or new infrastructure. Weekday UI preserves the existing Monday-first bitmask.",
+  "fixesDuringVerification": [
+    "Corrected role-preserving browser-test navigation.",
+    "Imported nested weekday picker explicitly.",
+    "Extracted cohesive InfoRow widget without changing its public export to meet the existing source-size guard.",
+    "Corrected one unnecessary test import.",
+    "Made weekday choices full width and standardized the native site selector."
+  ],
+  "limitations": [
+    "No per-cycle before/after screenshots or measured field performance deltas.",
+    "Unrelated client documentation and backend reorganization preserved."
+  ],
+  "repository": "mobile",
+  "sourceRevisionBeforeFinalValidationCommit": "8efb32a812dcfea5808dd99c46c0f5a04fd8798f",
+  "sourceHashes": {
+    "lib/core/widgets/info_row.dart": "efb95056c06153ae696f651ca8a0fd18f4104efe3a7ff958e4b159691c3582ee",
+    "lib/app.dart": "ad67f43b5338cb575d683f08728b970fe61d95d902f38e1c525d739ca04ba839",
+    "lib/app/cases.dart": "008c09c355a29d8411b3e3becdd4c756b953a3c54dd6431c4044cbe311803711",
+    "lib/app/catalogs.dart": "f3338fdb6fd00f3cf80d750cab7545a92cf8329a831ab372bbfe473836762eeb",
+    "lib/app/composition.dart": "189d293cf409a2bc32d996a0b6b9355e0d6e9e895e4c8f07450a3b2912059df2",
+    "lib/app/configuration.dart": "99e69f04af6f23823d584c1b06b492719dd4c1e3d431e148c43286a7d896342d",
+    "lib/app/feature_panels.dart": "da878e2561bca42edee851bc6550058aaf86fe6a6ddf0c9e23d6106132d062fe",
+    "lib/app/providers.dart": "af609db1cd41a40b15d179c272293aef038729114a56f69ada2268e16e140fb4",
+    "lib/app/runtime.dart": "5719466e7004671b5fa02479338bbe6f2ccc763e08a55aa1d697e638eedd75eb",
+    "lib/app/workspace_banner.dart": "6f12b5aa671c36fa069d8b6eb7009aecd85b5677c46be0ae5175f171882b1128",
+    "lib/core/data/api_client.dart": "c377274b82ddfdf619ef3750083b20b3e13ff0ca8de7a60e9e44c1fae36a7842",
+    "lib/core/data/cache/cached_source.dart": "1d6de1783b0d02693c9441a498c230bf40965d3e89a976f9f394b39d2680f6b5",
+    "lib/core/data/cache/store.dart": "2d8b262f78e1933c841170bff0e03ed6a4fbba61258c3aaaa7b6a9d94849d800",
+    "lib/core/data/case_repository.dart": "820af55434cfb728fb95f07a962e4804a71c31d069a95c7dc4512fd1a91a005d",
+    "lib/core/data/json.dart": "6c46fa2980a744d3572e402f1dd0b069ed5d30d3f8109b08a520c5f502f95ef6",
+    "lib/core/data/mappers.dart": "4eaf0bad69b24b96a674ca7162e23d28a5fdf9444b144dd9f6bb3c4ed5fc4635",
+    "lib/core/data/pending_commands.dart": "29606538571a9003b33a14dcd84430ce157a832764fa5b5098da0b7652b2deef",
+    "lib/core/data/remote_source.dart": "d37e9a0409204c250389aa6bf3396fa4db5a354394eafb87fb5238f6d95ff6ea",
+    "lib/core/data/resource_repository.dart": "5728dbfa433b71af39d425b84a4911138ae577198fc61765e061289a4988e077",
+    "lib/core/data/storage.dart": "f1719c4d3b9b78f7d2e46c6d78d857a5d6d2a7c9a486daf049163732b6f64908",
+    "lib/core/demo/local_service.dart": "a448f326f3ee00fc119592976a02ff49a82b031aa6979d6c47bd0d4f7a0db3ad",
+    "lib/core/design_tokens.dart": "e07ccb40a0aca4d4588b4ee3338fb4cc29da6cc2d35a33139efc0aa27e78ec24",
+    "lib/core/leave_quantity.dart": "9acb7e9d4df2dfb867b5c1439e08155717b350015223832d2a07ed9affd362b2",
+    "lib/core/presentation_format.dart": "e40ac1a89c1ed742df0857422229d2f8f5ec8f8e0ed29367f54b27709ada44e9",
+    "lib/core/protocol.dart": "5aab1263f35bc344bc40d45bb52bb1598bcf87f4ccd3e16da03012f5920a41cd",
+    "lib/core/theme.dart": "cda668ad223e9dfb6f11312b3fe07df93fb353de76783d2294124870e03ca6fe",
+    "lib/core/widgets.dart": "da3037770389551f3a970d020107d95d14f9537d37c1565f9add792f98dbc33f",
+    "lib/features/approvals/application/providers.dart": "5a8ecc443cb8fed91dc5ac73706ab66bd2bd579622aec3f116df7f3ee8499f75",
+    "lib/features/approvals/data/delegation_local.dart": "d796b1f04de86d57662c57acbc86589daa6140392e3fc40bee1da77f1d4e8a82",
+    "lib/features/approvals/data/delegation_repository.dart": "1e042ae6fe2033430f31a0041a5533e29cebc89cd6a03411d1ea93e8a899c524",
+    "lib/features/approvals/domain/delegation.dart": "aa5043d6ff4ebe8df627fb33bb086dc2d967a99afaee16eca7ee0701cc357703",
+    "lib/features/approvals/presentation/delegate_picker.dart": "04d9021da5223fc3a2d51964ceed8514a573adacfec8bb63077274d72711d24a",
+    "lib/features/approvals/presentation/delegations_page.dart": "1c42ae6c5f87832b22088cdd3fee8db1701dbc3823651879040a8f690a675f62",
+    "lib/features/attachments/data/local_handler.dart": "c07bd4e4b721d07f6955a0b92fb5a2b29d2ec3bd7ea5c7051f5e7a238634058c",
+    "lib/features/attachments/data/methods.dart": "bd1e4f3ebee9c3f61f62e40f5efb345ffd35a66c841713d0cddaa89a398adde2",
+    "lib/features/attachments/data/signed_transfer.dart": "27245656375fcd4ffee58aaef96de9792403cddf669fad4c4ff209487a2d296a",
+    "lib/features/attachments/domain/repository.dart": "2ce102553a07dd3f88058a9251211e888536aab32942b05f1cb5d0738c5a1fc8",
+    "lib/features/attendance/application/evidence.dart": "629b0331b7c4e2109f9c7f648fa09fccb0f42ecc8dfcc4808d0347ea1ea15a91",
+    "lib/features/attendance/application/providers.dart": "9a81c09fb064d213164556f0ecce230f13a70437c726e08c72bbda0bd74136e5",
+    "lib/features/attendance/data/case_local.dart": "8f2172f4dc1ecf80d4e3f72f24af209e20c056a0b80f3f60709febda05218118",
+    "lib/features/attendance/data/case_routes.dart": "4a8093f1a3b136a46eb0e5b0f7dae588b81ceb11c2f304ac22c810b8617ed3c5",
+    "lib/features/attendance/data/local_handler.dart": "d4446788d8c40286110e8af90b929e766db46599f5f60bfe8deafca3250bd666",
+    "lib/features/attendance/data/location_capture.dart": "f4751c4efef1dd6ab11637b8bc83bf1aa98ffb89c7b289367bbe8d318d20c707",
+    "lib/features/attendance/data/mappers.dart": "803d140cf5133c43b4ec55a6cf283ff17092264429c5a0556c366a59e3d43578",
+    "lib/features/attendance/data/methods.dart": "fe09b6eb2240c9daad12520d2c9a965187c8c851179befa96bf584e1a9929ad5",
+    "lib/features/attendance/data/repository.dart": "89dd8daf0671823b91810271d8f3dc5a3480b7753ed9664a8fabf74e34bdacb8",
+    "lib/features/attendance/domain/correction_time.dart": "903778da046f33c37252a600cd51ed31396381175c5773005ffd0413d4fbfacd",
+    "lib/features/attendance/domain/evidence.dart": "bdb6fd09ebd6c6c2d4b4b3325e2256b514333131a8fc4c1563956bf3896e8b74",
+    "lib/features/attendance/domain/models.dart": "33cf04d0705309ad423837c8e19a573f788452c60b5793837c302c1c81920ea6",
+    "lib/features/attendance/domain/repository.dart": "9d6527801df90f9e0f4f7d17a3f34fb2a945cc81f28b2a0e0d2ae8744a8b0b08",
+    "lib/features/attendance/presentation/activity_page.dart": "bacfec4d336cf481a733c911cc0a4c369f49618123f351fde17a6fac5996d80c",
+    "lib/features/attendance/presentation/case_pages.dart": "cebfcf74ddddc7432a183b8dc6b0065187037340faa5763ee46b71c6e55fb997",
+    "lib/features/attendance/presentation/correction_original_times.dart": "cffb2b826393e46bd597b492d2160056f4e1db17ee9ee2825754bfba24ed33e7",
+    "lib/features/attendance/presentation/evidence_page.dart": "c1b4c86070d543f8b4b4008fb645b6e91bb4d9fb09a8f03888abb43e7a689cf5",
+    "lib/features/attendance/presentation/team_page.dart": "2b6d180c2bb219a899a7212cdb7185af1097c2cd3c9f6b2e93977e48ae28ce94",
+    "lib/features/dashboard/presentation/attendance_clock_card.dart": "0aaf320b90951265a973d3ce86f22484aa2d2d9dfc0ab7917c4f6de1aab4fbcc",
+    "lib/features/dashboard/presentation/home_page.dart": "3dc03656ece9470352269a264655a894299f0a07e6fecaae232aba759772c6bf",
+    "lib/features/dashboard/presentation/role_tasks.dart": "ee0c3a7eaf8615fa18a263778f6907dee3ba24fca55eb4c940257dea36fb1617",
+    "lib/features/dashboard/presentation/workspace_navigation.dart": "996b8a1fd8acd014fa4a6a6b6a28b942a9b0a13e3e3eb69936a8e0022d831973",
+    "lib/features/identity/application/providers.dart": "0215f76c97f983852e00b470e19314b9f42690999804d972e10c3f5099204aae",
+    "lib/features/identity/application/session.dart": "bbfab56d8a662ebe1cffb388d9630a93e29073b07521dbe44687cddcccb0bc2f",
+    "lib/features/identity/application/shift_use_cases.dart": "73c17d85bad4f68e10bd41d9c8d9e2433d3673b6380b96f888a49ed323a758b3",
+    "lib/features/identity/data/case_local.dart": "fef0fdde9fea8bd00734966110190110ddc18b10cadfc01e4e45a8c2f13d38c1",
+    "lib/features/identity/data/case_routes.dart": "b563c4785ed81a194bfbd19c682a803468cc0d13edeee2fc4708b93491386212",
+    "lib/features/identity/data/local_handler.dart": "7f8a5b8562300b66d11729861b09823ca57aba4e282ccd49f600364dc803a38b",
+    "lib/features/identity/data/mappers.dart": "126521e871ae1ebef9ae50ba57afddcade64abd9a58a3297f45318a82ae29b2b",
+    "lib/features/identity/data/methods.dart": "5e436ebb52ba8b028b07109cddbb3211567a9316d459ac24c4057e1e4e1d99b6",
+    "lib/features/identity/data/repository.dart": "7d490a216a5c1bc0d8bf7a6ad6e6f009457945bcfc4bf2ae25f956733ae9510e",
+    "lib/features/identity/data/schedule_seed.dart": "766ec7ff3fdb9cd17288dea177a7460b81b5343a0e03b29227910d266b1ee1c2",
+    "lib/features/identity/data/session_client.dart": "74e186d2f655b163565ea901e4e21fe8f25f3a0046fcf631e4d40878f8dec555",
+    "lib/features/identity/data/shift_case_local.dart": "4fb844898f4c70eaaf57418d50f60128e22408e578bcfde8c9f45f5af3ef5508",
+    "lib/features/identity/domain/models.dart": "1901aa0f763663840f9e59884a6ad6ac4dd180b3ce9c088d4b07c0cfd0063a02",
+    "lib/features/identity/domain/repository.dart": "88cf03eeec525cd01b45415c591b35295e87dfb78f32b65b7a54b5987e9057d9",
+    "lib/features/identity/domain/session_gateway.dart": "6673bb486e3d893b062d4aa57830f8e0281c6fea960a42df713b7781d96859c9",
+    "lib/features/identity/presentation/access_help.dart": "948f55dfc8fa42daada7e484db9b3cce4563adafb6e8501ac7cb77c418a9cf08",
+    "lib/features/identity/presentation/assignment_section.dart": "2581342cd3cc450c5791bed2dff42a22e23a5d8529f4f438291f9bbccb4f2739",
+    "lib/features/identity/presentation/assignments_page.dart": "6fa0b14c6081477120ac6a4499969367337f7e66e6639b099c33fd3ee8d8428b",
+    "lib/features/identity/presentation/audit_page.dart": "0570a0075fe9d8b832586588a0b0a555031f6088438427472b0aec2017091152",
+    "lib/features/identity/presentation/auth_page.dart": "0725bdc78a85d2c884e6a80d03885e5437cf6e57c4fb1766ee83ef955f2b2115",
+    "lib/features/identity/presentation/case_pages.dart": "efd116e39ddb3f2d203784bee73238a1f0e98b6339458c234815cba265ffcb25",
+    "lib/features/identity/presentation/master_editor.dart": "699cfea5f4120d7a3236697e3b787ac386d61a1f9192e7b4102e4884e176a397",
+    "lib/features/identity/presentation/people_pages.dart": "e56cabab2bb5f445c7ca3e917eff3c97fa19c46d874ac792a80eb43b85906a10",
+    "lib/features/identity/presentation/profile_page.dart": "0c254984fde99f57c6f95926f9dccfdb30e7b6bef043c3d161138d1c7a674e60",
+    "lib/features/identity/presentation/schedule_page.dart": "cbc3d13941f295a6db59ff0ad54883f0808842484d6083de0b1d0564c0a5ee2b",
+    "lib/features/identity/presentation/setup_page.dart": "f8c440c210108875201231c05ed1643dcd0da7e878921efed068c25d3dc8becd",
+    "lib/features/identity/presentation/shift_fields.dart": "8cabda25fd29b1fe5c7d409b312d7618e2536385884e4f3401fac43ad10495f6",
+    "lib/features/leave/application/providers.dart": "bfa1f6dc38d2767313e6147192e104fba07464c7e34637611f857a8c860e34c9",
+    "lib/features/leave/data/case_local.dart": "e7d871d2145d5af327f5482f41f6faa68a24dc39fa958cb554fb964bf30852b4",
+    "lib/features/leave/data/case_routes.dart": "b07a6d1707114fbc324be8a1982aecf9ed6a2d6eda33824a0c1200cf2ebacf92",
+    "lib/features/leave/data/command_body.dart": "aa84143bbc1135ed24ce5deec7f1be237dbdf650b06b8bc6346caea74222ef1d",
+    "lib/features/leave/data/local_handler.dart": "e8f616223f989082664bfe0beee00a5bab05d820aa024964bdd409141be11508",
+    "lib/features/leave/data/mappers.dart": "a7e81abc551d940709c033a5d78d514297e69e0913ff015b99cefd3a3d070fb3",
+    "lib/features/leave/data/methods.dart": "26eac186555a92876174346f502ac85e259581bd9ef7e584fe9f72fb5bd96cb7",
+    "lib/features/leave/data/repository.dart": "efad798cd6548e69e9e829783823b4c61322a34ff1d6961cd766aff3e99be86f",
+    "lib/features/leave/domain/models.dart": "f45da483663b2b38cf142df7e2e39a441250963075a155101ba1ec82ad3515fc",
+    "lib/features/leave/domain/repository.dart": "ab9d46501930bbb75d9a05f2ac258782f53103eecc9fe98d5b9ace3f66856c30",
+    "lib/features/leave/presentation/case_pages.dart": "6bc4482765b1c5f3d8de83a283d32bf58e1ccf51a673facbd7779e1a041db293",
+    "lib/features/leave/presentation/preview_panel.dart": "b4a6ceab626f620b144246ea27d1b7b9db2541972d5bb5775c308a1ba876b975",
+    "lib/features/notifications/application/providers.dart": "929ef35a14710e4df1ce017ca37a8a0f43d3f52cde243afe653536acaeb6b717",
+    "lib/features/notifications/application/push.dart": "6e7782d6c54ce8dfb2c993c12cf7c0245eee691453d7262892fd6ab71998fe3b",
+    "lib/features/notifications/data/case_local.dart": "6c523b960065fe5563bc9113bd03883951d1d449b7efa1525bb20e6c484b9ac1",
+    "lib/features/notifications/data/case_routes.dart": "ed766e38636065b89748879cbabd361086b1a722241f55b236a8974f800c2e2d",
+    "lib/features/notifications/data/local_handler.dart": "6a3dd9260997e29b8923b9a93003a975fca4f97f5b9bcce171850c3bf7150e86",
+    "lib/features/notifications/data/mappers.dart": "6fc9e63ee24669d3ccf433a2487dfe72410ac7a53b4196c6cd807a37ac81e813",
+    "lib/features/notifications/data/methods.dart": "3ab175b122e5c6fd3ea30f3116764f82c8661831b24044de925e34caf94417fc",
+    "lib/features/notifications/data/push_device.dart": "85c61f23cc67a4b33a11e4107c9afaa637300dd7787d4c8da37021b745b93fa9",
+    "lib/features/notifications/data/repository.dart": "b008bf7d57565f6e051e43fe3c9058ca07aa1c6a542d88657cf666bc3e151bfb",
+    "lib/features/notifications/domain/models.dart": "2e809f990b0b46b926b1d1ba6aee38ae784cb8214845f7d1b8e10b1bb0bd4573",
+    "lib/features/notifications/domain/notice_route.dart": "8696fa3eb817816b3f342419b355f2027bf59bd69e1478dce590ba6182acff31",
+    "lib/features/notifications/domain/push.dart": "c13b0ad42fcd08d17ac52a484b0773608e7e261b2bb7c61f43660bf27f980150",
+    "lib/features/notifications/domain/repository.dart": "88075bada8f8535ce4893a4ca2f6d74b8ed25d868326a754d0e743e46e5bdf81",
+    "lib/features/notifications/presentation/case_pages.dart": "c4e1bfce278c6224bc03f0007669e505a6be82ca6b08b5bd7dc56faff241c6ce",
+    "lib/features/notifications/presentation/inbox_page.dart": "031a667496f9fe413a1cc4a6cd434983b6aa0a72a9894e5501e9a547d7853a95",
+    "lib/features/notifications/presentation/preferences_panel.dart": "4c3ebdcb049f22c2f795271d736c8033af05aa5c4dd619f046ab84df17582e7c",
+    "lib/features/operations/application/providers.dart": "957907734d68b3c12dd2d281f2d9ed43035db358e9f62799ecf8f38870448628",
+    "lib/features/operations/data/local_handler.dart": "7e36f7322f52d006abce7ee1c832dad968300d48d8a1110cfd24324d25f2bf86",
+    "lib/features/operations/data/repository.dart": "978d9faaa75ab2462214c927ab6a328de98cfc4cb77f136fdb388bc8948f95ad",
+    "lib/features/operations/domain/repository.dart": "6aff73215363894a73617d5e0e248ec4471e6c7ff95441d36995c2395fa7c623",
+    "lib/features/operations/presentation/case_pages.dart": "658e08333f5a4813b0e650d9c64a04685e87c8a990a35ec884ceb4c459e2d4ad",
+    "lib/features/reporting/application/providers.dart": "b51f422db9d0a07d295f6a810b6a91f3e0853af279c01f643bd3deecbef3bc70",
+    "lib/features/reporting/data/case_local.dart": "2d4d30013b0cb87137a356f69836590207f2afb02100bd99ea6f9bd8a7a54c14",
+    "lib/features/reporting/data/case_routes.dart": "90eb706cdc8b5b260d02e4e0e00b97d51c82fbb797745b688fb068ab82f15c71",
+    "lib/features/reporting/data/local_handler.dart": "4a67af1f6c139bdaa1729ce1897418c0c2e7aa8ab3dfb83e4431d280144ab6c7",
+    "lib/features/reporting/data/methods.dart": "ce64ede98c886b1c632963b98748d5f317dbd5eebb7f3081be22c152e56d405f",
+    "lib/features/reporting/data/repository.dart": "c96f757a78182add78ccd3fa08ac31567b9a0dfe06eeccb9255fcb50b839027d",
+    "lib/features/reporting/domain/repository.dart": "cb577e0566f645f4975081bec65ace9e61ef43bdab923fd322214b7a63b38268",
+    "lib/features/reporting/presentation/case_pages.dart": "d1868320a3f1894608938cb83bfb9dcc0cf3dd97a838b56ed67daa6c6df1dbe5",
+    "lib/features/reporting/presentation/export_button.dart": "00127a73850d72514918d70c744e35ec5f581cc4f2e02bb8e2541c1762dd8b95",
+    "lib/features/reporting/presentation/live_attendance_summary.dart": "a283c688376c9af959a37d397125f984fff954412a4fb4ceb08e1c25ec61fc80",
+    "lib/features/reporting/presentation/reports_page.dart": "21026dcff6538bcfcc0b9da385394613fcea47be01717e1ea19bf5d118fad5ef",
+    "lib/features/requests/application/providers.dart": "751bcb6875dcacef0fd3ee8bda50c3c9d71484c81a043e828bc6e9593d726f21",
+    "lib/features/requests/data/case_local.dart": "4b40f1470d709c1f0a9ecbbb2fcd95b3c282a316e3e782c846e5934b314395eb",
+    "lib/features/requests/data/case_routes.dart": "9fca29b5b2e1f8e435012007f3243374020fe404c88a739fb35172aa1dc73e79",
+    "lib/features/requests/data/local_handler.dart": "674768a04218b34b8f432082dbb6806f555d406e65a44617b6ab7a2b435b75b5",
+    "lib/features/requests/data/repository.dart": "ee9810d969f7bf7b9e61b3246b1ea32a8b88a28c0eb94d8bf9db084f053db149",
+    "lib/features/requests/domain/repository.dart": "77e0a1b6f4405ff4126095b642331461a7d9782c3cf9b751edb7ef107c708a72",
+    "lib/features/requests/presentation/case_pages.dart": "58ac90d6ebafeec6b3f29ec363fa959705214e3b7a31ba0f893ceb97d4663261",
+    "lib/features/settings/application/providers.dart": "0ba79d5402225a1e70462dfe243cc27a1c6288946f915bc54b361b0950dbbef0",
+    "lib/features/settings/domain/preferences_gateway.dart": "7ceca12f3529219e20f995445d5c53ca93fc01d2b21de54b450327d90212086e",
+    "lib/features/settings/presentation/settings_pages.dart": "edc18fc16a5b4be8ea7836fcc7125c20827cee724dc42a38e7ebbfe3e4764e54",
+    "lib/features/workflows/application/providers.dart": "614eed882c069e104600e8ce2f2e26adf78dadf10a1d55de7fe454fee5c56c66",
+    "lib/features/workflows/application/use_cases.dart": "4a07136f89c29201352fa4f2f2cee0edbe0fe3989963420350cb0ebcaf043ffa",
+    "lib/features/workflows/data/local_handler.dart": "df0c0d4be80e9c9317333286389d435179e143a7c212654155fb05158697dc31",
+    "lib/features/workflows/data/mappers.dart": "06593f2832a80ea5ecdacc8ac6618d80115c2dc4c8697627eee3aab8359203a0",
+    "lib/features/workflows/data/methods.dart": "c82fed92cf128190ee22a79fc2a671dc585a08c4ad2bc0a6e8505048b633af2b",
+    "lib/features/workflows/data/review_context_local.dart": "cfe9660d53e6ccdd5e3cb3084b5c4600a229199bfb27d642e8d25c2235e6afa4",
+    "lib/features/workflows/domain/repository.dart": "28e1d43442048b4bd2082f9f164724bf1bff5bd2ab3c7a158f11b4859950b11d",
+    "lib/features/workflows/presentation/approval_filters.dart": "7a291b5b208dfae7bb089d7bfd384fe8d80f9609ebc81a66b12c8e3fb9917542",
+    "lib/features/workflows/presentation/approval_position.dart": "04d61b42e955ab47c942c14081d05bac8c2ddb64e104b6a1162abc6aa382cde8",
+    "lib/features/workflows/presentation/decision_context.dart": "6c62dee769b92107d1b79dc29c27dbb2ecabede38aa2f6b2a8442d525eddce01",
+    "lib/features/workflows/presentation/decision_dialog.dart": "039c41db20276823e6f5d7180c30abf862a93081e34576ff33431aeff95f0067",
+    "lib/features/workflows/presentation/edit_request_page.dart": "6c1035748644a96644744e6b11fa319a451b20cf66499d1c01549ea7371670f8",
+    "lib/features/workflows/presentation/form_actions.dart": "ffbd91c57070f2b61f189d9ce1a881b1a797b465f09d0c9347f2583c4e00290c",
+    "lib/features/workflows/presentation/form_page.dart": "5858f6c658eb8b09fd831ae75d6ed18b8ea7477dc69d8600c7f0a8c794bad750",
+    "lib/features/workflows/presentation/form_review.dart": "fe623d83336379872190b7830140e9b577b146139d83f20d653f551cf03e1af8",
+    "lib/features/workflows/presentation/material_request_fields.dart": "bf78fb676c68443386ea3d6242836a309dcc5d2932183183afd0c0f6841ce0f5",
+    "lib/features/workflows/presentation/record_action_bar.dart": "b7663e2d41ee5103d42fb407e3ab3b983c8a96337a645af961b927b168f56022",
+    "lib/features/workflows/presentation/request_details_fields.dart": "341296f123dbdfb025b919e68eb4be606a6d4d9f31c2104387150156959d83d1",
+    "lib/features/workflows/presentation/workflow_date_fields.dart": "c20fbc3a5f75f541a1af197c097ebf063d36019faeabbb7b30fcaafa04f0df00",
+    "lib/features/workflows/presentation/workflow_lists.dart": "ee52bbc857f761fa40514ed37eb5ff760f252c2347306b31b624e08fd333df97",
+    "lib/features/workflows/presentation/workflow_pages.dart": "e6aa4b3323f483b1255a583312f730108f3390649ce623d6af2f6e7fde2655fc",
+    "lib/main.dart": "40402397455ae1f97fba072cde2501ab194dd2d89ea40c69bfb83526430c71fa",
+    "lib/shared/domain/cases.dart": "6815c2da18f93d9dc9bb40b4f6f63fe93e241214ef62f2befe960998b65b0e4e",
+    "lib/shared/domain/models.dart": "7e988d6688d4f49b58a3d9e580030344137769cbc81f54c3809acc495c4eec47",
+    "lib/shared/domain/resource_gateway.dart": "aa23ccff2bfec0d29157e0f29da0420da0598b913cc49fe7e1817cbac1590607",
+    "lib/shared/domain/workflow.dart": "810ecbd2a75957aaf5a98e94ef1697c2664910c1fe757cc1575e48b3a8572484",
+    "lib/shared/domain/workflow_policy.dart": "62e7f20acedb930c7d35df7d7a3bc1746159353593665811ceedc426b83fa34c",
+    "lib/shared/presentation/case_fields.dart": "56c851c6b6bdc3cfe829224f0254e6375e972265be350d29b71d67e3117abeb5",
+    "lib/shared/presentation/case_lookup.dart": "4d5157e72e6651382f9e5ec0fa74657e390ba6717da7e351026bcf69021c45ee",
+    "lib/shared/presentation/case_models.dart": "869ffa09d9713a2617cb00f2b5b4badc082a92bb549ea0c11250604499809a24",
+    "lib/shared/presentation/case_page.dart": "301636b1486244e729d326bfab7281b2822c374ef585820e3072ef6f504b9bf5"
+  }
+}
