@@ -76,7 +76,11 @@ class _DelegatePickerState extends ConsumerState<_DelegatePicker> {
                   );
                 }
                 if (!result.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      semanticsLabel: 'Loading eligible reviewers',
+                    ),
+                  );
                 }
                 final rows = result.data!;
                 return Column(
