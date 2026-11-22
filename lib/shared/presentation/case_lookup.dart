@@ -88,10 +88,11 @@ class _PagedLookupDialogState extends ConsumerState<_PagedLookupDialog> {
               ),
             ),
             if (value.asData != null)
-              Row(
+              Wrap(
+                spacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text('Page ${page + 1}'),
-                  const Spacer(),
                   TextButton(
                     onPressed: page == 0 ? null : () => setState(() => page--),
                     child: const Text('Previous'),
