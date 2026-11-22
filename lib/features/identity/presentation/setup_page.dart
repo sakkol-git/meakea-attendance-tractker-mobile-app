@@ -113,6 +113,8 @@ class _SetupState extends ConsumerState<WorkspaceSetupPage> {
                 ] else ...[
                   TextFormField(
                     controller: name,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Company name',
                     ),
