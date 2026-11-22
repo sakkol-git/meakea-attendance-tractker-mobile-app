@@ -26,6 +26,7 @@ class RequestDetailsFields extends ConsumerWidget {
       const SizedBox(height: 12),
       TextFormField(
         controller: title,
+        textCapitalization: TextCapitalization.sentences,
         enabled: !saving,
         decoration: const InputDecoration(
           labelText: 'Request title',
