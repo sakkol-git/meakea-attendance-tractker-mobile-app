@@ -6,7 +6,7 @@ abstract final class Palette {
   static const teal = Color(0xFF006151),
       ink = Color(0xFF172B29),
       muted = Color(0xFF526560),
-      canvas = Color(0xFFF5F7F8),
+      canvas = Color(0xFFF4F2EE),
       line = Color(0xFFD9E2DF),
       tint = Color(0xFFE8F4F0),
       danger = Color(0xFFA12B2B),
@@ -53,7 +53,7 @@ class SemanticColors extends ThemeExtension<SemanticColors> {
   static const light = SemanticColors(
     textPrimary: Color(0xFF172B29),
     textMuted: Color(0xFF526560),
-    surface: Color(0xFFF5F7F8),
+    surface: Palette.canvas,
     card: Colors.white,
     error: Color(0xFFA12B2B),
     onError: Colors.white,
