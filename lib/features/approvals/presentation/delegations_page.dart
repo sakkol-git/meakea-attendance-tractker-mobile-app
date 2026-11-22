@@ -242,6 +242,7 @@ class _DelegationFormState extends ConsumerState<_DelegationForm> {
             ),
             TextField(
               controller: reason,
+              enabled: !busy,
               maxLines: 2,
               onChanged: (_) => setState(() => dirty = true),
               decoration: const InputDecoration(labelText: 'Reason · Required'),
