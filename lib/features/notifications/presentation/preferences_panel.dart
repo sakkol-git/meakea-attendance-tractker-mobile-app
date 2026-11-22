@@ -33,6 +33,14 @@ class _PreferencesState extends ConsumerState<NotificationPreferencesPanel> {
       builder: (settings) => Surface(
         child: Column(
           children: [
+            if (saving)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Semantics(
+                  liveRegion: true,
+                  child: Text('Saving notification preferences…'),
+                ),
+              ),
             const ListTile(
               contentPadding: EdgeInsets.zero,
               title: Text('Approval updates'),
