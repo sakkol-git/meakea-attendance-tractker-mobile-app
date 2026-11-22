@@ -71,6 +71,7 @@ Future<void> showWorkflowDecision(
                       InfoRow('Requested quantity', '${r.fields['quantity']}'),
                     const SizedBox(height: 16),
                     TextFormField(
+                      enabled: !busy,
                       onChanged: (value) => note = value,
                       maxLines: 3,
                       decoration: InputDecoration(
