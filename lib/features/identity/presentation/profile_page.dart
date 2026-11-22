@@ -31,7 +31,11 @@ class ProfilePage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text(p.name, style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                p.name,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               Text(
                 p.position,
                 style: TextStyle(color: context.semantic.textMuted),
