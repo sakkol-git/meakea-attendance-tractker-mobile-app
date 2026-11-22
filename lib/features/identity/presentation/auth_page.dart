@@ -184,6 +184,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         const SizedBox(height: AppSpacing.x4),
         TextFormField(
           controller: email,
+          autocorrect: false,
+          enableSuggestions: false,
+          textCapitalization: TextCapitalization.none,
           decoration: const InputDecoration(labelText: 'Work email'),
           keyboardType: TextInputType.emailAddress,
           autofillHints: const [AutofillHints.username],
