@@ -34,11 +34,11 @@ class _PreferencesState extends ConsumerState<NotificationPreferencesPanel> {
         child: Column(
           children: [
             if (saving)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Semantics(
                   liveRegion: true,
-                  child: Text('Saving notification preferences…'),
+                  child: const Text('Saving notification preferences…'),
                 ),
               ),
             const ListTile(
