@@ -36,6 +36,7 @@ class ApprovalFilters extends StatelessWidget {
         ],
         onChanged: (value) => onRequestType(value ?? ''),
       ),
+      const SizedBox(height: 12),
       DropdownButtonFormField<int>(
         isExpanded: true,
         itemHeight: null,
@@ -49,6 +50,7 @@ class ApprovalFilters extends StatelessWidget {
         ],
         onChanged: (value) => onMinAgeDays(value ?? 0),
       ),
+      const SizedBox(height: 12),
       DropdownButtonFormField<String>(
         initialValue: status,
         isExpanded: true,
@@ -61,6 +63,7 @@ class ApprovalFilters extends StatelessWidget {
         ],
         onChanged: (value) => onStatus(value ?? 'PENDING'),
       ),
+      const SizedBox(height: 12),
       DropdownButtonFormField<String>(
         initialValue: sort,
         isExpanded: true,
