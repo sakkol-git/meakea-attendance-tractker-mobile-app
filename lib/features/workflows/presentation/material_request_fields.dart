@@ -78,6 +78,7 @@ class MaterialRequestFields extends StatelessWidget {
       const SizedBox(height: 16),
       TextFormField(
         controller: quantity,
+        enabled: !saving,
         decoration: const InputDecoration(labelText: 'Quantity'),
         keyboardType: TextInputType.number,
         validator: (value) {
