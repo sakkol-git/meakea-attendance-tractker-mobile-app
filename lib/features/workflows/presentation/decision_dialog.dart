@@ -75,6 +75,7 @@ Future<void> showWorkflowDecision(
                       onChanged: (value) => note = value,
                       maxLines: 3,
                       decoration: InputDecoration(
+                        helperText: action == 'reject' ? 'Use at least five characters.' : null,
                         labelText: action == 'reject'
                             ? 'Reason'
                             : 'Note (optional)',
