@@ -158,6 +158,19 @@ ThemeData appTheme({bool dark = false}) {
     bodySmall: const TextStyle(fontSize: 12, height: 1.5),
   );
   return base.copyWith(
+    switchTheme: SwitchThemeData(
+      materialTapTargetSize: MaterialTapTargetSize.padded,
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return null;
+        return states.contains(WidgetState.selected)
+            ? semantic.selectedNav
+            : semantic.disabled;
+      }),
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) return null;
+        return semantic.card;
+      }),
+    ),
     textTheme: text.apply(
       fontFamily: 'KantumruyPro',
       bodyColor: semantic.textPrimary,
