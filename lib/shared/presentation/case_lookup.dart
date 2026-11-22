@@ -92,9 +92,15 @@ class _PagedLookupDialogState extends ConsumerState<_PagedLookupDialog> {
                 value: value,
                 retry: () => ref.invalidate(provider),
                 builder: (rows) => rows.isEmpty
-                    ? const Center(child: Text('No matches'))
+                    ? Center(
+                        child: Semantics(
+                          liveRegion: true,
+                          child: const Text('No matches'),
+                        ),
+                      )
                     : ListView(
-                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        keyboardDismissBehavior:
+                            ScrollViewKeyboardDismissBehavior.onDrag,
                         children: [
                           for (final row in rows)
                             ListTile(
