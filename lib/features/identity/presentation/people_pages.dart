@@ -91,9 +91,11 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
           retry: () => ref.invalidate(provider),
           builder: (people) {
             if (people.isEmpty) {
-              return const EmptyState(
-                title: 'No matches',
-                description: 'Try a different name or department.',
+              return EmptyState(
+                title: search.isEmpty ? 'No people to show' : 'No matches',
+                description: search.isEmpty
+                    ? 'People will appear here when employee records are available.'
+                    : 'Try a different name or department.',
                 icon: Icons.people_outline,
               );
             }
@@ -101,7 +103,10 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Semantics(liveRegion: true, child: Text('${people.length} people shown')),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Text('${people.length} people shown'),
+                  ),
                 ),
                 ...people.map((record) {
                   final p = record.values;
