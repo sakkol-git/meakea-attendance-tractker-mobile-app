@@ -1,3 +1,11 @@
+String personInitials(String name) => name
+    .trim()
+    .split(RegExp(r'\s+'))
+    .where((part) => part.isNotEmpty)
+    .take(2)
+    .map((part) => String.fromCharCode(part.runes.first))
+    .join();
+
 String statusLabel(String status) => switch (status) {
   'REVIEW_NEEDED' => 'Review needed',
   'CONFIRMED' => 'Confirmed',

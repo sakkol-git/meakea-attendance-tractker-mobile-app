@@ -22,7 +22,7 @@ class ProfilePage extends ConsumerWidget {
                 radius: 36,
                 backgroundColor: context.semantic.successBackground,
                 child: Text(
-                  p.name.split(' ').map((s) => s[0]).take(2).join(),
+                  personInitials(p.name),
                   style: TextStyle(
                     color: context.semantic.selectedNav,
                     fontSize: 24,
