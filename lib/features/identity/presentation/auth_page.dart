@@ -175,6 +175,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       children: [
         TextFormField(
           controller: tenant,
+          autocorrect: false,
+          enableSuggestions: false,
+          textCapitalization: TextCapitalization.none,
           decoration: const InputDecoration(labelText: 'Company workspace'),
           textInputAction: TextInputAction.next,
           autofillHints: const [AutofillHints.organizationName],
