@@ -72,6 +72,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
           : null,
       children: [
         TextField(
+          textInputAction: TextInputAction.search,
           decoration: const InputDecoration(
             hintText: 'Search people or departments',
             labelText: 'Search people',
