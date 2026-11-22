@@ -54,6 +54,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         Padding(
           padding: const EdgeInsets.only(bottom: 16),
           child: InputChip(
+            deleteButtonTooltipMessage: 'Clear attendance date filter',
             label: Text(
               '${shortDate(range!.start.toString())} – ${shortDate(range!.end.toString())}',
             ),
