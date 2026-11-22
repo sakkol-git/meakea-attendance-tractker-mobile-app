@@ -89,6 +89,8 @@ class _AuditPageState extends ConsumerState<AuditPage> {
       children: [
         TextField(
           decoration: const InputDecoration(labelText: 'Filter actor'),
+          autocorrect: false,
+          enableSuggestions: false,
           onChanged: (value) => filter('actor', value),
         ),
         const SizedBox(height: 8),
@@ -99,6 +101,8 @@ class _AuditPageState extends ConsumerState<AuditPage> {
         const SizedBox(height: 8),
         TextField(
           decoration: const InputDecoration(labelText: 'Filter target'),
+          autocorrect: false,
+          enableSuggestions: false,
           onChanged: (value) => filter('target', value),
         ),
         const SizedBox(height: 8),
