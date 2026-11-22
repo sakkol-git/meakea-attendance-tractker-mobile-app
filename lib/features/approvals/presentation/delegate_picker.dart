@@ -74,9 +74,16 @@ class _DelegatePickerState extends ConsumerState<_DelegatePicker> {
                   children: [
                     Expanded(
                       child: rows.isEmpty
-                          ? const Center(child: Text('No eligible reviewers'))
+                          ? Center(
+                              child: Text(
+                                search.isEmpty
+                                    ? 'No eligible reviewers'
+                                    : 'No reviewers match your search',
+                              ),
+                            )
                           : ListView(
-                              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                              keyboardDismissBehavior:
+                                  ScrollViewKeyboardDismissBehavior.onDrag,
                               children: [
                                 for (final reviewer in rows)
                                   ListTile(
