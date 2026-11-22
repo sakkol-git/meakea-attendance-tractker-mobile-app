@@ -74,6 +74,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
         TextField(
           decoration: const InputDecoration(
             hintText: 'Search people or departments',
+            labelText: 'Search people',
             prefixIcon: Icon(Icons.search),
           ),
           onChanged: (v) {
