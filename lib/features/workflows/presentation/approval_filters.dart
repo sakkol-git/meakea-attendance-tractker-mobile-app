@@ -24,6 +24,8 @@ class ApprovalFilters extends StatelessWidget {
     children: [
       DropdownButtonFormField<String>(
         initialValue: requestType,
+        isExpanded: true,
+        itemHeight: null,
         decoration: const InputDecoration(labelText: 'Request type'),
         items: [
           DropdownMenuItem(value: '', child: Text('All types')),
@@ -35,6 +37,8 @@ class ApprovalFilters extends StatelessWidget {
         onChanged: (value) => onRequestType(value ?? ''),
       ),
       DropdownButtonFormField<int>(
+        isExpanded: true,
+        itemHeight: null,
         initialValue: minAgeDays,
         decoration: const InputDecoration(labelText: 'Waiting age'),
         items: const [
@@ -47,6 +51,8 @@ class ApprovalFilters extends StatelessWidget {
       ),
       DropdownButtonFormField<String>(
         initialValue: status,
+        isExpanded: true,
+        itemHeight: null,
         decoration: const InputDecoration(labelText: 'Status'),
         items: const [
           DropdownMenuItem(value: 'PENDING', child: Text('Pending')),
@@ -57,6 +63,8 @@ class ApprovalFilters extends StatelessWidget {
       ),
       DropdownButtonFormField<String>(
         initialValue: sort,
+        isExpanded: true,
+        itemHeight: null,
         decoration: const InputDecoration(labelText: 'Sort'),
         items: const [
           DropdownMenuItem(value: 'oldest', child: Text('Oldest first')),
