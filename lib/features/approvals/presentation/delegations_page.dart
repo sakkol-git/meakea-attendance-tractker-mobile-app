@@ -250,7 +250,7 @@ class _DelegationFormState extends ConsumerState<_DelegationForm> {
             if (error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child: Text(error!),
+                child: Semantics(liveRegion: true, child: Text(error!)),
               ),
           ],
         ),
