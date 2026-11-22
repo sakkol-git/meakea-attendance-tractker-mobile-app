@@ -125,6 +125,9 @@ class _SetupState extends ConsumerState<WorkspaceSetupPage> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: slug,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
                       labelText: 'Company workspace',
                     ),
