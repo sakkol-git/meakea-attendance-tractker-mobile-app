@@ -30,7 +30,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
             lastDate: now,
             initialDateRange: range,
           );
-          if (selected != null) setState(() => range = selected);
+          if (selected != null && mounted) setState(() => range = selected);
         },
         icon: Icon(Icons.date_range_outlined),
       ),
