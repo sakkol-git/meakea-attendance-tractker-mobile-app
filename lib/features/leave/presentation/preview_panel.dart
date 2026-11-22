@@ -44,7 +44,10 @@ class LeavePreviewPanel extends StatelessWidget {
       if (preview.minimumNoticeDays > 0)
         InfoRow('Minimum notice', '${preview.minimumNoticeDays} days'),
       for (final warning in preview.warnings)
-        Text(warning, style: TextStyle(color: context.semantic.error)),
+        Semantics(
+          liveRegion: true,
+          child: Text(warning, style: TextStyle(color: context.semantic.error)),
+        ),
       if (preview.evidenceRequired) ...[
         const Text('Supporting evidence is required before submission.'),
         OutlinedButton.icon(
