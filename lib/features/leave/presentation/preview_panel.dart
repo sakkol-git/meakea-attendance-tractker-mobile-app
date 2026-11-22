@@ -21,7 +21,13 @@ class LeavePreviewPanel extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Text('Before you submit', style: Theme.of(context).textTheme.titleMedium),
+      Semantics(
+        header: true,
+        child: Text(
+          'Before you submit',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+      ),
       InfoRow('Chargeable', formatLeaveDays(preview.chargeableDays)),
       InfoRow(
         'Available before',
