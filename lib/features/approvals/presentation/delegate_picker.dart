@@ -112,7 +112,7 @@ class _DelegatePickerState extends ConsumerState<_DelegatePicker> {
                       spacing: 8,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        Text('Page ${page + 1}'),
+                        Semantics(liveRegion: true, child: Text('Page ${page + 1}')),
                         TextButton(
                           onPressed: page == 0
                               ? null
