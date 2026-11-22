@@ -101,7 +101,7 @@ class _DirectoryState extends ConsumerState<DirectoryPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text('${people.length} shown'),
+                  child: Semantics(liveRegion: true, child: Text('${people.length} people shown')),
                 ),
                 ...people.map((record) {
                   final p = record.values;
