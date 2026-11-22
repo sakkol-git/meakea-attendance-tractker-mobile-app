@@ -75,7 +75,9 @@ Future<void> showWorkflowDecision(
                       onChanged: (value) => note = value,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        helperText: action == 'reject' ? 'Use at least five characters.' : null,
+                        helperText: action == 'reject'
+                            ? 'Use at least five characters.'
+                            : null,
                         labelText: action == 'reject'
                             ? 'Reason'
                             : 'Note (optional)',
@@ -131,9 +133,14 @@ Future<void> showWorkflowDecision(
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
-                                failure!,
-                                style: TextStyle(color: context.semantic.error),
+                              child: Semantics(
+                                liveRegion: true,
+                                child: Text(
+                                  failure!,
+                                  style: TextStyle(
+                                    color: context.semantic.error,
+                                  ),
+                                ),
                               ),
                             ),
                           ],
