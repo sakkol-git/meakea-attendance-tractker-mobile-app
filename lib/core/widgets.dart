@@ -164,7 +164,10 @@ class SectionTitle extends StatelessWidget {
     child: Row(
       children: [
         Expanded(
-          child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+          child: Semantics(
+            header: true,
+            child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+          ),
         ),
         ?action,
       ],
