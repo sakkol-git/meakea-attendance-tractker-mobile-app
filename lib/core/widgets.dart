@@ -216,9 +216,12 @@ class AsyncPanel<T> extends ConsumerWidget {
           children: [
             Icon(Icons.cloud_off_outlined, color: context.semantic.textMuted),
             const SizedBox(height: AppSpacing.x3),
-            Text(
-              'Could not load this information',
-              style: Theme.of(context).textTheme.titleMedium,
+            Semantics(
+              header: true,
+              child: Text(
+                'Could not load this information',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
             const SizedBox(height: AppSpacing.x2),
             Text(message(e)),
