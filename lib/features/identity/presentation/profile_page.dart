@@ -230,6 +230,8 @@ class _EditProfileState extends ConsumerState<EditProfilePage> {
                   hintText: 'Asia/Phnom_Penh',
                 ),
                 autocorrect: false,
+                enableSuggestions: false,
+                textCapitalization: TextCapitalization.none,
                 validator: (v) =>
                     v == null ||
                         !RegExp(r'^[A-Za-z_]+(?:/[A-Za-z0-9_+.-]+)+$')
