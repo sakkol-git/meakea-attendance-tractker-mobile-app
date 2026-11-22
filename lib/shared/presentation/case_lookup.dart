@@ -26,12 +26,14 @@ class _PagedLookupDialog extends ConsumerStatefulWidget {
 }
 
 class _PagedLookupDialogState extends ConsumerState<_PagedLookupDialog> {
+  final searchInput = TextEditingController();
   String search = '';
   int page = 0;
   Timer? debounce;
 
   @override
   void dispose() {
+    searchInput.dispose();
     debounce?.cancel();
     super.dispose();
   }
@@ -52,10 +54,25 @@ class _PagedLookupDialogState extends ConsumerState<_PagedLookupDialog> {
         child: Column(
           children: [
             TextField(
+              controller: searchInput,
               textInputAction: TextInputAction.search,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Search all records',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: search.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Clear search',
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          debounce?.cancel();
+                          searchInput.clear();
+                          setState(() {
+                            search = '';
+                            page = 0;
+                          });
+                        },
+                      ),
               ),
               onChanged: (text) {
                 debounce?.cancel();
