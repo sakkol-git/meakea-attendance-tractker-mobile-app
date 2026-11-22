@@ -11,6 +11,7 @@ class ExportDownloadButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) => BusyButton(
     label: 'Download or share CSV',
+    icon: Icons.download_outlined,
     action: () async {
       final file = await ref
           .read(reportingRepositoryProvider)
