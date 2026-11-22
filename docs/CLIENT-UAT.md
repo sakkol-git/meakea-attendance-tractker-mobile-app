@@ -4,6 +4,8 @@ Use this runbook for a repeatable client review before connecting a live backend
 
 ## Setup and evidence
 
+For the UX batch through cycle 207, check profile names containing extra spaces, persistent People search labels, and exact email/workspace entry without autocorrection. At 200% text size, reviewer and lookup paging controls must wrap. Clear lookup search to return to page one, retry unavailable reviewers in place, and verify submitted titles, quantities and reasons remain stable while saves are pending. Use a screen reader to review section headings, label/value pairs, page changes and failure announcements. These checks still require physical-device acceptance.
+
 - Given remote mode without an account, open workspace setup and getting-started help. Expect HR-provided workspace/account instructions, no public account-creation command and clear password-assistance guidance. Demo setup must remain explicitly labelled.
 - From sign-in and Profile, open Help and getting started. Follow the first-workday navigation and location-permission recovery explanations without developer terminology.
 - Given a request with entered title, reason, materials or dates, expand Review details, edit a field and verify the summary updates while other values remain. Saving a request is still a draft; submission happens from its details.
