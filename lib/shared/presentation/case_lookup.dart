@@ -52,6 +52,7 @@ class _PagedLookupDialogState extends ConsumerState<_PagedLookupDialog> {
         child: Column(
           children: [
             TextField(
+              textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 labelText: 'Search all records',
                 prefixIcon: Icon(Icons.search),

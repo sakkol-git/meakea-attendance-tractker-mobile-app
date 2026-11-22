@@ -37,6 +37,7 @@ class _DelegatePickerState extends ConsumerState<_DelegatePicker> {
       child: Column(
         children: [
           TextField(
+            textInputAction: TextInputAction.search,
             decoration: const InputDecoration(
               labelText: 'Search reviewers',
               prefixIcon: Icon(Icons.search),
