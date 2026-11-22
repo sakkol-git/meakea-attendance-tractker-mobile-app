@@ -215,6 +215,8 @@ class _EditProfileState extends ConsumerState<EditProfilePage> {
             children: [
               TextFormField(
                 controller: name,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Full name'),
                 autofillHints: const [AutofillHints.name],
                 validator: (v) =>
