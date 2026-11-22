@@ -139,6 +139,9 @@ class _SetupState extends ConsumerState<WorkspaceSetupPage> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: ownerName,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.name],
                     decoration: const InputDecoration(labelText: 'Owner name'),
                     validator: (v) => (v?.trim().length ?? 0) < 3
                         ? 'Enter the owner name'
