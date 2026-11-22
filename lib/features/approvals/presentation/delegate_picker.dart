@@ -62,8 +62,17 @@ class _DelegatePickerState extends ConsumerState<_DelegatePicker> {
                   .candidates(search: search, page: page),
               builder: (context, result) {
                 if (result.hasError) {
-                  return const Center(
-                    child: Text('Reviewers unavailable. Try again.'),
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Reviewers unavailable. Try again.'),
+                        TextButton(
+                          onPressed: () => setState(() {}),
+                          child: const Text('Retry reviewers'),
+                        ),
+                      ],
+                    ),
                   );
                 }
                 if (!result.hasData) {
