@@ -150,6 +150,9 @@ class _SetupState extends ConsumerState<WorkspaceSetupPage> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: email,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    autofillHints: const [AutofillHints.email],
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       labelText: 'Owner work email',
