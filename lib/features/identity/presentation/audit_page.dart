@@ -163,7 +163,7 @@ class _AuditPageState extends ConsumerState<AuditPage> {
             spacing: 8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('Page ${page + 1}'),
+              Semantics(liveRegion: true, child: Text('Page ${page + 1}')),
               TextButton(
                 onPressed: page == 0 ? null : () => setState(() => page--),
                 child: const Text('Previous'),
